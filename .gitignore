@@ -16,6 +16,9 @@ __pycache__/
 .vscode/
 .DS_Store
 
+# Claude Code local settings (CLAUDE.md is committed; local overrides are not)
+.claude/settings.local.json
+
 # Env
 .venv/
 .pixi/
