@@ -24,8 +24,12 @@ Each record is four `int32` values:
 |---|---|
 | `kind` | `0 = ENTER_RULE`, `1 = EXIT_RULE`, `2 = TERMINAL`, `3 = ERROR` |
 | `payload` | rule index (enter/exit) or token type (terminal/error) |
-| `start` | source char index of the token's first codepoint (`-1` for rules) |
-| `stop` | source char index of the token's last codepoint (`-1` for rules) |
+| `start` | source char index of the item's first codepoint (`-1` if none) |
+| `stop` | source char index of the item's last codepoint (`-1` if none) |
+
+For a terminal/error the span is the token; for a rule it is the rule's full
+extent (first token start … last token stop). Items with no span — an empty
+rule, or an inserted/missing error token — report `-1`.
 
 Token **text is never copied across the boundary**. The runtime returns only the
 integer `(start, stop)` span; Python recovers the text on demand by slicing the

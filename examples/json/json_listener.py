@@ -6,10 +6,10 @@ override the callbacks you care about, then call .walk(text, LexerCls, ParserCls
 
 from __future__ import annotations
 
-from antlr_pyfacade import drive, load_specs
+from antlr_pyfacade import FacadeListener, drive, load_specs
 
 
-class JSONEventListener:
+class JSONEventListener(FacadeListener):
     ruleNames = ['json', 'obj', 'pair', 'arr', 'value']
     START_RULE = 0  # json
 
@@ -58,6 +58,9 @@ class JSONEventListener:
         pass
 
     def visitTerminal(self, token_type: int, text: str) -> None:
+        pass
+
+    def visitError(self, token_type: int, text: str) -> None:
         pass
 
     def walk(self, text: str, lexer_cls, parser_cls, *, filtered: bool = True) -> None:

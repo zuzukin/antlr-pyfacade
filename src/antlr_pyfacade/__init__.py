@@ -27,7 +27,8 @@ from ._native import (
     parse_stage_times,
     parse_walk,
 )
-from .facade_runtime import drive
+from .facade_runtime import FacadeListener, drive
+from .location import SourceMap
 from .specs import load_specs
 
 __version__ = _native.__version__
@@ -35,12 +36,14 @@ __version__ = _native.__version__
 __all__ = [
     "AtnShape",
     "ErrorNode",
+    "FacadeListener",
     "LexerSpec",
     "ParseTree",
     "ParseTreeListener",
     "ParserRuleContext",
     "ParserSpec",
     "RuleContext",
+    "SourceMap",
     "TerminalNode",
     "Token",
     "atn_shape",

@@ -12,7 +12,7 @@ page maps the official `ParseTreeListener` model onto the facade.
 | `enterEveryRule(ctx)` / `enter<Rule>(ctx)` | `enter<Rule>(self)` — no `ctx` |
 | `exitEveryRule(ctx)` / `exit<Rule>(ctx)` | `exit<Rule>(self)` — no `ctx` |
 | `visitTerminal(node)` | `visitTerminal(self, token_type, text)` |
-| `visitErrorNode(node)` | surfaced as `ERROR` events in the raw stream |
+| `visitErrorNode(node)` | `visitError(self, token_type, text)` |
 
 The big difference: **there are no node/context objects**. Callbacks carry no
 parse-tree handles, because no Python parse tree is built. You reconstruct
@@ -35,10 +35,28 @@ def visitTerminal(self, token_type, text):
     ...  # text is already the sliced source for this token
 ```
 
-The runtime slices `text[start : stop + 1]` for you. There is no `Token` object,
-no line/column on the terminal callback. (If you need positions, use the raw
-`parse_events` buffer, which carries `start`/`stop` char indices, and derive
-line/column from the source yourself — or fall back to `parse_walk`.)
+The runtime slices `text[start : stop + 1]` for you, so there is no `Token`
+object. You still get the position: inside any callback, `self.line_col()`
+returns the current event's `(line, column)` and `self.span()` its raw
+`(start, stop)` char offsets — see the
+[source-location section](api.md#source-location-in-a-callback).
+
+## Handling errors
+
+Official code overrides `visitErrorNode(node)`; the facade gives you
+`visitError(self, token_type, text)`, called for each error node the parser
+produces while recovering. Combined with `self.line_col()`, that's enough to
+report a parse failure:
+
+```python
+def visitError(self, token_type, text):
+    pos = self.line_col()
+    where = f"{pos[0]}:{pos[1]}" if pos else "?"
+    print(f"{where}: unexpected {text!r}")
+```
+
+Error nodes always cross into Python even when you filter terminals, so you can
+subscribe to errors alone without receiving every token.
 
 ## Identifying rules and tokens
 

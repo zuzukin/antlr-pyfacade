@@ -40,7 +40,7 @@ pip install antlr-pyfacade
    ```
 
    This emits a `MyGrammarEventListener` base class with `enter<Rule>` /
-   `exit<Rule>` / `visitTerminal` stubs and token-type constants.
+   `exit<Rule>` / `visitTerminal` / `visitError` stubs and token-type constants.
 
 3. **Subclass it** and override only the callbacks you care about:
 

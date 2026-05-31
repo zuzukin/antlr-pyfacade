@@ -24,7 +24,7 @@ antlr-pyfacade <parser_module> <Grammar> [-o OUTPUT]
 ### The emitted base class
 
 ```python
-class MyGrammarEventListener:
+class MyGrammarEventListener(FacadeListener):
     ruleNames = [...]          # rule names, in rule-index order
     START_RULE = 0             # index of the entry rule
     # token-type constants, e.g.  STRING = 10, NUMBER = 11, ...
@@ -32,6 +32,7 @@ class MyGrammarEventListener:
     def enter<Rule>(self) -> None: ...      # one pair per grammar rule
     def exit<Rule>(self) -> None: ...
     def visitTerminal(self, token_type: int, text: str) -> None: ...
+    def visitError(self, token_type: int, text: str) -> None: ...
 
     def walk(self, text, lexer_cls, parser_cls, *, filtered=True) -> None: ...
 ```
@@ -42,11 +43,38 @@ class MyGrammarEventListener:
   yourself (a stack is the usual pattern; see `examples/json/to_python.py`).
 - `visitTerminal(token_type, text)` receives the integer token type (compare
   against the generated constants) and the already-sliced token text.
+- `visitError(token_type, text)` fires for error nodes the parser produces while
+  recovering (an unexpected token, or an inserted/missing one). For a missing
+  token `text` is `""`. Error nodes are **always** delivered — they bypass the
+  token mask — so you never silently lose a parse failure.
 - Override only what you need. The set of overrides determines the native masks,
   so unsubscribed rules/tokens never cross into Python.
 - `walk` builds and caches the native specs from `lexer_cls` / `parser_cls`
   (via [`load_specs`](#load_specs)) and runs the event stream.
 - `walk(..., filtered=False)` forces the full unfiltered stream.
+
+### Source location in a callback
+
+`<Grammar>EventListener` subclasses `FacadeListener`, which exposes the current
+event's position — handy for reporting where an error occurred:
+
+```python
+def visitError(self, token_type: int, text: str) -> None:
+    pos = self.line_col()        # (line, column) of the offending token, or None
+    if pos is not None:
+        line, col = pos
+        print(f"{line}:{col}: unexpected {text!r}")
+```
+
+- `self.line_col()` → `(line, column)` of the current event's start (line
+  **1-based**, column **0-based**, matching ANTLR's own `line:column` reports),
+  or `None` when the event has no source span (e.g. an inserted/missing token,
+  or an empty rule).
+- `self.span()` → the raw `(start, stop)` character offsets of the current event.
+
+These are valid for every callback — `enter<Rule>`/`exit<Rule>` report the rule's
+extent, terminals and errors report the token. The underlying
+[`SourceMap`](#sourcemap) is built once per `walk`, on first use.
 
 ### Optional: restrict terminal tokens further
 
@@ -66,6 +94,20 @@ Builds the native `ParserSpec` / `LexerSpec` from the stock-generated
 Results are cached by the `(lexer_cls, parser_cls)` pair, so the ATN is
 deserialized once. The facade's `walk` calls this for you; call it directly only
 if you use the low-level `parse_events`.
+
+## `SourceMap`
+
+```python
+sm = antlr_pyfacade.SourceMap(text)
+line, column = sm.line_col(offset)
+```
+
+Converts a character `offset` (as reported by the event stream) into a
+`(line, column)` position — line **1-based**, column **0-based**. The newline
+scan runs once at construction; each `line_col` lookup is an O(log n) bisect.
+The facade's `self.line_col()` uses this internally; construct one yourself when
+working with the raw [`parse_events`](#parse_events-raw-buffer) buffer. A
+negative offset raises `ValueError`.
 
 ## `parse_events` (raw buffer)
 
@@ -95,7 +137,14 @@ for kind, payload, start, stop in struct.iter_unpack("<4i", raw):
 
 `rule_mask` / `token_mask` are lists of indices to **keep**; `None` keeps all,
 `[]` keeps none. Indices out of range and token type 0 (EOF/unused sentinel) are
-handled safely.
+handled safely. `ERROR` records are emitted regardless of `token_mask`, so a
+filtered stream never drops parse failures.
+
+For every record, `start` / `stop` are the character span of the item: the token
+for `TERMINAL`/`ERROR`, and the rule's full extent (first token start … last
+token stop) for `ENTER_RULE`/`EXIT_RULE`. An item with no span — an empty rule,
+or an inserted/missing error token — reports `-1`. Turn an offset into a
+position with [`SourceMap`](#sourcemap).
 
 Kind constants: `ENTER_RULE=0`, `EXIT_RULE=1`, `TERMINAL=2`, `ERROR=3`.
 

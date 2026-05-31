@@ -4,8 +4,10 @@ parser metadata.
 Reads ``ruleNames`` + token name lists from an already-generated ANTLR Python
 parser module (no annotated grammar, no extra inputs) and emits a
 ``<Grammar>EventListener`` base class: named ``enter<Rule>`` / ``exit<Rule>``
-no-op stubs, a ``visitTerminal`` stub, token-type constants, and a ``walk``
-method that runs the bulk native event stream.
+no-op stubs, ``visitTerminal`` / ``visitError`` stubs, token-type constants, and
+a ``walk`` method that runs the bulk native event stream. The base subclasses
+``FacadeListener``, so callbacks can call ``self.line_col()`` for the current
+event's source position.
 
 The generated surface mirrors the stock ANTLR listener so consumers write the
 same code; the difference is that callbacks are driven by a flat event buffer
@@ -53,10 +55,10 @@ def generate(parser_qualname: str, grammar: str) -> str:
     w("")
     w("from __future__ import annotations")
     w("")
-    w("from antlr_pyfacade import drive, load_specs")
+    w("from antlr_pyfacade import FacadeListener, drive, load_specs")
     w("")
     w("")
-    w(f"class {grammar}EventListener:")
+    w(f"class {grammar}EventListener(FacadeListener):")
     w(f"    ruleNames = {rule_names!r}")
     w(f"    START_RULE = 0  # {rule_names[0]}")
     w("")
@@ -73,6 +75,9 @@ def generate(parser_qualname: str, grammar: str) -> str:
         w("        pass")
         w("")
     w("    def visitTerminal(self, token_type: int, text: str) -> None:")
+    w("        pass")
+    w("")
+    w("    def visitError(self, token_type: int, text: str) -> None:")
     w("        pass")
     w("")
     w("    def walk(self, text: str, lexer_cls, parser_cls, *, "

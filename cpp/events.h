@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "ParserRuleContext.h"
 #include "RuleContext.h"
 #include "Token.h"
 #include "tree/ErrorNode.h"
@@ -24,6 +25,17 @@ enum EventKind : int32_t {
     EV_TERMINAL = 2,
     EV_ERROR = 3,
 };
+
+// Character (codepoint) span of a rule, taken from its first/last tokens.
+// Empty rules (no consumed token) yield -1. These offsets index the source the
+// same way terminal offsets do, so Python can turn them into line/column.
+inline void rule_span(antlr4::ParserRuleContext *ctx, int32_t &start,
+                      int32_t &stop) {
+    antlr4::Token *st = ctx->getStart();
+    antlr4::Token *sp = ctx->getStop();
+    start = st != nullptr ? static_cast<int32_t>(st->getStartIndex()) : -1;
+    stop = sp != nullptr ? static_cast<int32_t>(sp->getStopIndex()) : -1;
+}
 
 // Build a keep-mask of size n from a Python index list. Callers pass nullptr
 // (not this table) when a mask is absent, which collect_events reads as
@@ -60,16 +72,22 @@ inline void collect_events(antlr4::tree::ParseTree *root,
             Token *sym = static_cast<tree::TerminalNode *>(node)->getSymbol();
             size_t type = sym->getType();
             bool is_err = tree::ErrorNode::is(*node);
-            bool keep = tok_keep == nullptr || (type < n_toks && tok_keep[type]);
+            // Errors always survive the token mask: a filtered stream that
+            // silently dropped parse failures would be a footgun.
+            bool keep = is_err || tok_keep == nullptr ||
+                        (type < n_toks && tok_keep[type]);
             if (keep) {
                 push(is_err ? EV_ERROR : EV_TERMINAL, static_cast<int32_t>(type),
                      static_cast<int32_t>(sym->getStartIndex()),
                      static_cast<int32_t>(sym->getStopIndex()));
             }
         } else {
-            size_t ridx = static_cast<RuleContext *>(node)->getRuleIndex();
+            auto *ctx = static_cast<ParserRuleContext *>(node);
+            size_t ridx = ctx->getRuleIndex();
             if (rule_keep == nullptr || (ridx < n_rules && rule_keep[ridx])) {
-                push(EV_ENTER_RULE, static_cast<int32_t>(ridx), -1, -1);
+                int32_t start, stop;
+                rule_span(ctx, start, stop);
+                push(EV_ENTER_RULE, static_cast<int32_t>(ridx), start, stop);
             }
         }
 
@@ -83,9 +101,12 @@ inline void collect_events(antlr4::tree::ParseTree *root,
         do {
             // post-order (rules only)
             if (!tree::TerminalNode::is(*node)) {
-                size_t ridx = static_cast<RuleContext *>(node)->getRuleIndex();
+                auto *ctx = static_cast<ParserRuleContext *>(node);
+                size_t ridx = ctx->getRuleIndex();
                 if (rule_keep == nullptr || (ridx < n_rules && rule_keep[ridx])) {
-                    push(EV_EXIT_RULE, static_cast<int32_t>(ridx), -1, -1);
+                    int32_t start, stop;
+                    rule_span(ctx, start, stop);
+                    push(EV_EXIT_RULE, static_cast<int32_t>(ridx), start, stop);
                 }
             }
             if (stack.empty()) {
