@@ -80,32 +80,10 @@ This runtime executes the **interpreted ATN**; it cannot run target-language
 them will not parse correctly here. See `docs/` for the full discussion and the
 performance characteristics of the bulk event-stream approach.
 
-## Development
+## Contributing
 
-This project uses [pixi](https://pixi.sh). The toolchain (C++ compiler, CMake,
-Ninja, nanobind, scikit-build-core) comes from the pixi environment, so the
-editable `editable.rebuild` hook always finds a persistent CMake on `PATH`.
-
-```sh
-pixi install            # solve + build the editable extension
-pixi run test           # run the pytest suite (test environment)
-pixi run example        # run the JSON reconstruction example
-pixi run docs-serve     # preview the docs site at http://localhost:8000
-pixi run docs-build     # build the static docs site into site/
-```
-
-Environments:
-
-- **default / test** — Python build + test toolchain (no JDK).
-- **gen** — adds `openjdk` + the ANTLR tool, isolated from the runtime envs.
-  Regenerate the example from the grammar with `pixi run gen-json` (re-runs the
-  ANTLR Python target on `examples/json/JSON.g4`) and `pixi run gen-facade`.
-- **docs** — [Zensical](https://zensical.org) static site generator, isolated
-  with no default feature so building the docs pulls neither the JDK nor the C++
-  toolchain. Configured by `zensical.toml`; output goes to `site/` (gitignored).
-
-The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
-`vendor/antlr4-cpp/UPDATING.md` to refresh the snapshot.
+Development setup, pixi environments, and the vendored-runtime workflow live in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 
