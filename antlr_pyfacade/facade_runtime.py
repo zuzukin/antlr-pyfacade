@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 from . import _native
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from collections.abc import Callable
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 _REC = "<4i"

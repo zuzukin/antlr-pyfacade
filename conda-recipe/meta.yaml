@@ -21,7 +21,7 @@ build:
   number: 0
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   # cp312+ ships abi3 wheels; until then build per CPython.
-  skip: true  # [py<39]
+  skip: true  # [py<310]
 
 requirements:
   build:

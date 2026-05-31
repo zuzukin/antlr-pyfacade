@@ -7,7 +7,7 @@ name = "antlr-pyfacade"
 version = "0.1.0"
 description = "Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream facade over the official ANTLR4 C++ runtime, driven by stock Python3-target output."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Christopher Barber" }]
 keywords = ["antlr", "antlr4", "parser", "parsing", "grammar"]
@@ -42,7 +42,7 @@ editable.verbose = false
 # CPython only; skip PyPy and the 32-bit / musllinux targets to keep the C++
 # build matrix sane. The vendored runtime needs a C++17 compiler (present on
 # all default cibuildwheel images).
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+build = "cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux* *_i686 *-win32"
 build-frontend = "build"
 # Smoke-test each built wheel: import the extension and print its version. No
@@ -59,7 +59,7 @@ platforms = ["osx-arm64", "linux-64"]
 # Native build toolchain + the extension's build backend, from conda-forge so the
 # editable `editable.rebuild` hook always finds a persistent cmake/ninja on PATH.
 [tool.pixi.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 cxx-compiler = "*"
 cmake = ">=3.21"
 ninja = "*"
@@ -91,7 +91,7 @@ antlr4-tools = "*"
 # generator). Isolated and default-feature-free so it pulls neither the JDK nor
 # the C++ build toolchain — building the docs never compiles the extension.
 [tool.pixi.feature.docs.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 
 [tool.pixi.feature.docs.pypi-dependencies]
 zensical = "*"

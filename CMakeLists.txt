@@ -27,7 +27,7 @@ file(GLOB antlr4_runtime_SRC
   "${ANTLR4_CPP_SRC}/tree/xpath/*.cpp"
 )
 
-find_package(Python 3.9 REQUIRED COMPONENTS Interpreter Development.Module)
+find_package(Python 3.10 REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(nanobind CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
