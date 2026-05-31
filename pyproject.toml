@@ -45,9 +45,8 @@ editable.verbose = false
 build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux* *_i686 *-win32"
 build-frontend = "build"
-# Smoke-test each built wheel: import the extension and round-trip the bundled
-# JSON example end to end.
-test-requires = ["pytest", "antlr4-python3-runtime>=4.13"]
+# Smoke-test each built wheel: import the extension and print its version. No
+# extra test deps are needed — the wheel pulls antlr4-python3-runtime itself.
 test-command = "python -c \"import antlr_pyfacade as a; print(a.__version__)\""
 
 [tool.cibuildwheel.macos]
