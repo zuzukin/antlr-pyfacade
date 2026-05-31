@@ -32,7 +32,7 @@ find_package(nanobind CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
 nanobind_add_module(_native STABLE_ABI
-  src/binding.cpp
+  cpp/binding.cpp
   ${antlr4_runtime_SRC}
 )
 
