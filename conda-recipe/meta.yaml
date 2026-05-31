@@ -36,11 +36,11 @@ requirements:
     - nanobind >=2.0
   run:
     - python
+    - antlr4-python3-runtime >=4.13
 
 test:
   requires:
     - pip
-    - antlr4-python3-runtime >=4.13
   imports:
     - antlr_pyfacade
   commands:

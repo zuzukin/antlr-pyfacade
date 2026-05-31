@@ -19,10 +19,11 @@ classifiers = [
   "Topic :: Text Processing :: General",
 ]
 
-[project.optional-dependencies]
-# The example/tests import stock-generated ANTLR Python modules, which subclass
-# the official pure-Python runtime; pytest drives the correctness suite.
-test = ["antlr4-python3-runtime>=4.13", "pytest>=7"]
+# Generated lexer/parser modules subclass the official pure-Python runtime and do
+# `from antlr4 import *`, so it must be importable for the documented facade
+# workflow (load_specs / walk). The C++ engine itself never imports it, but the
+# advertised API requires it, so it is a hard runtime dependency.
+dependencies = ["antlr4-python3-runtime>=4.13"]
 
 [project.urls]
 Homepage = "https://github.com/analog-cbarber/antlr-pyfacade"
@@ -67,10 +68,9 @@ nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
 
 [tool.pixi.pypi-dependencies]
+# Installs the package editable; its declared runtime dependency
+# (antlr4-python3-runtime) is resolved automatically from [project.dependencies].
 antlr-pyfacade = { path = ".", editable = true }
-# Generated parser/lexer modules subclass the official pure-Python runtime, so
-# it must be importable to load specs and run the example.
-antlr4-python3-runtime = ">=4.13"
 
 # Build the editable package against the env's own toolchain (not an isolated,
 # throwaway one), so the rebuild-on-import hook resolves cmake/ninja correctly.
@@ -106,6 +106,13 @@ docs = { features = ["docs"], no-default-feature = true }
 [tool.pixi.tasks]
 # Run the JSON reconstruction example end to end.
 example = { cmd = "python to_python.py", cwd = "examples/json" }
+
+# pytest drives the correctness suite. It is a dev/test tool only — no end user
+# or downstream consumer needs an `antlr-pyfacade[test]` extra (the test suite
+# isn't shipped in the wheel), so it lives in the pixi test feature rather than as
+# a published optional dependency.
+[tool.pixi.feature.test.dependencies]
+pytest = ">=7"
 
 [tool.pixi.feature.test.tasks]
 test = "pytest"
