@@ -26,7 +26,7 @@ a faster way to consume it.
 ## At a glance
 
 ```python
-from my_listener import MyGrammarEventListener      # antlr-pyfacade-gen output
+from my_listener import MyGrammarEventListener      # antlr-pyfacade output
 from generated.MyGrammarLexer import MyGrammarLexer  # stock ANTLR Python output
 from generated.MyGrammarParser import MyGrammarParser
 

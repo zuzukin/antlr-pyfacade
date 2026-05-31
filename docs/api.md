@@ -4,13 +4,13 @@ Everything is exported from the top-level `antlr_pyfacade` package.
 
 ## The generated facade
 
-`antlr-pyfacade-gen` reads a stock-generated ANTLR Python parser module and emits
+`antlr-pyfacade` reads a stock-generated ANTLR Python parser module and emits
 a `<Grammar>EventListener` base class. You subclass it and override callbacks.
 
 ### Generating
 
 ```sh
-antlr-pyfacade-gen <parser_module> <Grammar> [-o OUTPUT]
+antlr-pyfacade <parser_module> <Grammar> [-o OUTPUT]
 ```
 
 - `<parser_module>` — importable dotted path to the generated parser module,

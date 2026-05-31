@@ -30,7 +30,7 @@ Homepage = "https://github.com/analog-cbarber/antlr-pyfacade"
 Source = "https://github.com/analog-cbarber/antlr-pyfacade"
 
 [project.scripts]
-antlr-pyfacade-gen = "antlr_pyfacade.gen_facade:main"
+antlr-pyfacade = "antlr_pyfacade.gen_facade:main"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -120,7 +120,7 @@ test = "pytest"
 # Regenerate the example's Python parser/lexer from the grammar (ANTLR tool).
 gen-json = { cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated", cwd = "examples/json", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
 # Regenerate the event-listener facade from the generated parser module.
-gen-facade = { cmd = "antlr-pyfacade-gen generated.JSONParser JSON -o json_listener.py", cwd = "examples/json", env = { PYTHONPATH = "." } }
+gen-facade = { cmd = "antlr-pyfacade generated.JSONParser JSON -o json_listener.py", cwd = "examples/json", env = { PYTHONPATH = "." } }
 # Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py).
 gen-pred = { cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated", cwd = "examples/predicate", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
 

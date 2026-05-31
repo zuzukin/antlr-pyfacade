@@ -36,7 +36,7 @@ pip install antlr-pyfacade
 2. **Generate the facade** from the generated parser module:
 
    ```sh
-   antlr-pyfacade-gen generated.MyGrammarParser MyGrammar -o my_listener.py
+   antlr-pyfacade generated.MyGrammarParser MyGrammar -o my_listener.py
    ```
 
    This emits a `MyGrammarEventListener` base class with `enter<Rule>` /

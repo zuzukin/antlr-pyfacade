@@ -1,7 +1,7 @@
 """antlr-pyfacade: a fast, C++-accelerated ANTLR runtime for Python.
 
 Generate your parser with the stock ANTLR tool (``-Dlanguage=Python3``),
-generate a facade with ``antlr-pyfacade-gen``, subclass the
+generate a facade with ``antlr-pyfacade``, subclass the
 ``<Grammar>EventListener`` it emits, and call ``.walk(text, LexerCls,
 ParserCls)``. Parsing runs in the official ANTLR4 C++ runtime; a single bulk,
 filtered event stream crosses into Python instead of a per-node parse-tree walk.

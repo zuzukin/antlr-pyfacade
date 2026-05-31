@@ -45,7 +45,7 @@ test:
     - antlr_pyfacade
   commands:
     - python -c "import antlr_pyfacade as a; assert a.__version__"
-    - antlr-pyfacade-gen --help
+    - antlr-pyfacade --help
 
 about:
   home: https://github.com/analog-cbarber/antlr-pyfacade
