@@ -103,10 +103,17 @@ python = ">=3.10"
 [tool.pixi.feature.docs.pypi-dependencies]
 zensical = "*"
 
+# conda-forge recipe builder (rattler-build). Isolated with no default feature:
+# rattler-build creates its own sandboxed build/host environment from the recipe,
+# so the package's own C++ toolchain feature is not needed here.
+[tool.pixi.feature.recipe.dependencies]
+rattler-build = "*"
+
 [tool.pixi.environments]
 default = { solve-group = "default" }
 gen = { features = ["gen"], solve-group = "default" }
 docs = { features = ["docs"], no-default-feature = true }
+recipe = { features = ["recipe"], no-default-feature = true }
 
 [tool.pixi.tasks.example]
 description = "Run the JSON reconstruction example end to end."
@@ -142,3 +149,7 @@ cmd = "zensical build"
 [tool.pixi.feature.docs.tasks.docs-serve]
 description = "Serve the docs locally with live reload at http://localhost:8000."
 cmd = "zensical serve"
+
+[tool.pixi.feature.recipe.tasks.recipe-build]
+description = "Build the conda package locally from conda-recipe/recipe.yaml (rattler-build)."
+cmd = "rattler-build build --recipe conda-recipe/recipe.yaml"

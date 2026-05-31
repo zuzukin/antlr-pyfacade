@@ -1,0 +1,70 @@
+schema_version: 1
+
+# rattler-build recipe for conda-forge. To submit: copy this directory to
+# conda-forge/staged-recipes under recipes/antlr-pyfacade/, fill in the real
+# sdist sha256 (from the PyPI release), and open a PR. Once merged it becomes a
+# feedstock. Builds the C++ extension from the vendored ANTLR4 runtime carried in
+# the sdist, so no external runtime is fetched.
+
+context:
+  name: antlr-pyfacade
+  version: "0.1.0"
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  # Prefer the PyPI sdist (carries the vendored runtime). Replace sha256 on each
+  # release.
+  url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/antlr_pyfacade-${{ version }}.tar.gz
+  sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+
+build:
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  # Compiled extension (not noarch); cp312+ ships abi3 wheels but we still build
+  # per CPython here. Floor matches requires-python.
+  skip:
+    - match(python, "<3.10")
+
+requirements:
+  build:
+    - ${{ compiler('cxx') }}
+    - ${{ stdlib('c') }}
+    - cmake >=3.21
+    - ninja
+  host:
+    - python
+    - pip
+    - scikit-build-core >=0.10
+    - nanobind >=2.0
+  run:
+    - python
+    - antlr4-python3-runtime >=4.13
+
+tests:
+  - python:
+      imports:
+        - antlr_pyfacade
+      pip_check: true
+  - script:
+      - python -c "import antlr_pyfacade as a; assert a.__version__"
+      - antlr-pyfacade --help
+
+about:
+  homepage: https://github.com/analog-cbarber/antlr-pyfacade
+  repository: https://github.com/analog-cbarber/antlr-pyfacade
+  documentation: https://github.com/analog-cbarber/antlr-pyfacade/tree/main/docs
+  license: Apache-2.0
+  license_file:
+    - LICENSE
+    - vendor/antlr4-cpp/LICENSE.txt
+  summary: >-
+    Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream
+    facade over the official ANTLR4 C++ runtime, driven by stock Python3-target
+    output.
+
+extra:
+  recipe-maintainers:
+    - analog-cbarber
