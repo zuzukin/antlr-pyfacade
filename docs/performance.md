@@ -16,38 +16,31 @@ So the honest framing: batching removes the call overhead; filtering reduces the
 iteration count. Neither makes a "reserialize everything" workload free, because
 something in Python still iterates the kept events.
 
-## Measured throughput (testbed)
+## How fast, in relative terms
 
-From the development testbed — converting JSON to YAML, which is close to a
-**worst case** because it touches essentially every node — on an 84 MiB input,
-Apple M5 Max, single-threaded:
+The comparison that matters for a Python user is the official
+`antlr4-python3-runtime`, since that is the other way to consume the same
+generated parser. Consider a workload that touches most nodes — close to the
+worst case for this design, because Python still iterates every kept event:
 
-| backend | MiB/s |
-|---|---:|
-| official pure-Python runtime | 0.52 |
-| mypyc-compiled model | 4.09 |
-| native parse, per-node Python listener | 4.45 |
-| native parse, **bulk event-stream facade** | ~6–9 |
-| native parse, C++ counting walk (no Python) | 9.03 |
-| Java (generated parser) | 41.7 |
-
-Reading this: the per-node Python listener (4.45) barely beats mypyc despite the
-C++ parse, because it pays the per-node crossing. The bulk facade closes most of
-the remaining gap to the C++-only walk (9.03), which is the practical ceiling for
-*any* approach that still hands every node to Python. Real consumers usually
-filter to a subset and land closer to — or above — that line, because they never
-iterate the dropped events at all.
-
-json2yaml is deliberately near the worst case. A consumer that, say, extracts a
-handful of token kinds from a large file will see a much larger win, since
-filtering removes the bulk of the iteration before Python ever sees it.
+- The **bulk event-stream facade** runs roughly **10–20× faster** than the
+  official pure-Python runtime — and that is the *worst* case for this design.
+  Workloads that subscribe to only a subset of rules/tokens go higher still,
+  because native filtering drops the rest before Python ever iterates them.
+- A **per-node Python listener over the native parse** — the slower escape hatch
+  this package also exposes — lands well short of the facade, because it pays one
+  FFI crossing per tree node. That per-node crossing is exactly the cost the bulk
+  stream removes.
+- The practical ceiling for *any* approach that still hands every node to Python
+  is a **pure-C++ walk that never enters Python**. The facade closes most of the
+  gap to it; you can only go further by *receiving fewer events*.
 
 ### Underlying C++ runtime
 
 This package bundles the ANTLR4 C++ runtime with a lock-free DFA-edge patch on
 the per-character lexer read path (the vendored snapshot; see
-`vendor/antlr4-cpp/UPDATING.md`). On the testbed inputs that patch alone gave
-roughly **1.7–1.8× lexer** and **1.3–1.4× total-parse** throughput versus stock,
+`vendor/antlr4-cpp/UPDATING.md`). Versus the stock C++ runtime, that patch alone
+measured roughly **1.7–1.8× lexer** and **1.3–1.4× total-parse** throughput,
 single-threaded, and more under concurrency.
 
 ## Limitation: semantic predicates and embedded actions

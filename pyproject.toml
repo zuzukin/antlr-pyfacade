@@ -88,10 +88,20 @@ openjdk = ">=11"
 [tool.pixi.feature.gen.pypi-dependencies]
 antlr4-tools = "*"
 
+# Documentation toolchain (Zensical, the Material-for-MkDocs-team static site
+# generator). Isolated and default-feature-free so it pulls neither the JDK nor
+# the C++ build toolchain — building the docs never compiles the extension.
+[tool.pixi.feature.docs.dependencies]
+python = ">=3.9"
+
+[tool.pixi.feature.docs.pypi-dependencies]
+zensical = "*"
+
 [tool.pixi.environments]
 default = { solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 gen = { features = ["gen"], solve-group = "default" }
+docs = { features = ["docs"], no-default-feature = true }
 
 [tool.pixi.tasks]
 # Run the JSON reconstruction example end to end.
@@ -107,3 +117,9 @@ gen-json = { cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated", cwd = "exam
 gen-facade = { cmd = "antlr-pyfacade-gen generated.JSONParser JSON -o json_listener.py", cwd = "examples/json", env = { PYTHONPATH = "." } }
 # Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py).
 gen-pred = { cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated", cwd = "examples/predicate", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
+
+[tool.pixi.feature.docs.tasks]
+# Build the static documentation site into site/ (configured in zensical.toml).
+docs-build = "zensical build"
+# Serve the docs locally with live reload at http://localhost:8000.
+docs-serve = "zensical serve"

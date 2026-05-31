@@ -3,6 +3,10 @@
 A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python — with
 **no per-grammar C/C++ compilation by the user**.
 
+> **10–20× faster** than the official pure-Python `antlr4-python3-runtime` on
+> workloads that touch most nodes — and more when your listener subscribes to
+> only a subset of the grammar.
+
 You generate your parser with the ordinary ANTLR tool targeting Python, install
 this package, generate a small *facade*, and write a pure-Python event listener.
 Parsing itself runs inside the official ANTLR4 **C++** runtime, driven directly
@@ -86,6 +90,8 @@ editable `editable.rebuild` hook always finds a persistent CMake on `PATH`.
 pixi install            # solve + build the editable extension
 pixi run test           # run the pytest suite (test environment)
 pixi run example        # run the JSON reconstruction example
+pixi run docs-serve     # preview the docs site at http://localhost:8000
+pixi run docs-build     # build the static docs site into site/
 ```
 
 Environments:
@@ -94,6 +100,9 @@ Environments:
 - **gen** — adds `openjdk` + the ANTLR tool, isolated from the runtime envs.
   Regenerate the example from the grammar with `pixi run gen-json` (re-runs the
   ANTLR Python target on `examples/json/JSON.g4`) and `pixi run gen-facade`.
+- **docs** — [Zensical](https://zensical.org) static site generator, isolated
+  with no default feature so building the docs pulls neither the JDK nor the C++
+  toolchain. Configured by `zensical.toml`; output goes to `site/` (gitignored).
 
 The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 `vendor/antlr4-cpp/UPDATING.md` to refresh the snapshot.

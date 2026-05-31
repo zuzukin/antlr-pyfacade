@@ -12,7 +12,8 @@ a faster way to consume it.
 
 ## Contents
 
-- [Quickstart](../README.md) — install → generate → facade → walk, in one page.
+- [Quickstart](https://github.com/analog-cbarber/antlr-pyfacade#quickstart) —
+  install → generate → facade → walk, in one page.
 - [How it works](concepts.md) — the bulk filtered event stream, native masks,
   and why this is faster than a per-node listener.
 - [API reference](api.md) — the facade base class, `walk` options, `load_specs`,
