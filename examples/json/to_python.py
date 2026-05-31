@@ -1,0 +1,113 @@
+"""Example: reconstruct a Python object from JSON using the generated facade.
+
+Subclasses the generated ``JSONEventListener`` and overrides only the rule
+enter/exit callbacks and ``visitTerminal`` it needs. Demonstrates the typical
+shape of a consumer: a small value stack driven by the bulk event stream, with
+token text recovered by the runtime via index slicing (no node objects, no
+per-node FFI crossings).
+
+Run from this directory:
+
+    python to_python.py '{"a": [1, true, null], "b": "hi"}'
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+
+from json_listener import JSONEventListener
+
+from generated.JSONLexer import JSONLexer
+from generated.JSONParser import JSONParser
+
+# Scalar token types (see the generated facade's token-type constants).
+_TRUE, _FALSE, _NULL = JSONEventListener.T__7, JSONEventListener.T__8, JSONEventListener.T__9
+_STRING, _NUMBER = JSONEventListener.STRING, JSONEventListener.NUMBER
+
+_MISSING = object()
+
+
+class JsonValueBuilder(JSONEventListener):
+    """Rebuild the parsed JSON document as native Python objects."""
+
+    def __init__(self) -> None:
+        # Stack of partially-built containers. A pending key for the enclosing
+        # object is carried as ("key", value) handling via _expect_key.
+        self._stack: list = []
+        self._keys: list = []
+        self._expect_key = False
+        self.result = _MISSING
+
+    # --- containers ---------------------------------------------------------
+
+    def enterObj(self) -> None:
+        self._push({})
+
+    def exitObj(self) -> None:
+        self._pop()
+
+    def enterArr(self) -> None:
+        self._push([])
+
+    def exitArr(self) -> None:
+        self._pop()
+
+    def enterPair(self) -> None:
+        self._expect_key = True
+
+    # --- scalars ------------------------------------------------------------
+
+    def visitTerminal(self, token_type: int, text: str) -> None:
+        if token_type == _STRING:
+            value = json.loads(text)  # unquote + unescape
+            if self._expect_key:
+                self._keys.append(value)
+                self._expect_key = False
+                return
+        elif token_type == _NUMBER:
+            value = json.loads(text)
+        elif token_type == _TRUE:
+            value = True
+        elif token_type == _FALSE:
+            value = False
+        elif token_type == _NULL:
+            value = None
+        else:
+            return  # structural punctuation: '{', '}', '[', ']', ':', ','
+        self._attach(value)
+
+    # --- machinery ----------------------------------------------------------
+
+    def _push(self, container) -> None:
+        self._attach(container)
+        self._stack.append(container)
+
+    def _pop(self) -> None:
+        self._stack.pop()
+
+    def _attach(self, value) -> None:
+        if not self._stack:
+            self.result = value
+            return
+        top = self._stack[-1]
+        if isinstance(top, list):
+            top.append(value)
+        else:  # dict: pair key was captured first
+            top[self._keys.pop()] = value
+
+
+def parse(text: str):
+    builder = JsonValueBuilder()
+    builder.walk(text, JSONLexer, JSONParser)
+    return builder.result
+
+
+def main() -> int:
+    text = sys.argv[1] if len(sys.argv) > 1 else '{"a": [1, true, null], "b": "hi"}'
+    print(parse(text))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

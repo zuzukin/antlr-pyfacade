@@ -1,0 +1,109 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "antlr-pyfacade"
+version = "0.1.0"
+description = "Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream facade over the official ANTLR4 C++ runtime, driven by stock Python3-target output."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Christopher Barber" }]
+keywords = ["antlr", "antlr4", "parser", "parsing", "grammar"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "License :: OSI Approved :: Apache Software License",
+  "Topic :: Software Development :: Compilers",
+  "Topic :: Text Processing :: General",
+]
+
+[project.optional-dependencies]
+# The example/tests import stock-generated ANTLR Python modules, which subclass
+# the official pure-Python runtime; pytest drives the correctness suite.
+test = ["antlr4-python3-runtime>=4.13", "pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/analog-cbarber/antlr-pyfacade"
+Source = "https://github.com/analog-cbarber/antlr-pyfacade"
+
+[project.scripts]
+antlr-pyfacade-gen = "antlr_pyfacade.gen_facade:main"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+editable.rebuild = true
+editable.verbose = false
+
+[tool.cibuildwheel]
+# CPython only; skip PyPy and the 32-bit / musllinux targets to keep the C++
+# build matrix sane. The vendored runtime needs a C++17 compiler (present on
+# all default cibuildwheel images).
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+skip = "*-musllinux* *_i686 *-win32"
+build-frontend = "build"
+# Smoke-test each built wheel: import the extension and round-trip the bundled
+# JSON example end to end.
+test-requires = ["pytest", "antlr4-python3-runtime>=4.13"]
+test-command = "python -c \"import antlr_pyfacade as a; print(a.__version__)\""
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+# Native build toolchain + the extension's build backend, from conda-forge so the
+# editable `editable.rebuild` hook always finds a persistent cmake/ninja on PATH.
+[tool.pixi.dependencies]
+python = ">=3.9"
+cxx-compiler = "*"
+cmake = ">=3.21"
+ninja = "*"
+nanobind = ">=2.0"
+scikit-build-core = ">=0.10"
+
+[tool.pixi.pypi-dependencies]
+antlr-pyfacade = { path = ".", editable = true }
+# Generated parser/lexer modules subclass the official pure-Python runtime, so
+# it must be importable to load specs and run the example.
+antlr4-python3-runtime = ">=4.13"
+
+# Build the editable package against the env's own toolchain (not an isolated,
+# throwaway one), so the rebuild-on-import hook resolves cmake/ninja correctly.
+[tool.pixi.pypi-options]
+no-build-isolation = ["antlr-pyfacade"]
+
+[tool.pixi.activation.env]
+MACOSX_DEPLOYMENT_TARGET = "11.0"
+
+# Java + the ANTLR tool, isolated in a dedicated feature so the Python build/test
+# environments never pull in a JDK.
+[tool.pixi.feature.gen.dependencies]
+openjdk = ">=11"
+
+[tool.pixi.feature.gen.pypi-dependencies]
+antlr4-tools = "*"
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+gen = { features = ["gen"], solve-group = "default" }
+
+[tool.pixi.tasks]
+# Run the JSON reconstruction example end to end.
+example = { cmd = "python to_python.py", cwd = "examples/json" }
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"
+
+[tool.pixi.feature.gen.tasks]
+# Regenerate the example's Python parser/lexer from the grammar (ANTLR tool).
+gen-json = { cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated", cwd = "examples/json", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
+# Regenerate the event-listener facade from the generated parser module.
+gen-facade = { cmd = "antlr-pyfacade-gen generated.JSONParser JSON -o json_listener.py", cwd = "examples/json", env = { PYTHONPATH = "." } }
+# Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py).
+gen-pred = { cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated", cwd = "examples/predicate", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }

@@ -1,0 +1,130 @@
+# API reference
+
+Everything is exported from the top-level `antlr_pyfacade` package.
+
+## The generated facade
+
+`antlr-pyfacade-gen` reads a stock-generated ANTLR Python parser module and emits
+a `<Grammar>EventListener` base class. You subclass it and override callbacks.
+
+### Generating
+
+```sh
+antlr-pyfacade-gen <parser_module> <Grammar> [-o OUTPUT]
+```
+
+- `<parser_module>` — importable dotted path to the generated parser module,
+  e.g. `mypkg.generated.MyParser`. It must be importable (the official
+  `antlr4-python3-runtime` must be installed, since the generated module
+  subclasses it).
+- `<Grammar>` — the class-name prefix for the emitted facade
+  (`<Grammar>EventListener`).
+- `-o OUTPUT` — write to a file instead of stdout.
+
+### The emitted base class
+
+```python
+class MyGrammarEventListener:
+    ruleNames = [...]          # rule names, in rule-index order
+    START_RULE = 0             # index of the entry rule
+    # token-type constants, e.g.  STRING = 10, NUMBER = 11, ...
+
+    def enter<Rule>(self) -> None: ...      # one pair per grammar rule
+    def exit<Rule>(self) -> None: ...
+    def visitTerminal(self, token_type: int, text: str) -> None: ...
+
+    def walk(self, text, lexer_cls, parser_cls, *, filtered=True) -> None: ...
+```
+
+**Contract:**
+
+- Rule callbacks take **no arguments** — there are no node objects. Track state
+  yourself (a stack is the usual pattern; see `examples/json/to_python.py`).
+- `visitTerminal(token_type, text)` receives the integer token type (compare
+  against the generated constants) and the already-sliced token text.
+- Override only what you need. The set of overrides determines the native masks,
+  so unsubscribed rules/tokens never cross into Python.
+- `walk` builds and caches the native specs from `lexer_cls` / `parser_cls`
+  (via [`load_specs`](#load_specs)) and runs the event stream.
+- `walk(..., filtered=False)` forces the full unfiltered stream.
+
+### Optional: restrict terminal tokens further
+
+If your subclass overrides `visitTerminal` but only wants *specific* token types,
+set a class attribute `TERMINAL_TOKENS` to an iterable of token-type ints; the
+driver uses it as the token mask. Omit it to receive every terminal.
+
+## `load_specs`
+
+```python
+parser_spec, lexer_spec = antlr_pyfacade.load_specs(lexer_cls, parser_cls)
+```
+
+Builds the native `ParserSpec` / `LexerSpec` from the stock-generated
+`<Grammar>Lexer` / `<Grammar>Parser` classes by reading their `serializedATN()`,
+`literalNames`, `symbolicNames`, `ruleNames`, `channelNames`, and `modeNames`.
+Results are cached by the `(lexer_cls, parser_cls)` pair, so the ATN is
+deserialized once. The facade's `walk` calls this for you; call it directly only
+if you use the low-level `parse_events`.
+
+## `parse_events` (raw buffer)
+
+```python
+raw: bytes = antlr_pyfacade.parse_events(
+    parser_spec, lexer_spec, text, start_rule,
+    rule_mask=None, token_mask=None,
+)
+```
+
+Runs lexer + parser + masked DFS and returns the event buffer as `bytes`: a flat
+little-endian `int32` array of `4 * N` values (`N` records of
+`kind, payload, start, stop`). Decode without a numpy dependency:
+
+```python
+import struct
+for kind, payload, start, stop in struct.iter_unpack("<4i", raw):
+    if kind == 2:                    # TERMINAL
+        token_type, token_text = payload, text[start : stop + 1]
+    elif kind == 0:                  # ENTER_RULE
+        rule_index = payload
+    elif kind == 1:                  # EXIT_RULE
+        rule_index = payload
+    elif kind == 3:                  # ERROR
+        ...
+```
+
+`rule_mask` / `token_mask` are lists of indices to **keep**; `None` keeps all,
+`[]` keeps none. Indices out of range and token type 0 (EOF/unused sentinel) are
+handled safely.
+
+Kind constants: `ENTER_RULE=0`, `EXIT_RULE=1`, `TERMINAL=2`, `ERROR=3`.
+
+## Diagnostics (secondary)
+
+These are retained for benchmarking and debugging; the facade is the recommended
+path.
+
+- `parse_walk(parser_spec, lexer_spec, text, start_rule, listener)` — the classic
+  per-node path: walks the tree dispatching into a Python `ParseTreeListener`
+  subclass (`visitTerminal` / `visitErrorNode` / `enterEveryRule` /
+  `exitEveryRule`, with node arguments). This is the **slow escape hatch** — it
+  pays the per-node FFI crossing the event stream exists to avoid. Use it only
+  when you genuinely need node objects.
+- `parse_count(parser_spec, lexer_spec, text, start_rule)` — parse + walk with a
+  native counting listener (no Python crossing); returns a dict of
+  `terminals / errors / enters / exits / num_tokens`. Useful as a correctness
+  reference for event tallies.
+- `parse_stage_times(parser_spec, lexer_spec, text, start_rule)` — dict of
+  per-stage seconds (`input_decode`, `lex_fill`, `parse_tree`, `walk`) plus
+  token / event / codepoint counts, for decomposing where time goes.
+- `atn_shape(serialized)` — deserialize a serialized ATN int list and report its
+  shape (`grammar_type`, `num_states`, `num_decisions`, `num_rules`,
+  `max_token_type`).
+
+## Character index units
+
+`start` / `stop` are **codepoint** offsets into the decoded source (the C++
+runtime decodes input to UTF-32 internally), which line up exactly with Python
+`str` indexing. `text[start : stop + 1]` is therefore correct for multibyte
+UTF-8 source as long as `text` is the original `str`. (Don't slice a UTF-8
+`bytes` view by these indices.)

@@ -1,0 +1,21 @@
+# Build artifacts
+/build/
+/dist/
+*.so
+*.pyd
+*.egg-info/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editors
+.idea/
+.vscode/
+.DS_Store
+
+# Env
+.venv/
+.pixi/
+# pixi environments
+.pixi/*
+!.pixi/config.toml

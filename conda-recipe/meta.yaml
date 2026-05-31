@@ -1,0 +1,65 @@
+{% set name = "antlr-pyfacade" %}
+{% set version = "0.1.0" %}
+
+# conda-forge recipe. To submit: copy this directory to
+# conda-forge/staged-recipes under recipes/antlr-pyfacade/, fill in the real
+# sdist sha256 (from the PyPI release), and open a PR. Once merged it becomes a
+# feedstock. Builds the C++ extension from the vendored ANTLR4 runtime in the
+# sdist, so no external runtime is fetched.
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  # Prefer the PyPI sdist (carries the vendored runtime). Replace sha256 on each
+  # release.
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/antlr_pyfacade-{{ version }}.tar.gz
+  sha256: 0000000000000000000000000000000000000000000000000000000000000000
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  # cp312+ ships abi3 wheels; until then build per CPython.
+  skip: true  # [py<39]
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - {{ stdlib('c') }}
+    - cmake >=3.21
+    - ninja
+  host:
+    - python
+    - pip
+    - scikit-build-core >=0.10
+    - nanobind >=2.0
+  run:
+    - python
+
+test:
+  requires:
+    - pip
+    - antlr4-python3-runtime >=4.13
+  imports:
+    - antlr_pyfacade
+  commands:
+    - python -c "import antlr_pyfacade as a; assert a.__version__"
+    - antlr-pyfacade-gen --help
+
+about:
+  home: https://github.com/analog-cbarber/antlr-pyfacade
+  license: Apache-2.0
+  license_family: Apache
+  license_file:
+    - LICENSE
+    - vendor/antlr4-cpp/LICENSE.txt
+  summary: >-
+    Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream
+    facade over the official ANTLR4 C++ runtime, driven by stock Python3-target
+    output.
+  doc_url: https://github.com/analog-cbarber/antlr-pyfacade/tree/main/docs
+
+extra:
+  recipe-maintainers:
+    - analog-cbarber
