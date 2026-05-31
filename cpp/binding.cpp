@@ -12,10 +12,12 @@
 #include <nanobind/stl/vector.h>
 
 #include "ANTLRInputStream.h"
+#include "BaseErrorListener.h"
 #include "CommonTokenStream.h"
 #include "ParserInterpreter.h"
 #include "LexerInterpreter.h"
 #include "ParserRuleContext.h"
+#include "Recognizer.h"
 #include "RuleContext.h"
 #include "Token.h"
 #include "Vocabulary.h"
@@ -129,17 +131,58 @@ struct CountingListener : public tree::ParseTreeListener {
     void exitEveryRule(ParserRuleContext * /*ctx*/) override { exits++; }
 };
 
+// A collected parse diagnostic. `start`/`stop` are the codepoint span of the
+// offending token (matching the event-stream offsets), or -1 when there is no
+// token (e.g. a lexer error). `line` is 1-based, `column` 0-based.
+struct SyntaxError {
+    size_t line;
+    size_t column;
+    int32_t start;
+    int32_t stop;
+    std::string message;
+};
+
+// Replaces ANTLR's default ConsoleErrorListener (which writes to stderr). It
+// captures each syntaxError into a structured list the caller hands to Python,
+// so the consumer — not the library — decides how parse errors are reported.
+class CollectingErrorListener : public BaseErrorListener {
+public:
+    std::vector<SyntaxError> errors;
+
+    void syntaxError(Recognizer * /*recognizer*/, Token *offendingSymbol,
+                     size_t line, size_t charPositionInLine,
+                     const std::string &msg,
+                     std::exception_ptr /*e*/) override {
+        int32_t start = -1;
+        int32_t stop = -1;
+        if (offendingSymbol != nullptr) {
+            start = static_cast<int32_t>(offendingSymbol->getStartIndex());
+            stop = static_cast<int32_t>(offendingSymbol->getStopIndex());
+        }
+        errors.push_back({line, charPositionInLine, start, stop, msg});
+    }
+};
+
 // Run lexer + parser to a full tree. Returns the root; tree memory is owned by
-// the ParserInterpreter, so the caller must keep both alive while walking.
+// the ParserInterpreter, so the caller must keep both alive while walking. The
+// default console error listeners are removed so parsing never writes to stderr;
+// pass `err_listener` to collect diagnostics instead.
 static ParserRuleContext *run_parse(ParserSpec &pspec, LexerSpec &lspec,
                                     ANTLRInputStream &input,
                                     LexerInterpreter &lexer,
                                     CommonTokenStream &tokens,
                                     ParserInterpreter &parser,
-                                    size_t start_rule) {
+                                    size_t start_rule,
+                                    BaseErrorListener *err_listener = nullptr) {
     (void)input;
     (void)lspec;
     (void)pspec;
+    lexer.removeErrorListeners();
+    parser.removeErrorListeners();
+    if (err_listener != nullptr) {
+        lexer.addErrorListener(err_listener);
+        parser.addErrorListener(err_listener);
+    }
     tokens.fill();
     return parser.parse(start_rule);
 }
@@ -208,8 +251,9 @@ static nb::object parse_events(ParserSpec &pspec, LexerSpec &lspec,
     CommonTokenStream tokens(&lexer);
     ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
                              pspec.rule_names, *pspec.atn, &tokens);
-    ParserRuleContext *tree =
-        run_parse(pspec, lspec, input, lexer, tokens, parser, start_rule);
+    CollectingErrorListener err_listener;
+    ParserRuleContext *tree = run_parse(pspec, lspec, input, lexer, tokens,
+                                        parser, start_rule, &err_listener);
 
     size_t n_rules = pspec.atn->ruleToStartState.size();
     size_t n_toks = pspec.atn->maxTokenType + 1;
@@ -223,8 +267,9 @@ static nb::object parse_events(ParserSpec &pspec, LexerSpec &lspec,
     collect_events(tree, buf, rule_mask ? rule_keep.data() : nullptr, n_rules,
                    token_mask ? tok_keep.data() : nullptr, n_toks);
 
-    return nb::bytes(reinterpret_cast<const char *>(buf.data()),
+    nb::bytes events(reinterpret_cast<const char *>(buf.data()),
                      buf.size() * sizeof(int32_t));
+    return nb::make_tuple(std::move(events), std::move(err_listener.errors));
 }
 
 // Diagnostic: time each stage of the native pipeline separately so the parse
@@ -244,12 +289,14 @@ static nb::dict parse_stage_times(ParserSpec &pspec, LexerSpec &lspec,
     LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
                            lspec.rule_names, lspec.channel_names,
                            lspec.mode_names, *lspec.atn, &input);
+    lexer.removeErrorListeners();
     CommonTokenStream tokens(&lexer);
     tokens.fill();
     auto t2 = clk::now();
 
     ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
                              pspec.rule_names, *pspec.atn, &tokens);
+    parser.removeErrorListeners();
     ParserRuleContext *tree = parser.parse(start_rule);
     auto t3 = clk::now();
 
@@ -308,6 +355,20 @@ NB_MODULE(_native, m) {
     m.def("atn_shape", &atn_shape, nb::arg("serialized"),
           "Deserialize a serialized ATN int list and return its shape.");
 
+    nb::class_<SyntaxError>(m, "ParseError")
+        .def_ro("line", &SyntaxError::line)
+        .def_ro("column", &SyntaxError::column)
+        .def_ro("start", &SyntaxError::start)
+        .def_ro("stop", &SyntaxError::stop)
+        .def_ro("message", &SyntaxError::message)
+        .def("__repr__", [](const SyntaxError &e) {
+            return "ParseError(line=" + std::to_string(e.line) +
+                   ", column=" + std::to_string(e.column) +
+                   ", start=" + std::to_string(e.start) +
+                   ", stop=" + std::to_string(e.stop) + ", message=" +
+                   e.message + ")";
+        });
+
     nb::class_<LexerSpec>(m, "LexerSpec")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -364,9 +425,11 @@ NB_MODULE(_native, m) {
     m.def("parse_events", &parse_events, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           nb::arg("rule_mask") = nb::none(), nb::arg("token_mask") = nb::none(),
-          "Parse and return a bulk flat int32 event buffer of 4*N values "
-          "(kind, payload, start, stop). Optional rule_mask/token_mask "
-          "(lists of indices to keep) filter events natively.");
+          "Parse and return (events, errors): a bulk flat int32 event buffer of "
+          "4*N values (kind, payload, start, stop) as bytes, and a list of "
+          "SyntaxError diagnostics collected during the parse. Optional "
+          "rule_mask/token_mask (lists of indices to keep) filter events "
+          "natively. The default stderr error listener is suppressed.");
     m.def("parse_stage_times", &parse_stage_times, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           "Diagnostic: dict of per-stage seconds (input_decode, lex_fill, "

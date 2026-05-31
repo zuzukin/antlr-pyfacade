@@ -21,7 +21,7 @@ RULE_JSON = JSONParser.RULE_json
 
 def _event_tallies(text: str) -> dict[int, int]:
     pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
-    raw = ap.parse_events(pspec, lspec, text, RULE_JSON)
+    raw, _ = ap.parse_events(pspec, lspec, text, RULE_JSON)
     mv = memoryview(raw).cast("i")
     tally = {EV_ENTER: 0, EV_EXIT: 0, EV_TERMINAL: 0, EV_ERROR: 0}
     for i in range(len(mv) // 4):

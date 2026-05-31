@@ -23,9 +23,9 @@ def test_mask_keeps_only_subscribed(json_text):
     rule_mask = [RULE_OBJ]
     token_mask = [STRING]
 
-    full = _rows(ap.parse_events(pspec, lspec, json_text, RULE_JSON))
+    full = _rows(ap.parse_events(pspec, lspec, json_text, RULE_JSON)[0])
     filtered = _rows(
-        ap.parse_events(pspec, lspec, json_text, RULE_JSON, rule_mask, token_mask)
+        ap.parse_events(pspec, lspec, json_text, RULE_JSON, rule_mask, token_mask)[0]
     )
 
     expected = [
@@ -39,5 +39,5 @@ def test_mask_keeps_only_subscribed(json_text):
 
 def test_empty_mask_drops_everything(json_text):
     pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
-    raw = ap.parse_events(pspec, lspec, json_text, RULE_JSON, [], [])
+    raw, _ = ap.parse_events(pspec, lspec, json_text, RULE_JSON, [], [])
     assert _rows(raw) == []

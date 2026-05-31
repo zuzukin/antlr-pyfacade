@@ -58,6 +58,18 @@ def visitError(self, token_type, text):
 Error nodes always cross into Python even when you filter terminals, so you can
 subscribe to errors alone without receiving every token.
 
+The official runtime also installs a `ConsoleErrorListener` that prints
+`line X:Y ...` to **stderr** unless you call `removeErrorListeners()`. The facade
+does this for you: nothing is printed, and after `walk` the diagnostics are
+available as `self.syntax_errors` — a list of `ParseError` records carrying
+ANTLR's message plus `line`/`column`/`start`/`stop`:
+
+```python
+listener.walk(source_text, MyLexer, MyParser)
+for err in listener.syntax_errors:
+    print(f"{err.line}:{err.column}: {err.message}")
+```
+
 ## Identifying rules and tokens
 
 Official code often branches on `ctx.getRuleIndex()` or token types from the

@@ -41,6 +41,13 @@ class FacadeListener:
     _pyfacade_stop: int = -1
     _pyfacade_sourcemap: SourceMap | None = None
 
+    #: Parse diagnostics collected during the most recent :meth:`walk`, as a list
+    #: of native ``SyntaxError`` records (``line``, ``column``, ``start``,
+    #: ``stop``, ``message``). Empty when the parse had no errors. The default
+    #: ANTLR console error listener is suppressed, so these are the only report of
+    #: a parse failure — inspect them instead of watching stderr.
+    syntax_errors: list = []
+
     def span(self) -> tuple[int, int]:
         """``(start, stop)`` character offsets of the current event."""
         return self._pyfacade_start, self._pyfacade_stop
@@ -109,9 +116,10 @@ def drive(
     # filtered=False forces a faithful full stream regardless of overrides.
     r_mask = rule_mask if filtered else None
     t_mask = token_mask if filtered else None
-    raw = _native.parse_events(
+    raw, errors = _native.parse_events(
         parser_spec, lexer_spec, text, start_rule, r_mask, t_mask
     )
+    listener.syntax_errors = errors
 
     # Source-location state read by FacadeListener.span / .line_col. Reset the
     # cached map so a reused listener re-derives it for this text.

@@ -67,6 +67,11 @@ cmake = ">=3.21"
 ninja = "*"
 nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
+# pytest drives the correctness suite. It is a dev tool only — no end user or
+# downstream consumer needs an `antlr-pyfacade[test]` extra (the suite isn't
+# shipped in the wheel), so it lives in the dev environment, not as a published
+# optional dependency.
+pytest = ">=7"
 
 [tool.pixi.pypi-dependencies]
 # Installs the package editable; its declared runtime dependency
@@ -100,34 +105,40 @@ zensical = "*"
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-test = { features = ["test"], solve-group = "default" }
 gen = { features = ["gen"], solve-group = "default" }
 docs = { features = ["docs"], no-default-feature = true }
 
-[tool.pixi.tasks]
-# Run the JSON reconstruction example end to end.
-example = { cmd = "python to_python.py", cwd = "examples/json" }
+[tool.pixi.tasks.example]
+description = "Run the JSON reconstruction example end to end."
+cmd = "python to_python.py"
+cwd = "examples/json"
 
-# pytest drives the correctness suite. It is a dev/test tool only — no end user
-# or downstream consumer needs an `antlr-pyfacade[test]` extra (the test suite
-# isn't shipped in the wheel), so it lives in the pixi test feature rather than as
-# a published optional dependency.
-[tool.pixi.feature.test.dependencies]
-pytest = ">=7"
+[tool.pixi.tasks.test]
+description = "Run the pytest correctness suite."
+cmd = "pytest"
 
-[tool.pixi.feature.test.tasks]
-test = "pytest"
+[tool.pixi.feature.gen.tasks.gen-json]
+description = "Regenerate the example's Python parser/lexer from the grammar (ANTLR tool)."
+cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated"
+cwd = "examples/json"
+env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 
-[tool.pixi.feature.gen.tasks]
-# Regenerate the example's Python parser/lexer from the grammar (ANTLR tool).
-gen-json = { cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated", cwd = "examples/json", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
-# Regenerate the event-listener facade from the generated parser module.
-gen-facade = { cmd = "antlr-pyfacade generated.JSONParser JSON -o json_listener.py", cwd = "examples/json", env = { PYTHONPATH = "." } }
-# Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py).
-gen-pred = { cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated", cwd = "examples/predicate", env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" } }
+[tool.pixi.feature.gen.tasks.gen-facade]
+description = "Regenerate the event-listener facade from the generated parser module."
+cmd = "antlr-pyfacade generated.JSONParser JSON -o json_listener.py"
+cwd = "examples/json"
+env = { PYTHONPATH = "." }
 
-[tool.pixi.feature.docs.tasks]
-# Build the static documentation site into site/ (configured in zensical.toml).
-docs-build = "zensical build"
-# Serve the docs locally with live reload at http://localhost:8000.
-docs-serve = "zensical serve"
+[tool.pixi.feature.gen.tasks.gen-pred]
+description = "Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py)."
+cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated"
+cwd = "examples/predicate"
+env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
+
+[tool.pixi.feature.docs.tasks.docs-build]
+description = "Build the static documentation site into site/ (configured in zensical.toml)."
+cmd = "zensical build"
+
+[tool.pixi.feature.docs.tasks.docs-serve]
+description = "Serve the docs locally with live reload at http://localhost:8000."
+cmd = "zensical serve"

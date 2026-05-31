@@ -1,0 +1,60 @@
+"""Parse-error collection: the default ANTLR console error listener is replaced
+by a collecting one, so parse diagnostics surface as structured ``ParseError``
+records (on the raw ``parse_events`` tuple and as ``listener.syntax_errors``)
+instead of being written to stderr."""
+
+from __future__ import annotations
+
+import antlr_pyfacade as ap
+from generated.JSONLexer import JSONLexer
+from generated.JSONParser import JSONParser
+from json_listener import JSONEventListener
+
+RULE_JSON = JSONParser.RULE_json
+
+
+# --- raw parse_events tuple --------------------------------------------------
+
+
+def test_parse_events_returns_events_and_errors():
+    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    events, errors = ap.parse_events(pspec, lspec, "[1 2]", RULE_JSON)
+    assert isinstance(events, bytes)
+    assert len(errors) == 1
+    err = errors[0]
+    assert isinstance(err, ap.ParseError)
+    assert (err.line, err.column) == (1, 3)
+    assert (err.start, err.stop) == (3, 3)
+    assert "extraneous input '2'" in err.message
+
+
+def test_parse_events_no_errors_on_valid_input():
+    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    _events, errors = ap.parse_events(pspec, lspec, '{"a": 1}', RULE_JSON)
+    assert errors == []
+
+
+# --- facade exposure ---------------------------------------------------------
+
+
+def test_facade_collects_syntax_errors():
+    listener = JSONEventListener()
+    listener.walk("[1 2]", JSONLexer, JSONParser)
+    assert len(listener.syntax_errors) == 1
+    err = listener.syntax_errors[0]
+    assert (err.line, err.column) == (1, 3)
+    assert "extraneous input '2'" in err.message
+
+
+def test_facade_syntax_errors_empty_on_valid_input():
+    listener = JSONEventListener()
+    listener.walk('{"a": 1}', JSONLexer, JSONParser)
+    assert listener.syntax_errors == []
+
+
+def test_facade_syntax_errors_reset_between_walks():
+    listener = JSONEventListener()
+    listener.walk("[1 2]", JSONLexer, JSONParser)
+    assert listener.syntax_errors
+    listener.walk('{"a": 1}', JSONLexer, JSONParser)
+    assert listener.syntax_errors == []

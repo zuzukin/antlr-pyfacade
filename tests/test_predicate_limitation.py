@@ -29,7 +29,7 @@ ERROR_KIND = 3  # EV_ERROR in the int32 event stream
 
 def _interp_has_error(text: str) -> bool:
     parser_spec, lexer_spec = load_specs(PredLexer, PredParser)
-    raw = parse_events(parser_spec, lexer_spec, text, 0)
+    raw, _ = parse_events(parser_spec, lexer_spec, text, 0)
     return any(rec[0] == ERROR_KIND for rec in struct.iter_unpack("<4i", raw))
 
 

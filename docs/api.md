@@ -52,6 +52,9 @@ class MyGrammarEventListener(FacadeListener):
 - `walk` builds and caches the native specs from `lexer_cls` / `parser_cls`
   (via [`load_specs`](#load_specs)) and runs the event stream.
 - `walk(..., filtered=False)` forces the full unfiltered stream.
+- After `walk`, `self.syntax_errors` is the list of
+  [`ParseError`](#parseerror) diagnostics from that parse (empty if it was
+  clean); see [Collected parse errors](#collected-parse-errors).
 
 ### Source location in a callback
 
@@ -76,6 +79,27 @@ These are valid for every callback — `enter<Rule>`/`exit<Rule>` report the rul
 extent, terminals and errors report the token. The underlying
 [`SourceMap`](#sourcemap) is built once per `walk`, on first use.
 
+### Collected parse errors
+
+ANTLR's default error listener writes `line X:Y ...` to **stderr** during a
+parse. The facade replaces it with a collecting listener, so nothing is printed
+and you control reporting. After `walk`, `self.syntax_errors` holds the
+[`ParseError`](#parseerror) records produced during recovery:
+
+```python
+listener.walk(source_text, MyLexer, MyParser)
+for err in listener.syntax_errors:
+    print(f"{err.line}:{err.column}: {err.message}")
+```
+
+`syntax_errors` is reset on every `walk`, so it always reflects the latest parse.
+
+These diagnostics are distinct from the `visitError` callback: `visitError` fires
+per error *node* in the tree (giving the offending token's type and text), while
+`syntax_errors` carries ANTLR's human-readable message (`extraneous input ...`,
+`missing ... at ...`) and position for each recovery action. Use whichever fits —
+or both.
+
 ### Optional: restrict terminal tokens further
 
 If your subclass overrides `visitTerminal` but only wants *specific* token types,
@@ -95,6 +119,19 @@ Results are cached by the `(lexer_cls, parser_cls)` pair, so the ATN is
 deserialized once. The facade's `walk` calls this for you; call it directly only
 if you use the low-level `parse_events`.
 
+## `ParseError`
+
+A single parse diagnostic, collected in place of ANTLR's stderr console listener.
+Returned in the `errors` list of [`parse_events`](#parse_events-raw-buffer) and
+exposed as `self.syntax_errors` on the facade. Read-only attributes:
+
+- `line` — 1-based line of the offending token.
+- `column` — 0-based column of the offending token.
+- `start` / `stop` — codepoint span of the offending token (matching the
+  event-stream offsets), or `-1` when there is no token (e.g. a lexer error).
+- `message` — ANTLR's human-readable message (`extraneous input '2' expecting
+  ...`, `missing ',' at ...`, etc.).
+
 ## `SourceMap`
 
 ```python
@@ -112,15 +149,22 @@ negative offset raises `ValueError`.
 ## `parse_events` (raw buffer)
 
 ```python
-raw: bytes = antlr_pyfacade.parse_events(
+raw, errors = antlr_pyfacade.parse_events(
     parser_spec, lexer_spec, text, start_rule,
     rule_mask=None, token_mask=None,
 )
 ```
 
-Runs lexer + parser + masked DFS and returns the event buffer as `bytes`: a flat
-little-endian `int32` array of `4 * N` values (`N` records of
-`kind, payload, start, stop`). Decode without a numpy dependency:
+Runs lexer + parser + masked DFS and returns a `(events, errors)` tuple:
+
+- `events` is the event buffer as `bytes` — a flat little-endian `int32` array of
+  `4 * N` values (`N` records of `kind, payload, start, stop`).
+- `errors` is a list of [`ParseError`](#parseerror) diagnostics collected during
+  the parse (empty for a clean parse). The default ANTLR console error listener,
+  which writes `line X:Y ...` to **stderr**, is suppressed — these structured
+  records are how you observe a parse failure.
+
+Decode the event buffer without a numpy dependency:
 
 ```python
 import struct
