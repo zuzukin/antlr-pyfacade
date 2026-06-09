@@ -2,6 +2,13 @@
 
 Everything is exported from the top-level `antlr_pyfacade` package.
 
+> **Most users need only [the generated facade](#the-generated-facade):** subclass
+> it, override the callbacks you care about, and call `walk()`. If you're just
+> getting started, read [Getting started](getting-started.md) first — this page is
+> the complete reference. The sections after the facade (`load_specs`,
+> `SourceMap`, the raw `parse_events` buffer, and the diagnostics helpers) are for
+> power users who want lower-level access.
+
 ## The generated facade
 
 `antlr-pyfacade` reads a stock-generated ANTLR Python parser module and emits

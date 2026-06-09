@@ -87,10 +87,11 @@ Development setup, pixi environments, and the vendored-runtime workflow live in
 
 ## Documentation
 
-Full docs are in [`docs/`](docs/index.md): [how it works](docs/concepts.md),
+Full docs are in [`docs/`](docs/index.md): [getting started](docs/getting-started.md),
 [API reference](docs/api.md),
-[migrating from antlr4-python3-runtime](docs/migrating.md), and
-[performance & limitations](docs/performance.md).
+[migrating from antlr4-python3-runtime](docs/migrating.md),
+[performance & limitations](docs/performance.md), and
+[how it works](docs/concepts.md).
 
 ## License
 

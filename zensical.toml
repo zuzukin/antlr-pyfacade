@@ -16,10 +16,11 @@ Copyright &copy; 2026 Christopher Barber
 
 nav = [
   { "Overview" = "index.md" },
-  { "How it works" = "concepts.md" },
+  { "Getting started" = "getting-started.md" },
   { "API reference" = "api.md" },
   { "Migrating" = "migrating.md" },
   { "Performance & limitations" = "performance.md" },
+  { "How it works" = "concepts.md" },
 ]
 
 [project.theme]
