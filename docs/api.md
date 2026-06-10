@@ -41,7 +41,12 @@ class MyGrammarEventListener(FacadeListener):
     def visitTerminal(self, token_type: int, text: str) -> None: ...
     def visitError(self, token_type: int, text: str) -> None: ...
 
-    def walk(self, text, lexer_cls, parser_cls, *, filtered=True) -> None: ...
+    def walk(self, text, lexer_cls, parser_cls, *,
+             start_rule=None, filtered=True): ...          # returns self
+    @classmethod
+    def walk_parallel(cls, chunks, lexer_cls, parser_cls, *,
+                      start_rule=None, max_workers=None,
+                      filtered=True, factory=None) -> list: ...
 ```
 
 **Contract:**
@@ -57,8 +62,14 @@ class MyGrammarEventListener(FacadeListener):
 - Override only what you need. The set of overrides determines the native masks,
   so unsubscribed rules/tokens never cross into Python.
 - `walk` builds and caches the native specs from `lexer_cls` / `parser_cls`
-  (via [`load_specs`](#load_specs)) and runs the event stream.
+  (via [`load_specs`](#load_specs)) and runs the event stream. It returns `self`,
+  so `result = MyListener().walk(text, L, P).result` works.
 - `walk(..., filtered=False)` forces the full unfiltered stream.
+- `start_rule` (on both `walk` and `walk_parallel`) chooses which grammar rule to
+  parse as — a rule **name** (`"subckt"`), a rule **index**, or `None` for the
+  grammar's start rule. Use it to parse a chunk that is one sub-rule rather than a
+  whole document. See [`walk_parallel`](#walk_parallel) for parsing many such
+  chunks concurrently.
 - After `walk`, `self.syntax_errors` is the list of
   [`ParseError`](#parseerror) diagnostics from that parse (empty if it was
   clean); see [Collected parse errors](#collected-parse-errors).
@@ -113,6 +124,44 @@ If your subclass overrides `visitTerminal` but only wants *specific* token types
 set a class attribute `TERMINAL_TOKENS` to an iterable of token-type ints; the
 driver uses it as the token mask. Omit it to receive every terminal.
 
+## `walk_parallel`
+
+```python
+listeners = MyListener.walk_parallel(
+    chunks, lexer_cls, parser_cls, *,
+    start_rule=None, max_workers=None, filtered=True, factory=None,
+)
+```
+
+Parse independent `chunks` across a thread pool and return **one listener per
+chunk, in input order**. Each chunk is a self-contained piece of source (e.g. one
+subcircuit of a netlist) that parses as `start_rule`. A fresh listener is created
+per chunk — `cls()` by default, or `factory()` if given — walked over its chunk,
+and returned with whatever state it accumulated plus its `syntax_errors`.
+
+- The native parse releases the GIL, so the parses overlap across cores. Each
+  worker thread uses its own specs internally, so concurrent parses never contend.
+- `start_rule` — rule name, rule index, or `None` for the grammar's start rule.
+- `max_workers` — defaults to `os.cpu_count()`, capped at the chunk count. With
+  one worker or one chunk it runs inline (no pool), which keeps small inputs cheap.
+- `factory` — a zero-arg callable returning a fresh listener, for subclasses whose
+  constructor needs arguments. Defaults to the class itself.
+- Parallel speedup is bounded by how parse-heavy the work is versus per-callback
+  Python (the dispatch loop holds the GIL). See
+  [Parallel parsing](performance.md#parallel-parsing) for measured numbers and the
+  reasoning.
+
+```python
+# Split a netlist into per-subcircuit text, parse them concurrently:
+chunks = split_into_subcircuits(text)            # your fast splitter
+cells = [
+    ln.to_model()
+    for ln in CellListener.walk_parallel(
+        chunks, NetlistLexer, NetlistParser, start_rule="subckt"
+    )
+]
+```
+
 ## `load_specs`
 
 ```python
@@ -126,25 +175,13 @@ Results are cached by the `(lexer_cls, parser_cls)` pair, so the ATN is
 deserialized once. The facade's `walk` calls this for you; call it directly only
 if you use the low-level `parse_events`.
 
-**Threading.** A spec owns a mutable ATN, so for *parallel* parsing give each
-thread its own spec instead of sharing one cached result — pass `cached=False`
-(neither read from nor written to the cache) so each worker gets an independent
-spec. Sharing one is thread-safe but contends and won't scale; see
-[Threading](performance.md#other-notes). The simplest pattern is a
-`threading.local` that builds a spec the first time each worker thread parses:
-
-```python
-import threading
-_local = threading.local()
-
-def parser_for_this_thread():
-    specs = getattr(_local, "specs", None)
-    if specs is None:
-        specs = _local.specs = antlr_pyfacade.load_specs(
-            MyLexer, MyParser, cached=False
-        )
-    return specs
-```
+**Threading.** For parallel parsing, prefer [`walk_parallel`](#walk_parallel),
+which manages specs for you. If you drive `parse_events` directly across threads:
+the vendored runtime's per-DFA locks mean a shared, cached spec is now both
+thread-safe **and** scales (see [Parallel parsing](performance.md#parallel-parsing)).
+`cached=False` is still available to force an independent spec per thread (neither
+read from nor written to the cache) if you want to avoid any sharing — e.g. a
+`threading.local` that builds one the first time each worker parses.
 
 ## `ParseError`
 

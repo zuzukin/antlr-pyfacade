@@ -73,14 +73,52 @@ are unaffected.
 - **Single streaming pass.** You get one ordered traversal, not a retained tree.
   If you need random access, re-walking, XPath, or rewriting, keep the parse
   tree from the official runtime.
-- **Threading.** The native parse **releases the GIL**, so other Python threads
-  keep running during a parse and `asyncio.to_thread(listener.walk, ...)` won't
-  block the event loop. For parallel *throughput*, give **each thread its own
-  specs** — call [`load_specs(..., cached=False)`](api.md#load_specs) per worker
-  thread rather than sharing one result. A spec owns the deserialized ATN, whose
-  parser-prediction state is shared mutable data; concurrent parses that share
-  one spec are correct but contend on it and do **not** scale (the bundled
-  lock-free patch covers only the lexer's DFA edge reads, not the parser
-  prediction path). With independent specs, parses run in parallel across cores —
-  measured ~2× on 4 threads for a parse-bound workload, memory-bandwidth limited
-  beyond that.
+- **GIL.** The native parse **releases the GIL**, so other Python threads keep
+  running during a parse and `asyncio.to_thread(listener.walk, ...)` won't block
+  the event loop.
+
+## Parallel parsing
+
+When your input is a sequence of **independent pieces** — the cells/subcircuits of
+a netlist, the records of a log, the top-level definitions of a source file — you
+can parse them concurrently across CPU cores. Split the text into chunks (a cheap
+string/regex pass is usually enough) and hand them to
+[`walk_parallel`](api.md#walk_parallel):
+
+```python
+chunks = split_into_subcircuits(netlist_text)   # your fast splitter -> list[str]
+listeners = CellListener.walk_parallel(
+    chunks, NetlistLexer, NetlistParser, start_rule="subckt"
+)
+cells = [ln.to_model() for ln in listeners]      # one result per chunk, in order
+```
+
+Each chunk parses on a worker thread with the GIL released, so the parses overlap.
+Worker threads use independent specs internally, so they never contend on a shared
+ATN.
+
+**How much speedup?** It depends on how much of your per-chunk work is the native
+parse versus Python in your callbacks — the parse parallelizes, but the per-event
+Python dispatch still holds the GIL (Amdahl's law). Measured on an 18-core M5 Max,
+hundreds of small chunks:
+
+- **Parse-bound** work (light callbacks — counting, validation): **~3×** and
+  climbing with cores.
+- **Callback-heavy** work (rebuilding a rich object per node): **~2×**, plateauing
+  early because the Python dispatch serializes.
+
+To push callback-heavy workloads further you currently need a **free-threaded
+(no-GIL) CPython** build, where the dispatch parallelizes too — `walk_parallel`
+benefits automatically with no code change. Process-based parallelism is the other
+option, at the cost of pickling results back.
+
+Two implementation notes, both bundled here:
+
+- **Per-DFA locks.** A spec owns a mutable ATN. Concurrent parses sharing one spec
+  *used* to serialize on a single per-ATN lock guarding DFA construction — slower
+  than serial. The vendored runtime moves those write locks onto each DFA (see
+  `vendor/antlr4-cpp/UPDATING.md`, Patch 2), so a shared spec now scales like
+  independent ones; edge reads were already lock-free.
+- **Cold DFA per parse.** Each parse builds its own prediction DFA from scratch, so
+  very small chunks spend proportionally more time warming up. Larger chunks
+  amortize this away — real subcircuits are big enough that it's negligible.

@@ -29,11 +29,12 @@ def load_specs(
     module-level ``serializedATN()`` alongside each class, so we resolve it via
     the class's module. Results are cached by the class pair.
 
-    A spec owns a mutable ATN. Sharing one across threads is correct but the
-    parses contend on it and do not scale, so for *parallel* parsing pass
-    ``cached=False`` to get a fresh, independent spec per thread (the usual
-    pattern is one fresh spec per worker via ``threading.local``). With
-    ``cached=False`` the result is neither read from nor written to the cache.
+    A spec owns a mutable ATN. With the vendored runtime's per-DFA locks, sharing
+    one spec across threads is both correct and scales, so most parallel code can
+    just share a cached spec (or use :meth:`FacadeListener.walk_parallel`). Pass
+    ``cached=False`` to force a fresh, independent spec — neither read from nor
+    written to the cache — when you want to avoid sharing entirely (e.g. one spec
+    per worker via ``threading.local``).
     """
     key = (lexer_cls, parser_cls)
     if cached:

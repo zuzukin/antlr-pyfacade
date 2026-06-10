@@ -133,6 +133,9 @@ parse.
 
 - [Migrating from antlr4-python3-runtime](migrating.md) — if you already have a
   `ParseTreeListener`, this maps each piece onto the facade.
+- [Parallel parsing](performance.md#parallel-parsing) — if your input is many
+  independent pieces (records, definitions, netlist subcircuits), parse them
+  concurrently with [`walk_parallel`](api.md#walk_parallel).
 - [API reference](api.md) — every callback, `walk` option, source-position
   helpers, and the raw event buffer for power users.
 - [How it works](concepts.md) — optional background on why batching the events

@@ -81,10 +81,13 @@ def generate(parser_qualname: str, grammar: str) -> str:
     w("        pass")
     w("")
     w("    def walk(self, text: str, lexer_cls, parser_cls, *, "
-      "filtered: bool = True) -> None:")
+      "start_rule=None, filtered: bool = True):")
     w("        parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls)")
+    w(f"        rule = self._resolve_start_rule({grammar}EventListener, "
+      "start_rule)")
     w(f"        drive(self, {grammar}EventListener, parser_spec, lexer_spec,")
-    w("              text, self.START_RULE, filtered=filtered)")
+    w("              text, rule, filtered=filtered)")
+    w("        return self")
     w("")
     return "\n".join(out)
 

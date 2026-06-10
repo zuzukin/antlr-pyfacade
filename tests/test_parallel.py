@@ -1,0 +1,109 @@
+"""``walk_parallel`` parses independent chunks across a thread pool, one listener
+per chunk, in input order — the building block for parsing many independent
+pieces (e.g. the subcircuits of a netlist) concurrently.
+
+These check correctness and ordering; the GIL-release parallelism itself is
+covered by ``test_threading.py``.
+"""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from generated.JSONLexer import JSONLexer
+from generated.JSONParser import JSONParser
+from to_python import JsonValueBuilder
+
+# A spread of independent JSON values, each parsed as the `value` sub-rule.
+_CHUNKS = [
+    '{"id": 1, "tags": ["a", "b"], "ok": true}',
+    '{"id": 2, "nested": {"x": [1, 2, 3]}}',
+    "[1, 2.5, -3, null, false]",
+    '"a lone string"',
+    "42",
+    "{}",
+    "[]",
+    '{"unicode": "café 😀", "n": 7}',
+]
+_EXPECTED = [json.loads(c) for c in _CHUNKS]
+
+
+def _serial(chunks, **kw):
+    return [
+        JsonValueBuilder().walk(c, JSONLexer, JSONParser, start_rule="value").result
+        for c in chunks
+    ]
+
+
+def test_results_match_and_preserve_order():
+    listeners = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value"
+    )
+    assert [ln.result for ln in listeners] == _EXPECTED
+
+
+def test_parallel_matches_serial():
+    listeners = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value"
+    )
+    assert [ln.result for ln in listeners] == _serial(_CHUNKS)
+
+
+def test_start_rule_name_and_index_agree():
+    value_idx = list(JsonValueBuilder.ruleNames).index("value")
+    by_name = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value"
+    )
+    by_index = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule=value_idx
+    )
+    assert [ln.result for ln in by_name] == [ln.result for ln in by_index]
+
+
+def test_single_worker_inline_path_matches_pool():
+    pooled = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value", max_workers=4
+    )
+    inline = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value", max_workers=1
+    )
+    assert [ln.result for ln in pooled] == [ln.result for ln in inline]
+
+
+def test_empty_chunks():
+    assert JsonValueBuilder.walk_parallel([], JSONLexer, JSONParser) == []
+
+
+def test_factory_is_used_per_chunk():
+    seen = []
+
+    def factory():
+        builder = JsonValueBuilder()
+        seen.append(builder)
+        return builder
+
+    listeners = JsonValueBuilder.walk_parallel(
+        _CHUNKS, JSONLexer, JSONParser, start_rule="value", factory=factory
+    )
+    # One fresh listener per chunk, and the returned ones are exactly those made.
+    assert len(seen) == len(_CHUNKS)
+    assert set(map(id, seen)) == set(map(id, listeners))
+
+
+def test_unknown_start_rule_raises():
+    with pytest.raises(ValueError, match="unknown start rule"):
+        JsonValueBuilder.walk_parallel(
+            _CHUNKS, JSONLexer, JSONParser, start_rule="nonesuch"
+        )
+
+
+def test_syntax_errors_collected_per_chunk():
+    chunks = ['{"good": 1}', "{bad", '{"also_good": 2}']
+    listeners = JsonValueBuilder.walk_parallel(
+        chunks, JSONLexer, JSONParser, start_rule="value"
+    )
+    assert not listeners[0].syntax_errors
+    assert listeners[1].syntax_errors  # malformed chunk reports its own errors
+    assert not listeners[2].syntax_errors

@@ -13,17 +13,39 @@ Python (the unsubscribed rest are dropped C++-side before the buffer is built).
 
 from __future__ import annotations
 
+import os
 import struct
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING
 
 from . import _native
 from .location import SourceMap
+from .specs import load_specs
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 _REC = "<4i"
+
+# Per-thread spec cache for parallel parsing. Each worker thread builds its own
+# (parser_spec, lexer_spec) once per grammar with cached=False. With the vendored
+# runtime's per-DFA locks a shared spec scales too, but a per-thread spec is the
+# simple, robust default — independent of that patch and with no shared mutable
+# state at all (see docs/performance.md "Parallel parsing").
+_thread_specs = threading.local()
+
+
+def _specs_for_thread(lexer_cls, parser_cls):
+    cache = getattr(_thread_specs, "cache", None)
+    if cache is None:
+        cache = _thread_specs.cache = {}
+    key = (lexer_cls, parser_cls)
+    specs = cache.get(key)
+    if specs is None:
+        specs = cache[key] = load_specs(lexer_cls, parser_cls, cached=False)
+    return specs
 
 
 class FacadeListener:
@@ -65,6 +87,89 @@ class FacadeListener:
         if sm is None:
             sm = self._pyfacade_sourcemap = SourceMap(self._pyfacade_text)
         return sm.line_col(start)
+
+    @classmethod
+    def _facade_base(cls) -> type:
+        """The generated ``<Grammar>EventListener`` in this class's ancestry.
+
+        That base (the class that directly subclasses ``FacadeListener``) holds
+        the no-op callback stubs ``drive`` compares against to detect overrides,
+        plus ``ruleNames`` / ``START_RULE``. Works whether ``cls`` is the
+        generated class itself or a user subclass of it.
+        """
+        for klass in cls.__mro__:
+            if FacadeListener in klass.__bases__:
+                return klass
+        raise TypeError(
+            f"{cls.__name__} is not a generated facade listener subclass"
+        )
+
+    @classmethod
+    def _resolve_start_rule(cls, base: type, start_rule) -> int:
+        """Turn a rule name / index / None into a rule index for ``base``."""
+        if start_rule is None:
+            return base.START_RULE
+        if isinstance(start_rule, int):
+            return start_rule
+        try:
+            return list(base.ruleNames).index(start_rule)
+        except ValueError:
+            raise ValueError(
+                f"unknown start rule {start_rule!r}; "
+                f"known rules: {list(base.ruleNames)}"
+            ) from None
+
+    @classmethod
+    def walk_parallel(
+        cls,
+        chunks: Iterable[str],
+        lexer_cls,
+        parser_cls,
+        *,
+        start_rule=None,
+        max_workers: int | None = None,
+        filtered: bool = True,
+        factory: Callable[[], "FacadeListener"] | None = None,
+    ) -> list:
+        """Parse independent ``chunks`` across a thread pool; one listener each.
+
+        Each chunk is a self-contained piece of source (e.g. one subcircuit of a
+        netlist) that parses as ``start_rule`` (a rule name, rule index, or
+        ``None`` for the grammar's start rule). A fresh listener — ``cls()`` by
+        default, or ``factory()`` — is created per chunk and walked over it; the
+        list of listeners is returned **in input order**, each carrying whatever
+        state it accumulated plus its ``syntax_errors``.
+
+        The native parse releases the GIL, so the parses overlap across cores.
+        Each worker thread uses its own specs (built once via ``cached=False``),
+        so they never contend on a shared ATN. The per-event Python dispatch
+        still holds the GIL, so parallel speedup scales with how parse-heavy the
+        work is relative to per-callback Python work — see
+        ``docs/performance.md`` ("Parallel parsing").
+
+        ``max_workers`` defaults to ``os.cpu_count()`` (capped at the chunk
+        count). With one worker or one chunk it runs inline, no pool.
+        """
+        base = cls._facade_base()
+        rule = cls._resolve_start_rule(base, start_rule)
+        make = factory if factory is not None else cls
+        chunk_list = list(chunks)
+
+        def run(text: str):
+            parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
+            listener = make()
+            drive(
+                listener, base, parser_spec, lexer_spec, text, rule,
+                filtered=filtered,
+            )
+            return listener
+
+        if max_workers is None:
+            max_workers = min(len(chunk_list), os.cpu_count() or 1)
+        if max_workers <= 1 or len(chunk_list) <= 1:
+            return [run(text) for text in chunk_list]
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            return list(pool.map(run, chunk_list))
 
 
 def drive(
