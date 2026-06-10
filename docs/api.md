@@ -126,6 +126,26 @@ Results are cached by the `(lexer_cls, parser_cls)` pair, so the ATN is
 deserialized once. The facade's `walk` calls this for you; call it directly only
 if you use the low-level `parse_events`.
 
+**Threading.** A spec owns a mutable ATN, so for *parallel* parsing give each
+thread its own spec instead of sharing one cached result — pass `cached=False`
+(neither read from nor written to the cache) so each worker gets an independent
+spec. Sharing one is thread-safe but contends and won't scale; see
+[Threading](performance.md#other-notes). The simplest pattern is a
+`threading.local` that builds a spec the first time each worker thread parses:
+
+```python
+import threading
+_local = threading.local()
+
+def parser_for_this_thread():
+    specs = getattr(_local, "specs", None)
+    if specs is None:
+        specs = _local.specs = antlr_pyfacade.load_specs(
+            MyLexer, MyParser, cached=False
+        )
+    return specs
+```
+
 ## `ParseError`
 
 A single parse diagnostic, collected in place of ANTLR's stderr console listener.

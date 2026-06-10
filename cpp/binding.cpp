@@ -190,25 +190,33 @@ static ParserRuleContext *run_parse(ParserSpec &pspec, LexerSpec &lspec,
 // Diagnostic: pure native cost — parse + walk with a C++ listener.
 static nb::dict parse_count(ParserSpec &pspec, LexerSpec &lspec,
                             const std::string &text, size_t start_rule) {
-    ANTLRInputStream input(text);
-    LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
-                           lspec.rule_names, lspec.channel_names,
-                           lspec.mode_names, *lspec.atn, &input);
-    CommonTokenStream tokens(&lexer);
-    ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
-                             pspec.rule_names, *pspec.atn, &tokens);
-    ParserRuleContext *tree =
-        run_parse(pspec, lspec, input, lexer, tokens, parser, start_rule);
-
     CountingListener listener;
-    tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
+    size_t num_tokens;
+    {
+        // Pure native: the counting listener never crosses into Python, so the
+        // whole parse + walk runs without the GIL.
+        nb::gil_scoped_release release;
+
+        ANTLRInputStream input(text);
+        LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
+                               lspec.rule_names, lspec.channel_names,
+                               lspec.mode_names, *lspec.atn, &input);
+        CommonTokenStream tokens(&lexer);
+        ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
+                                 pspec.rule_names, *pspec.atn, &tokens);
+        ParserRuleContext *tree =
+            run_parse(pspec, lspec, input, lexer, tokens, parser, start_rule);
+
+        tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
+        num_tokens = tokens.size();
+    }
 
     nb::dict d;
     d["terminals"] = listener.terminals;
     d["errors"] = listener.errors;
     d["enters"] = listener.enters;
     d["exits"] = listener.exits;
-    d["num_tokens"] = tokens.size();
+    d["num_tokens"] = num_tokens;
     return d;
 }
 
@@ -224,8 +232,14 @@ static void parse_walk(ParserSpec &pspec, LexerSpec &lspec,
     CommonTokenStream tokens(&lexer);
     ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
                              pspec.rule_names, *pspec.atn, &tokens);
-    ParserRuleContext *tree =
-        run_parse(pspec, lspec, input, lexer, tokens, parser, start_rule);
+    ParserRuleContext *tree;
+    {
+        // Release the GIL for the native parse; the walk below re-acquires it
+        // because it dispatches into the Python ParseTreeListener per node.
+        // (input/lexer/tokens/parser stay alive in this scope for the walk.)
+        nb::gil_scoped_release release;
+        tree = run_parse(pspec, lspec, input, lexer, tokens, parser, start_rule);
+    }
     tree::ParseTreeWalker::DEFAULT.walk(listener, tree);
 }
 
@@ -244,28 +258,35 @@ static nb::object parse_events(ParserSpec &pspec, LexerSpec &lspec,
                                const std::string &text, size_t start_rule,
                                std::optional<std::vector<int32_t>> rule_mask,
                                std::optional<std::vector<int32_t>> token_mask) {
-    ANTLRInputStream input(text);
-    LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
-                           lspec.rule_names, lspec.channel_names,
-                           lspec.mode_names, *lspec.atn, &input);
-    CommonTokenStream tokens(&lexer);
-    ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
-                             pspec.rule_names, *pspec.atn, &tokens);
-    CollectingErrorListener err_listener;
-    ParserRuleContext *tree = run_parse(pspec, lspec, input, lexer, tokens,
-                                        parser, start_rule, &err_listener);
-
-    size_t n_rules = pspec.atn->ruleToStartState.size();
-    size_t n_toks = pspec.atn->maxTokenType + 1;
-    std::vector<char> rule_keep =
-        rule_mask ? make_mask(rule_mask, n_rules) : std::vector<char>();
-    std::vector<char> tok_keep =
-        token_mask ? make_mask(token_mask, n_toks) : std::vector<char>();
-
     std::vector<int32_t> buf;
-    buf.reserve(1u << 20);
-    collect_events(tree, buf, rule_mask ? rule_keep.data() : nullptr, n_rules,
-                   token_mask ? tok_keep.data() : nullptr, n_toks);
+    CollectingErrorListener err_listener;
+    {
+        // Everything in this block is pure C++ (nanobind converted the
+        // arguments before entry), so release the GIL: other Python threads
+        // keep running, and N threads can parse N documents in parallel.
+        nb::gil_scoped_release release;
+
+        ANTLRInputStream input(text);
+        LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
+                               lspec.rule_names, lspec.channel_names,
+                               lspec.mode_names, *lspec.atn, &input);
+        CommonTokenStream tokens(&lexer);
+        ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
+                                 pspec.rule_names, *pspec.atn, &tokens);
+        ParserRuleContext *tree = run_parse(pspec, lspec, input, lexer, tokens,
+                                            parser, start_rule, &err_listener);
+
+        size_t n_rules = pspec.atn->ruleToStartState.size();
+        size_t n_toks = pspec.atn->maxTokenType + 1;
+        std::vector<char> rule_keep =
+            rule_mask ? make_mask(rule_mask, n_rules) : std::vector<char>();
+        std::vector<char> tok_keep =
+            token_mask ? make_mask(token_mask, n_toks) : std::vector<char>();
+
+        buf.reserve(1u << 20);
+        collect_events(tree, buf, rule_mask ? rule_keep.data() : nullptr,
+                       n_rules, token_mask ? tok_keep.data() : nullptr, n_toks);
+    }
 
     nb::bytes events(reinterpret_cast<const char *>(buf.data()),
                      buf.size() * sizeof(int32_t));

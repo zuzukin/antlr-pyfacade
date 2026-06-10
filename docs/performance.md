@@ -73,6 +73,14 @@ are unaffected.
 - **Single streaming pass.** You get one ordered traversal, not a retained tree.
   If you need random access, re-walking, XPath, or rewriting, keep the parse
   tree from the official runtime.
-- **Threading.** The bundled lock-free read path makes concurrent parses on
-  separate threads safe and contention-free at the DFA edge table; each parse
-  still uses its own interpreter/stream instances.
+- **Threading.** The native parse **releases the GIL**, so other Python threads
+  keep running during a parse and `asyncio.to_thread(listener.walk, ...)` won't
+  block the event loop. For parallel *throughput*, give **each thread its own
+  specs** — call [`load_specs(..., cached=False)`](api.md#load_specs) per worker
+  thread rather than sharing one result. A spec owns the deserialized ATN, whose
+  parser-prediction state is shared mutable data; concurrent parses that share
+  one spec are correct but contend on it and do **not** scale (the bundled
+  lock-free patch covers only the lexer's DFA edge reads, not the parser
+  prediction path). With independent specs, parses run in parallel across cores —
+  measured ~2× on 4 threads for a parse-bound workload, memory-bandwidth limited
+  beyond that.

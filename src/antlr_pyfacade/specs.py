@@ -20,7 +20,7 @@ _CACHE: dict[tuple[type, type], tuple[_native.ParserSpec, _native.LexerSpec]] = 
 
 
 def load_specs(
-    lexer_cls: type, parser_cls: type
+    lexer_cls: type, parser_cls: type, *, cached: bool = True
 ) -> tuple[_native.ParserSpec, _native.LexerSpec]:
     """Return ``(parser_spec, lexer_spec)`` for a generated lexer/parser pair.
 
@@ -28,11 +28,18 @@ def load_specs(
     ``<Grammar>Lexer`` / ``<Grammar>Parser`` classes. The Python3 target emits a
     module-level ``serializedATN()`` alongside each class, so we resolve it via
     the class's module. Results are cached by the class pair.
+
+    A spec owns a mutable ATN. Sharing one across threads is correct but the
+    parses contend on it and do not scale, so for *parallel* parsing pass
+    ``cached=False`` to get a fresh, independent spec per thread (the usual
+    pattern is one fresh spec per worker via ``threading.local``). With
+    ``cached=False`` the result is neither read from nor written to the cache.
     """
     key = (lexer_cls, parser_cls)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
+    if cached:
+        hit = _CACHE.get(key)
+        if hit is not None:
+            return hit
 
     lexer_mod = sys.modules[lexer_cls.__module__]
     parser_mod = sys.modules[parser_cls.__module__]
@@ -56,5 +63,6 @@ def load_specs(
     )
 
     specs = (parser_spec, lexer_spec)
-    _CACHE[key] = specs
+    if cached:
+        _CACHE[key] = specs
     return specs
