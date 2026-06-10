@@ -23,6 +23,7 @@ the GIL was released.
 
 from __future__ import annotations
 
+import json
 import os
 import threading
 import time
@@ -120,3 +121,45 @@ def test_native_parse_parallelizes_with_independent_specs():
         f"native parse did not run in parallel: speedup={speedup:.2f}x "
         f"(serial={serial_s * 1e3:.0f}ms, threaded={threaded_s * 1e3:.0f}ms)"
     )
+
+
+# Varied inputs so concurrent parses build their (cold, per-instance) DFAs along
+# different paths — the scenario the per-DFA write locks must keep race-free.
+_STRESS_DOCS = [
+    '{"a": 1, "b": [2, 3, {"c": null}], "d": true}',
+    "[1, 2.5, -3, 4e10, [[[]]], {}]",
+    '{"deeply": {"nested": {"x": [1, [2, [3, [4]]]]}}}',
+    '{"u": "café 😀 日本語", "list": ["x", "y", "z"], "n": -0.5}',
+    "[]",
+    '{"k": "v"}',
+    '[{"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]',
+    "false",
+]
+_STRESS_EXPECTED = [json.loads(d) for d in _STRESS_DOCS]
+
+
+@pytest.mark.skipif(
+    (os.cpu_count() or 1) < 2, reason="needs >= 2 cores to race"
+)
+def test_shared_spec_concurrency_stress():
+    """Many threads parsing varied inputs through ONE shared spec must stay
+    correct, exercising concurrent cold-DFA construction over a shared ATN.
+
+    The per-DFA write locks (and the lock-free getEdge reads + atomic nextTokens
+    cache on the shared ATN) must produce results identical to a serial parse
+    every time. A data race would surface as a wrong/garbled rebuild or a crash.
+    """
+    # One shared, cached spec for all threads — the contended path.
+    load_specs(JSONLexer, JSONParser)
+    threads = max(8, (os.cpu_count() or 2))
+    iterations = 40
+    tasks = [i % len(_STRESS_DOCS) for _ in range(iterations) for i in range(len(_STRESS_DOCS))]
+
+    def run(doc_index: int):
+        builder = JsonValueBuilder()
+        builder.walk(_STRESS_DOCS[doc_index], JSONLexer, JSONParser)
+        return doc_index, builder.result
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for doc_index, result in pool.map(run, tasks):
+            assert result == _STRESS_EXPECTED[doc_index]

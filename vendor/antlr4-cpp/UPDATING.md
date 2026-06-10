@@ -11,12 +11,31 @@ no external checkout.
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
 - **Snapshot commit:** `8d3a921f2` (fork `analog-cbarber/antlr4`, branch
   `cpp-lockfree-dfa-edges`)
-- **Patch applied on top:** the lock-free DFA-edge change (PR1,
-  `cpp-lockfree-dfa-edges`). `DFAState::edges` is a lazily-allocated array of
-  `std::atomic<DFAState*>` with lock-free `getEdge`, replacing the
-  `FlatHashMap` guarded by `ATN::_edgeMutex`. This is the per-character read-path
-  speedup; once it lands upstream the snapshot can be refreshed without carrying
-  the patch.
+- **Patch 1 (PR1) — lock-free DFA-edge reads.** `DFAState::edges` is a
+  lazily-allocated array of `std::atomic<DFAState*>` with lock-free `getEdge`,
+  replacing the `FlatHashMap` guarded by a mutex. This is the per-character
+  read-path speedup; once it lands upstream the snapshot can be refreshed without
+  carrying the patch.
+- **Patch 2 (local) — per-DFA write locks.** The DFA state/edge write locks were
+  moved off the ATN (`ATN::_stateMutex` / `ATN::_edgeMutex`, now removed) and onto
+  the DFA itself (`dfa::DFA::stateMutex()` / `edgeMutex()`, heap-allocated so DFA
+  stays movable). `ATN::_mutex` remains for the lazy `nextTokens` cache. The
+  lexer/parser simulators (`LexerATNSimulator`, `ParserATNSimulator`) now lock the
+  owning DFA's mutex instead of the ATN's.
+
+  Rationale: a `ParserInterpreter`/`LexerInterpreter` keeps its **own**
+  `decisionToDFA`, but the write locks lived on the **shared** ATN, so concurrent
+  parses that share one spec serialized on a single per-ATN lock even though their
+  DFAs were independent — measured *slower than serial* (~0.6x on 4 threads).
+  After this patch, independent DFAs use independent locks (shared-spec parsing
+  scales ~2x on 4 threads, matching per-thread specs); a DFA shared across threads
+  (generated recognizers' static `decisionToDFA`) still serializes its own
+  writers, now at per-decision rather than per-ATN granularity. Edge *reads* stay
+  lock-free (Patch 1). Touched files: `dfa/DFA.h`, `atn/ATN.h`,
+  `atn/ParserATNSimulator.cpp`, `atn/LexerATNSimulator.cpp`, plus contract
+  comments in `dfa/DFAState.{h,cpp}` and `dfa/DFA.cpp`. Recommended before
+  upstreaming: a ThreadSanitizer build over the concurrency stress test
+  (`tests/test_threading.py::test_shared_spec_concurrency_stress`).
 - `LICENSE.txt` is the ANTLR project BSD-3-Clause license, carried alongside the
   sources.
 
@@ -31,4 +50,7 @@ no external checkout.
 2. If PR1 has **not** yet merged upstream, re-apply the lock-free DFA-edge patch
    (or copy from the `cpp-lockfree-dfa-edges` branch instead of `dev`). Once PR1
    is released upstream, drop this step and update the commit reference above.
-3. Rebuild and run `pytest` to confirm parity.
+3. Re-apply Patch 2 (per-DFA write locks) unless it, too, has landed upstream:
+   move `_stateMutex`/`_edgeMutex` from `atn/ATN.h` onto `dfa::DFA` and repoint the
+   simulator lock sites (see "Patch 2" above for the exact files).
+4. Rebuild and run `pytest` to confirm parity.
