@@ -1,17 +1,30 @@
-"""Generate a grammar-specific event-listener facade from stock ANTLR Python
-parser metadata.
+# Copyright 2026 Christopher Barber
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Reads ``ruleNames`` + token name lists from an already-generated ANTLR Python
-parser module (no annotated grammar, no extra inputs) and emits a
-``<Grammar>EventListener`` base class: named ``enter<Rule>`` / ``exit<Rule>``
-no-op stubs, ``visitTerminal`` / ``visitError`` stubs, token-type constants, and
-a ``walk`` method that runs the bulk native event stream. The base subclasses
-``FacadeListener``, so callbacks can call ``self.line_col()`` for the current
-event's source position.
+"""Generate a grammar-specific event-listener facade from ANTLR parser metadata.
 
-The generated surface mirrors the stock ANTLR listener so consumers write the
-same code; the difference is that callbacks are driven by a flat event buffer
-rather than a Python parse-tree walk. Usage (console script or module):
+Reads `ruleNames` + token name lists from an already-generated ANTLR Python parser
+module (no annotated grammar, no extra inputs) and emits a `<Grammar>EventListener`
+base class: named `enter<Rule>` / `exit<Rule>` no-op stubs, `visitTerminal` /
+`visitError` stubs, token-type constants, and a `walk` method that runs the bulk
+native event stream. The base subclasses
+[`FacadeListener`][antlr_pyfacade.FacadeListener], so callbacks can call
+`self.line_col()` for the current event's source position.
+
+The generated surface mirrors the stock ANTLR listener so consumers write the same
+code; the difference is that callbacks are driven by a flat event buffer rather
+than a Python parse-tree walk. Usage (console script or module):
 
     antlr-pyfacade mypkg.generated.MyParser My -o my_listener.py
 """
@@ -80,8 +93,9 @@ def generate(parser_qualname: str, grammar: str) -> str:
     w("    def visitError(self, token_type: int, text: str) -> None:")
     w("        pass")
     w("")
-    w("    def walk(self, text: str, lexer_cls, parser_cls, *, "
-      "start_rule=None, filtered: bool = True):")
+    w("    def walk(self, text: str, lexer_cls: type, parser_cls: type, *, "
+      "start_rule: int | str | None = None,")
+    w(f"             filtered: bool = True) -> \"{grammar}EventListener\":")
     w("        parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls)")
     w(f"        rule = self._resolve_start_rule({grammar}EventListener, "
       "start_rule)")

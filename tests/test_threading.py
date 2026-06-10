@@ -1,12 +1,26 @@
+# Copyright 2026 Christopher Barber
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """The native parse releases the GIL, so parses on separate threads run in
 parallel instead of serializing.
 
 Two checks:
 
-* **Correctness under concurrency** — many ``walk`` calls across a thread pool,
+* **Correctness under concurrency** — many `walk` calls across a thread pool,
   all sharing one cached spec, each rebuild the document correctly. (The shared
   ATN is thread-*safe*; see the note below about thread-*scaling*.)
-* **Actual parallelism** — the pure-native ``parse_events`` region (the part that
+* **Actual parallelism** — the pure-native `parse_events` region (the part that
   drops the GIL) runs measurably faster across threads than serially, when each
   thread uses its **own** spec. This is a timing assertion with a deliberately
   loose margin; it is skipped on a single-core host, where there is nothing to
@@ -16,7 +30,7 @@ Why per-thread specs for the timing check: the spec owns the deserialized ATN,
 whose parser-prediction state is shared mutable data. Concurrent parses that
 share one spec are *correct* but contend on it (the bundled lock-free patch only
 covers the lexer's DFA edge reads, not the parser prediction path), so they do
-not scale. ``load_specs(..., cached=False)`` gives each thread its own spec,
+not scale. `load_specs(..., cached=False)` gives each thread its own spec,
 removing the shared state so the parses run in parallel — which is what proves
 the GIL was released.
 """

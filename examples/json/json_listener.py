@@ -63,7 +63,8 @@ class JSONEventListener(FacadeListener):
     def visitError(self, token_type: int, text: str) -> None:
         pass
 
-    def walk(self, text: str, lexer_cls, parser_cls, *, start_rule=None, filtered: bool = True):
+    def walk(self, text: str, lexer_cls: type, parser_cls: type, *, start_rule: int | str | None = None,
+             filtered: bool = True) -> "JSONEventListener":
         parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls)
         rule = self._resolve_start_rule(JSONEventListener, start_rule)
         drive(self, JSONEventListener, parser_spec, lexer_spec,

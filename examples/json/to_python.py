@@ -1,10 +1,24 @@
+# Copyright 2026 Christopher Barber
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Example: reconstruct a Python object from JSON using the generated facade.
 
-Subclasses the generated ``JSONEventListener`` and overrides only the rule
-enter/exit callbacks and ``visitTerminal`` it needs. Demonstrates the typical
-shape of a consumer: a small value stack driven by the bulk event stream, with
-token text recovered by the runtime via index slicing (no node objects, no
-per-node FFI crossings).
+Subclasses the generated `JSONEventListener` and overrides only the rule
+enter/exit callbacks and `visitTerminal` it needs. Demonstrates the typical shape
+of a consumer: a small value stack driven by the bulk event stream, with token
+text recovered by the runtime via index slicing (no node objects, no per-node FFI
+crossings).
 
 Run from this directory:
 
@@ -79,14 +93,14 @@ class JsonValueBuilder(JSONEventListener):
 
     # --- machinery ----------------------------------------------------------
 
-    def _push(self, container) -> None:
+    def _push(self, container: dict | list) -> None:
         self._attach(container)
         self._stack.append(container)
 
     def _pop(self) -> None:
         self._stack.pop()
 
-    def _attach(self, value) -> None:
+    def _attach(self, value: object) -> None:
         if not self._stack:
             self.result = value
             return
@@ -97,7 +111,7 @@ class JsonValueBuilder(JSONEventListener):
             top[self._keys.pop()] = value
 
 
-def parse(text: str):
+def parse(text: str) -> object:
     builder = JsonValueBuilder()
     builder.walk(text, JSONLexer, JSONParser)
     return builder.result
