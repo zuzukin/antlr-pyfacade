@@ -58,8 +58,26 @@ pixi run stubgen
 ```
 
 `stubgen` imports the freshly built module and overwrites the stub, so re-apply
-the two hand edits its header comment documents (the module `__version__` and the
-`parse_events` return type), which nanobind cannot infer.
+the one hand edit its header comment documents (the `parse_events` return type),
+which nanobind cannot infer.
+
+## Version
+
+The version lives in one place: `src/antlr_pyfacade/VERSION`. The build reads it
+(scikit-build-core's regex metadata provider) so the wheel and its
+`importlib.metadata` follow it, and `antlr_pyfacade.__version__` reads the same
+file via `importlib.resources`. The conda recipe is the exception: it tracks the
+*published* release it packages, not the dev version, so it pins its own value
+(bumped per release).
+
+**Policy: bump the patch on every commit that changes runtime behavior or
+user-facing docs.** Edit `VERSION` in the same commit that touches the runtime
+(`src/`, `cpp/`, `vendor/antlr4-cpp/`) or the external docs (`README.md`,
+`docs/`). Build-only, test-only, or dev-tooling changes (pixi/CMake config,
+`scripts/`, `CONTRIBUTING.md`, CI) don't need a bump. When you bump, add a matching
+entry to [CHANGELOG.md](CHANGELOG.md). Bumping the file is enough for the version
+itself — `__version__` reflects it immediately; run `pixi install` to refresh the
+installed package metadata too.
 
 ## Vendored runtime
 
@@ -71,5 +89,5 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 - If you changed C++ (`cpp/` or `vendor/antlr4-cpp/`), run `pixi run build` first.
 - Run `pixi run test` and make sure the suite is green.
 - If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` and
-  re-apply the two hand edits documented in `_native.pyi`.
+  re-apply the hand edit documented in `_native.pyi`.
 - If you changed the docs, confirm `pixi run docs-build` succeeds.

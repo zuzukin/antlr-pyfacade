@@ -20,15 +20,12 @@
 # re-exported from it in `__init__.py` resolve.
 #
 # Regenerate with `pixi run stubgen` after changing cpp/binding.cpp, then re-apply
-# the two hand edits below that stubgen does not emit:
-#   - `__version__`
+# the one hand edit below that stubgen does not infer:
 #   - the `parse_events` return type (`tuple[bytes, list[ParseError]]`, not `object`)
 #
 """antlr-pyfacade: Python binding over the official ANTLR4 C++ runtime"""
 
 from collections.abc import Sequence
-
-__version__: str
 
 
 class AtnShape:

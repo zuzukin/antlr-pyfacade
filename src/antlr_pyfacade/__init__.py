@@ -47,7 +47,13 @@ from .facade_runtime import FacadeListener, drive
 from .location import SourceMap
 from .specs import load_specs
 
-__version__ = _native.__version__
+# Version is read from the VERSION file (the single source of truth), shipped as
+# package data in the wheel/sdist and present in the source tree.
+from importlib.resources import files as _files
+
+__version__ = (
+    _files(__package__).joinpath("VERSION").read_text(encoding="utf-8").strip()
+)
 
 __all__ = [
     "AtnShape",

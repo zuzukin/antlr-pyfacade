@@ -8,6 +8,10 @@ schema_version: 1
 
 context:
   name: antlr-pyfacade
+  # Pinned to the PUBLISHED release this recipe packages (it builds from the PyPI
+  # sdist below) — not read from the repo's src/antlr_pyfacade/VERSION, which is
+  # the dev version and may be ahead of the latest release. On conda-forge the
+  # autotick bot bumps this on each PyPI release.
   version: "0.1.0"
 
 package:

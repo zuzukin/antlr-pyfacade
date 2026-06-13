@@ -372,7 +372,8 @@ struct PyListener : public tree::ParseTreeListener {
 
 NB_MODULE(_native, m) {
     m.doc() = "antlr-pyfacade: Python binding over the official ANTLR4 C++ runtime";
-    m.attr("__version__") = "0.1.0";
+    // No __version__ here: the package version lives in the VERSION file and is
+    // surfaced via antlr_pyfacade.__version__ (see __init__.py).
 
     nb::class_<AtnShape>(m, "AtnShape")
         .def_ro("grammar_type", &AtnShape::grammar_type)
