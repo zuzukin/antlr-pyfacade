@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
-from json_listener import JSONEventListener
+from json_listener import JsonEventListener
 
 from antlr_pyfacade import SourceMap
 
@@ -61,7 +61,7 @@ def test_sourcemap_negative_offset_raises():
 # --- Facade location exposure -----------------------------------------------
 
 
-class _Recorder(JSONEventListener):
+class _Recorder(JsonEventListener):
     def __init__(self) -> None:
         self.terminals: dict[str, tuple] = {}
         self.objs: list = []

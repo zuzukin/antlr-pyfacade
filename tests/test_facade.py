@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Facade dispatch correctness: the generated JSONEventListener subclass driven
+"""Facade dispatch correctness: the generated JsonEventListener subclass driven
 by the bulk event stream must rebuild the document, filtered and unfiltered, with
 correct token text (including multibyte UTF-8, which exercises codepoint-indexed
 slicing)."""

@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.4] - 2026-06-13
+
+### Changed
+- The generated facade class is now named `<Grammar.capitalize()>EventListener`
+  (e.g. `JsonEventListener`) instead of `<Grammar>EventListener`. Regenerate your
+  facade and update references. The JSON example and its tests are updated.
+
 ## [0.1.3] - 2026-06-13
 
 ### Fixed

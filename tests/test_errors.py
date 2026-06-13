@@ -22,7 +22,7 @@ from __future__ import annotations
 import antlr_pyfacade as ap
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
-from json_listener import JSONEventListener
+from json_listener import JsonEventListener
 
 RULE_JSON = JSONParser.RULE_json
 
@@ -52,7 +52,7 @@ def test_parse_events_no_errors_on_valid_input():
 
 
 def test_facade_collects_syntax_errors():
-    listener = JSONEventListener()
+    listener = JsonEventListener()
     listener.walk("[1 2]", JSONLexer, JSONParser)
     assert len(listener.syntax_errors) == 1
     err = listener.syntax_errors[0]
@@ -61,13 +61,13 @@ def test_facade_collects_syntax_errors():
 
 
 def test_facade_syntax_errors_empty_on_valid_input():
-    listener = JSONEventListener()
+    listener = JsonEventListener()
     listener.walk('{"a": 1}', JSONLexer, JSONParser)
     assert listener.syntax_errors == []
 
 
 def test_facade_syntax_errors_reset_between_walks():
-    listener = JSONEventListener()
+    listener = JsonEventListener()
     listener.walk("[1 2]", JSONLexer, JSONParser)
     assert listener.syntax_errors
     listener.walk('{"a": 1}', JSONLexer, JSONParser)

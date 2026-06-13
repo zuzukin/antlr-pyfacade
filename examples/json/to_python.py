@@ -14,7 +14,7 @@
 
 """Example: reconstruct a Python object from JSON using the generated facade.
 
-Subclasses the generated `JSONEventListener` and overrides only the rule
+Subclasses the generated `JsonEventListener` and overrides only the rule
 enter/exit callbacks and `visitTerminal` it needs. Demonstrates the typical shape
 of a consumer: a small value stack driven by the bulk event stream, with token
 text recovered by the runtime via index slicing (no node objects, no per-node FFI
@@ -30,19 +30,19 @@ from __future__ import annotations
 import json
 import sys
 
-from json_listener import JSONEventListener
+from json_listener import JsonEventListener
 
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
 # Scalar token types (see the generated facade's token-type constants).
-_TRUE, _FALSE, _NULL = JSONEventListener.T__7, JSONEventListener.T__8, JSONEventListener.T__9
-_STRING, _NUMBER = JSONEventListener.STRING, JSONEventListener.NUMBER
+_TRUE, _FALSE, _NULL = JsonEventListener.T__7, JsonEventListener.T__8, JsonEventListener.T__9
+_STRING, _NUMBER = JsonEventListener.STRING, JsonEventListener.NUMBER
 
 _MISSING = object()
 
 
-class JsonValueBuilder(JSONEventListener):
+class JsonValueBuilder(JsonEventListener):
     """Rebuild the parsed JSON document as native Python objects."""
 
     def __init__(self) -> None:
