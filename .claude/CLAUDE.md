@@ -37,26 +37,37 @@ boundary. Only overridden rules/tokens are emitted (native filtering).
 
 ```sh
 pixi install            # solve + build the editable extension
-pixi run test           # pytest suite (test env)
+pixi run build          # rebuild _native after editing cpp/ or vendor/ (cmake)
+pixi run test           # pytest suite
 pixi run example        # JSON reconstruction example
 pixi run docs-build     # build the docs site into site/
+pixi run stubgen        # regenerate _native.pyi after binding API changes
 pixi run gen-json       # regenerate the JSON example parser (gen env, needs JDK)
 pixi run gen-facade     # regenerate the JSON facade
 ```
 
-Environments: `default`/`test` (Python build + test, no JDK), `gen` (openjdk +
-ANTLR tool, isolated), `docs` (Zensical, no default feature). The editable
-install uses `no-build-isolation`, so cmake/ninja must be on PATH — they come
-from the pixi env. After moving/renaming package files, `pixi reinstall` to
-regenerate the editable import redirector.
+Environments: `default` (Python build + test, no JDK), `gen` (openjdk + ANTLR
+tool, isolated), `docs` (Zensical, no default feature), `recipe` (rattler-build).
+The editable install uses `no-build-isolation`, so cmake/ninja must be on PATH —
+they come from the pixi env.
 
 ## Build
 
-scikit-build-core + nanobind + CMake. `editable.rebuild = true` recompiles
-`_native` on import. `wheel.packages = ["src/antlr_pyfacade"]`. Extension built
-with `STABLE_ABI` (abi3 only materializes on CPython 3.12+; older build
-per-version). `MACOSX_DEPLOYMENT_TARGET = 11.0`. Minimum Python is **3.10** —
-use modern typing (`list[...]`, `X | None`, `collections.abc` over `typing`).
+scikit-build-core + nanobind + CMake. `editable.rebuild = false` — imports never
+invoke the toolchain (so the package imports from any interpreter, even an
+unactivated IDE prefix); after editing `cpp/` or `vendor/`, recompile explicitly
+with `pixi run build` (a cmake build+install via `scripts/build_native.py`).
+`wheel.packages = ["src/antlr_pyfacade"]`. Extension built with `STABLE_ABI` (abi3
+only materializes on CPython 3.12+; older build per-version).
+`MACOSX_DEPLOYMENT_TARGET = 11.0`. Minimum Python is **3.10** — use modern typing
+(`list[...]`, `X | None`, `collections.abc` over `typing`).
+
+Version is single-sourced in `src/antlr_pyfacade/VERSION` (pyproject reads it
+dynamically; `antlr_pyfacade.__version__` reads it via `importlib.resources`). The
+compiled `_native` module has a checked-in stub `src/antlr_pyfacade/_native.pyi`
+(IDEs/type-checkers can't follow the editable redirector) — after changing the
+binding's public interface, `pixi run stubgen` and re-apply the one documented
+hand edit.
 
 ## Known limitation
 
@@ -68,6 +79,12 @@ Grammars depending on them won't parse correctly. This is pinned by
 ## Conventions
 
 - Default branch is `main`.
+- Bump the patch in `src/antlr_pyfacade/VERSION` and add a `CHANGELOG.md` entry on
+  every commit that changes runtime behavior or user-facing docs (`README`,
+  `docs/`); build/test/tooling-only changes don't bump. See `CONTRIBUTING.md`.
+- Hand-authored `.py`/`.cpp` files carry the Apache-2.0 header; docstrings use
+  mkdocstrings/Markdown style (single backticks, Google-style sections) — no
+  reStructuredText roles or `::` directives.
 - Package license is **Apache-2.0**; the vendored runtime under `vendor/` stays
   **BSD-3-Clause** — never relicense vendored code.
 - Public docs (README, `docs/`) compare only against alternatives the reader
