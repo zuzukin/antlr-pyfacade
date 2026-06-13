@@ -5,12 +5,12 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "antlr-pyfacade"
 version = "0.1.0"
-description = "Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream facade over the official ANTLR4 C++ runtime, driven by stock Python3-target output."
+description = "Fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Christopher Barber" }]
-keywords = ["antlr", "antlr4", "parser", "parsing", "grammar"]
+keywords = ["antlr", "antlr4", "parser", "parsing", "grammar", "python"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: C++",
@@ -128,6 +128,14 @@ cwd = "examples/json"
 [tool.pixi.tasks.test]
 description = "Run the pytest correctness suite."
 cmd = "pytest"
+
+[tool.pixi.tasks.build]
+description = "Compile the _native C++ extension now (triggers the editable rebuild-on-import)."
+cmd = "python -c \"import antlr_pyfacade as a; print('built', a.__version__)\""
+
+[tool.pixi.tasks.stubgen]
+description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (re-apply the hand edits noted in the stub)."
+cmd = "python -m nanobind.stubgen -m antlr_pyfacade._native -o src/antlr_pyfacade/_native.pyi"
 
 [tool.pixi.feature.gen.tasks.gen-json]
 description = "Regenerate the example's Python parser/lexer from the grammar (ANTLR tool)."
