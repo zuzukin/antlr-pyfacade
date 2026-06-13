@@ -35,7 +35,11 @@ antlr-pyfacade = "antlr_pyfacade.gen_facade:main"
 [tool.scikit-build]
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
-editable.rebuild = true
+# Rebuild explicitly with `pixi run build`, not on every import. The C++ rarely
+# changes, and rebuild-on-import made `import antlr_pyfacade` shell out to cmake,
+# which fails wherever the env is not activated (e.g. PyCharm using the prefix as
+# a plain interpreter). With this off, imports never touch the build toolchain.
+editable.rebuild = false
 editable.verbose = false
 # Python package lives under src/; the C++ extension sources are in cpp/.
 wheel.packages = ["src/antlr_pyfacade"]
@@ -58,8 +62,9 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
-# Native build toolchain + the extension's build backend, from conda-forge so the
-# editable `editable.rebuild` hook always finds a persistent cmake/ninja on PATH.
+# Native build toolchain + the extension's build backend, from conda-forge, plus
+# uv to drive the explicit `pixi run build` editable reinstall. Pinned here so the
+# whole rebuild path is reproducible from the environment.
 [tool.pixi.dependencies]
 python = ">=3.10"
 cxx-compiler = "*"
@@ -67,6 +72,7 @@ cmake = ">=3.21"
 ninja = "*"
 nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
+uv = "*"
 # pytest drives the correctness suite. It is a dev tool only — no end user or
 # downstream consumer needs an `antlr-pyfacade[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
@@ -130,8 +136,8 @@ description = "Run the pytest correctness suite."
 cmd = "pytest"
 
 [tool.pixi.tasks.build]
-description = "Compile the _native C++ extension now (triggers the editable rebuild-on-import)."
-cmd = "python -c \"import antlr_pyfacade as a; print('built', a.__version__)\""
+description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."
+cmd = "uv pip install --no-build-isolation --no-deps --reinstall-package antlr-pyfacade --editable ."
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (re-apply the hand edits noted in the stub)."
