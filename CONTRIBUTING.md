@@ -37,7 +37,7 @@ The C++ engine is the nanobind module `antlr_pyfacade._native`, built from
 under `cpp/` or `vendor/antlr4-cpp/`, recompile explicitly:
 
 ```sh
-pixi run build      # uv editable reinstall: incremental cmake build + install
+pixi run build      # incremental cmake build + install (scripts/build_native.py)
 ```
 
 Then `pixi run test` runs against the fresh build. Because import never invokes

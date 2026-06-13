@@ -62,9 +62,9 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
-# Native build toolchain + the extension's build backend, from conda-forge, plus
-# uv to drive the explicit `pixi run build` editable reinstall. Pinned here so the
-# whole rebuild path is reproducible from the environment.
+# Native build toolchain + the extension's build backend, from conda-forge. The
+# explicit `pixi run build` recompiles via cmake directly (see
+# scripts/build_native.py), so the whole rebuild path is reproducible here.
 [tool.pixi.dependencies]
 python = ">=3.10"
 cxx-compiler = "*"
@@ -72,7 +72,6 @@ cmake = ">=3.21"
 ninja = "*"
 nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
-uv = "*"
 # pytest drives the correctness suite. It is a dev tool only — no end user or
 # downstream consumer needs an `antlr-pyfacade[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
@@ -137,7 +136,7 @@ cmd = "pytest"
 
 [tool.pixi.tasks.build]
 description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."
-cmd = "uv pip install --no-build-isolation --no-deps --reinstall-package antlr-pyfacade --editable ."
+cmd = "python scripts/build_native.py"
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (re-apply the hand edits noted in the stub)."
