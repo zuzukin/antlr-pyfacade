@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.2] - 2026-06-13
+
+### Added
+- `antlr-pyfacade --version` prints the version.
+
 ## [0.1.1] - 2026-06-13
 
 ### Changed

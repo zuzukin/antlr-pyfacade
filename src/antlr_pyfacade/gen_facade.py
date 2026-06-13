@@ -35,6 +35,8 @@ import argparse
 import importlib
 import sys
 
+from antlr_pyfacade import __version__
+
 
 def _ident(name: str) -> str:
     return name[0].upper() + name[1:]
@@ -111,6 +113,9 @@ def main(argv: list[str] | None = None) -> int:
         prog="antlr-pyfacade",
         description="Generate a <Grammar>EventListener facade from a "
         "stock-generated ANTLR Python parser module.",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
         "parser_module",
