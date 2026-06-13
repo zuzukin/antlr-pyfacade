@@ -55,6 +55,9 @@ toggle.name = "Switch to light mode"
 icon = "fontawesome/brands/github"
 link = "https://github.com/analog-cbarber/antlr-pyfacade"
 
+[project.plugins.offline]
+enabled = false
+
 # Recommended Markdown extension baseline (mirrors the Zensical default template).
 [project.markdown_extensions.abbr]
 [project.markdown_extensions.admonition]

@@ -115,6 +115,11 @@ gen = { features = ["gen"], solve-group = "default" }
 docs = { features = ["docs"], no-default-feature = true }
 recipe = { features = ["recipe"], no-default-feature = true }
 
+[tool.pixi.tasks]
+doc-build = [{ task = "docs-build" }]
+doc-serve = [{ task = "docs-serve" }]
+doc-show = [{ task = "docs-serve" }]
+
 [tool.pixi.tasks.example]
 description = "Run the JSON reconstruction example end to end."
 cmd = "python to_python.py"
@@ -149,6 +154,10 @@ cmd = "zensical build"
 [tool.pixi.feature.docs.tasks.docs-serve]
 description = "Serve the docs locally with live reload at http://localhost:8000."
 cmd = "zensical serve"
+
+[tool.pixi.feature.docs.tasks.doc-clean]
+description = "Remove generated doc files"
+cmd = "rm -rf site"
 
 [tool.pixi.feature.recipe.tasks.recipe-build]
 description = "Build the conda package locally from conda-recipe/recipe.yaml (rattler-build)."

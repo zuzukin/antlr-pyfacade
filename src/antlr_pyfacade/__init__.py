@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""antlr-pyfacade: a fast, C++-accelerated ANTLR runtime for Python.
+"""
+antlr-pyfacade: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.
 
 Generate your parser with the stock ANTLR tool (`-Dlanguage=Python3`), generate a
 facade with `antlr-pyfacade`, subclass the `<Grammar>EventListener` it emits, and
