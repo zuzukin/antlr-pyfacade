@@ -133,7 +133,8 @@ namespace dfa {
     size_t edgeCount() const noexcept { return _edgeCount.load(std::memory_order_acquire); }
 
     /// Store an edge. `minSize` is the natural full size of the table for this
-    /// DFA kind (e.g. the lexer char range or maxTokenType+1); the table is
+    /// DFA kind (the lexer char range, or maxTokenType+2 for the parser, whose
+    /// edges are indexed by t+1 so EOF lands in slot 0); the table is
     /// grown to at least `index + 1` if needed. The caller MUST hold the owning
     /// DFA's edgeMutex() write lock. Lexer/parser tables are allocated once at
     /// `minSize` and never reallocated, so concurrent lock-free getEdge() calls

@@ -16,6 +16,14 @@ no external checkout.
   replacing the `FlatHashMap` guarded by a mutex. This is the per-character
   read-path speedup; once it lands upstream the snapshot can be refreshed without
   carrying the patch.
+  - **Fix (must also be applied to the upstream PR1 branch):** the parser edge
+    index must keep ANTLR's `t + 1` offset so EOF (`t == -1`) maps to slot 0.
+    The first cut dropped it, so `ParserATNSimulator::addDFAEdge` called
+    `setEdge((size_t)-1, …)`, wrapping to `edges - 8` — an intermittent
+    heap-buffer-overflow that only fired when a decision cached an edge on EOF
+    lookahead (e.g. a single-token input). `getExistingTargetState` now reads
+    `getEdge(t + 1)`, `addDFAEdge` writes `setEdge(t + 1, maxTokenType + 2, …)`
+    and guards `t < -1`. Verified clean under AddressSanitizer.
 - **Patch 2 (local) — per-DFA write locks.** The DFA state/edge write locks were
   moved off the ATN (`ATN::_stateMutex` / `ATN::_edgeMutex`, now removed) and onto
   the DFA itself (`dfa::DFA::stateMutex()` / `edgeMutex()`, heap-allocated so DFA

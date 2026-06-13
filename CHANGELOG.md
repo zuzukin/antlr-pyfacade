@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.3] - 2026-06-13
+
+### Fixed
+- Heap-buffer-overflow in the vendored runtime's parser DFA-edge cache. The
+  lock-free-edges patch had dropped ANTLR's `t + 1` edge-index offset, so caching
+  an edge on EOF lookahead (e.g. a single-token input) wrote out of bounds and
+  intermittently crashed the process (SIGSEGV / SIGBUS / abort). Restored the
+  offset and sized the table `maxTokenType + 2`; verified clean under
+  AddressSanitizer.
+
 ## [0.1.2] - 2026-06-13
 
 ### Added
