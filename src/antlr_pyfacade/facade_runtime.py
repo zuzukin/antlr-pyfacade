@@ -129,6 +129,8 @@ class FacadeListener:
             f"{cls.__name__} is not a generated facade listener subclass"
         )
 
+    # TODO - pick a more precise declared base type or create a Protocol that has the expected interface
+
     @classmethod
     def _resolve_start_rule(cls, base: type, start_rule: int | str | None) -> int:
         """Turn a rule name, rule index, or `None` into a rule index for `base`."""
@@ -148,6 +150,7 @@ class FacadeListener:
     def walk_parallel(
         cls,
         chunks: Iterable[str],
+        # TODO - more precise base classes or Protocols for lexer/parser
         lexer_cls: type,
         parser_cls: type,
         *,
@@ -190,6 +193,10 @@ class FacadeListener:
         make = factory if factory is not None else cls
         chunk_list = list(chunks)
 
+        # TODO - need to pass starting line/col for each chunk to correctly compute source map
+        #  also need to provide away to pass these in along with the chunks, at least as an option
+        #  in case the chunks are not contiguous.
+
         def run(text: str) -> FacadeListener:
             parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
             listener = make()
@@ -206,10 +213,11 @@ class FacadeListener:
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             return list(pool.map(run, chunk_list))
 
-
+# TODO - should this be a method of FacadeListener?
 def drive(
     listener: FacadeListener,
-    base_cls: type,
+    base_cls: type, # TODO: more precise base class or Protocol
+    # TODO: too many positional args
     parser_spec: _native.ParserSpec,
     lexer_spec: _native.LexerSpec,
     text: str,

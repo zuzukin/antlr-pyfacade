@@ -60,3 +60,5 @@ class SourceMap:
             raise ValueError(f"offset must be non-negative, got {offset}")
         line_idx = bisect.bisect_right(self._line_starts, offset) - 1
         return line_idx + 1, offset - self._line_starts[line_idx]
+
+    # TODO: add method to compute offset from line/col

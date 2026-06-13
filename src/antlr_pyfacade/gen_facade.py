@@ -38,6 +38,7 @@ from textwrap import dedent, indent
 
 from antlr_pyfacade import __version__
 
+# TODO - add doc strings
 
 def _ident(name: str) -> str:
     return name[0].upper() + name[1:]
