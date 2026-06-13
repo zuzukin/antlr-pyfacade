@@ -75,6 +75,9 @@ platforms = ["osx-arm64", "linux-64"]
 # scripts/build_native.py), so the whole rebuild path is reproducible here.
 [tool.pixi.dependencies]
 python = ">=3.10"
+# TODO: add antlr runtime dependency so we get it from conda-forge instead of pypi
+
+# TODO - move all of these to a `dev` feature (included in default env)
 cxx-compiler = "*"
 cmake = ">=3.21"
 ninja = "*"
@@ -138,6 +141,8 @@ description = "Run the JSON reconstruction example end to end."
 cmd = "python to_python.py"
 cwd = "examples/json"
 
+# TODO - add ruff and pyright dependencies and tasks
+
 [tool.pixi.tasks.test]
 description = "Run the pytest correctness suite."
 cmd = "pytest"
@@ -149,6 +154,14 @@ cmd = "python scripts/build_native.py"
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (re-apply the hand edits noted in the stub)."
 cmd = "python -m nanobind.stubgen -m antlr_pyfacade._native -o src/antlr_pyfacade/_native.pyi"
+
+[tool.pixi.tasks.asan-test]
+description = "Build and run the AddressSanitizer C++ harness over the example grammars (macOS + Linux)."
+cmd = "python scripts/asan_harness.py"
+
+[tool.pixi.tasks.asan-pytest]
+description = "Run the pytest suite under AddressSanitizer (Linux; skipped on macOS). Covers the binding too."
+cmd = "python scripts/asan_pytest.py"
 
 [tool.pixi.feature.gen.tasks.gen-json]
 description = "Regenerate the example's Python parser/lexer from the grammar (ANTLR tool)."
@@ -180,6 +193,9 @@ cmd = "zensical serve"
 description = "Remove generated doc files"
 cmd = "rm -rf site"
 
+# TODO - try using whl2conda to build conda package directly from wheel
+
+# TODO - maybe rename conda-recipe to conda-forge-recipe?
 [tool.pixi.feature.recipe.tasks.recipe-build]
 description = "Build the conda package locally from conda-recipe/recipe.yaml (rattler-build)."
 cmd = "rattler-build build --recipe conda-recipe/recipe.yaml"

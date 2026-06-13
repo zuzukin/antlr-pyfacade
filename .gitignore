@@ -10,6 +10,9 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+# AddressSanitizer build dirs (scripts/asan_pytest.py, scripts/asan_harness.py)
+/build-asan/
+/tests/asan/build/
 
 # Editors
 .idea/
