@@ -75,9 +75,21 @@ platforms = ["osx-arm64", "linux-64"]
 # scripts/build_native.py), so the whole rebuild path is reproducible here.
 [tool.pixi.dependencies]
 python = ">=3.10"
-# TODO: add antlr runtime dependency so we get it from conda-forge instead of pypi
+antlr4-python3-runtime = ">=4.13"
 
-# TODO - move all of these to a `dev` feature (included in default env)
+[tool.pixi.pypi-dependencies]
+# Installs the package from source tree
+antlr-pyfacade = { path = ".", editable = true }
+
+# Build the editable package against the env's own toolchain (not an isolated,
+# throwaway one), so the rebuild-on-import hook resolves cmake/ninja correctly.
+[tool.pixi.pypi-options]
+no-build-isolation = ["antlr-pyfacade"]
+
+[tool.pixi.activation.env]
+MACOSX_DEPLOYMENT_TARGET = "11.0"
+
+[tool.pixi.feature.dev.dependencies]
 cxx-compiler = "*"
 cmake = ">=3.21"
 ninja = "*"
@@ -88,19 +100,6 @@ scikit-build-core = ">=0.10"
 # shipped in the wheel), so it lives in the dev environment, not as a published
 # optional dependency.
 pytest = ">=7"
-
-[tool.pixi.pypi-dependencies]
-# Installs the package editable; its declared runtime dependency
-# (antlr4-python3-runtime) is resolved automatically from [project.dependencies].
-antlr-pyfacade = { path = ".", editable = true }
-
-# Build the editable package against the env's own toolchain (not an isolated,
-# throwaway one), so the rebuild-on-import hook resolves cmake/ninja correctly.
-[tool.pixi.pypi-options]
-no-build-isolation = ["antlr-pyfacade"]
-
-[tool.pixi.activation.env]
-MACOSX_DEPLOYMENT_TARGET = "11.0"
 
 # Java + the ANTLR tool, isolated in a dedicated feature so the Python build/test
 # environments never pull in a JDK.
@@ -126,7 +125,7 @@ zensical = "*"
 rattler-build = "*"
 
 [tool.pixi.environments]
-default = { solve-group = "default" }
+default = { features = ["dev"], solve-group = "default" }
 gen = { features = ["gen"], solve-group = "default" }
 docs = { features = ["docs"], no-default-feature = true }
 recipe = { features = ["recipe"], no-default-feature = true }
