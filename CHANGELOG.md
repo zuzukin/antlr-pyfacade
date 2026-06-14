@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.5] - 2026-06-14
+
+### Added
+- `SourceMap.offset(line, column=0)` — the inverse of `line_col`, mapping a
+  1-based line / 0-based column back to a character offset. Validates the line
+  number; the column is added without bounds-checking against the line length.
+
 ## [0.1.4] - 2026-06-13
 
 ### Changed

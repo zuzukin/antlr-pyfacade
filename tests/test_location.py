@@ -32,30 +32,44 @@ MULTILINE = '{\n  "a": 1\n}'
 # --- SourceMap unit tests ---------------------------------------------------
 
 
-def test_sourcemap_multiline():
+def test_sourcemap():
+    # Multi-line: 1-based line, 0-based column (offsets annotated by MULTILINE).
     sm = SourceMap(MULTILINE)
     assert sm.line_col(0) == (1, 0)  # '{'
     assert sm.line_col(4) == (2, 2)  # '"a"' start
     assert sm.line_col(9) == (2, 7)  # '1'
     assert sm.line_col(11) == (3, 0)  # '}'
 
+    # offset() is the inverse of line_col(): it undoes each mapping above,
+    # defaults column to the line start, and round-trips for every offset.
+    assert sm.offset(1, 0) == 0
+    assert sm.offset(2, 2) == 4
+    assert sm.offset(2, 7) == 9
+    assert sm.offset(3, 0) == 11
+    assert sm.offset(2) == 2  # column defaults to 0 (start of line 2)
+    for off in range(len(MULTILINE)):
+        assert sm.offset(*sm.line_col(off)) == off
 
-def test_sourcemap_single_line():
+    # Single line: every offset is on line 1.
     sm = SourceMap("abc")
     assert sm.line_col(0) == (1, 0)
     assert sm.line_col(2) == (1, 2)
+    assert sm.offset(1, 2) == 2
 
-
-def test_sourcemap_codepoint_offsets():
     # Offsets are codepoints, not bytes: 'é' (2 UTF-8 bytes) counts as one.
     sm = SourceMap('"café"')
     assert sm.line_col(4) == (1, 4)  # 'é'
     assert sm.line_col(5) == (1, 5)  # closing quote
+    assert sm.offset(1, 4) == 4
 
-
-def test_sourcemap_negative_offset_raises():
+    # Out-of-range inputs raise ValueError.
+    sm = SourceMap("x")  # one line, so the only valid line number is 1
     with pytest.raises(ValueError):
-        SourceMap("x").line_col(-1)
+        sm.line_col(-1)
+    with pytest.raises(ValueError):
+        sm.offset(0)  # line is 1-based
+    with pytest.raises(ValueError):
+        sm.offset(2)  # past the last line
 
 
 # --- Facade location exposure -----------------------------------------------

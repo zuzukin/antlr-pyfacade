@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Turn source character offsets into `(line, column)` positions.
+"""
+Turn source character offsets into `(line, column)` positions.
 
 The event stream reports `start`/`stop` as character (codepoint) offsets into the
 source string — the same indices that slice it directly. To report a position to a
@@ -61,4 +62,25 @@ class SourceMap:
         line_idx = bisect.bisect_right(self._line_starts, offset) - 1
         return line_idx + 1, offset - self._line_starts[line_idx]
 
-    # TODO: add method to compute offset from line/col
+    def offset(self, line: int, column: int = 0) -> int:
+        """Return the character offset for a 1-based `line` and 0-based `column`.
+
+        The inverse of [`line_col`][antlr_pyfacade.SourceMap.line_col]:
+        `offset(*line_col(o)) == o` for any valid offset `o`.
+
+        Args:
+            line: A 1-based line number.
+            column: A 0-based column within the line. Added to the line's start
+                offset without bounds-checking against the line length, so a
+                `column` past the end of the line yields an offset into a later
+                line.
+
+        Returns:
+            The character (codepoint) offset of `line`:`column`.
+
+        Raises:
+            ValueError: If `line` is outside `1..number-of-lines`.
+        """
+        if not 1 <= line <= len(self._line_starts):
+            raise ValueError(f"line must be in 1..{len(self._line_starts)}, got {line}")
+        return self._line_starts[line - 1] + column
