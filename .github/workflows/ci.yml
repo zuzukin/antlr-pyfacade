@@ -4,10 +4,12 @@ name: ci
 # leg builds the extension (and a C++ harness) with -fsanitize=address — it is
 # what would have caught the DFA-edge heap overflow that normal builds missed.
 
+# Runs on every branch push so work on any feature/dev branch is validated.
+# (Same-repo branch pushes are covered here; re-add a `pull_request:` trigger if
+# the project starts taking pull requests from forks.)
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches: ["**"]
   workflow_dispatch:
 
 jobs:

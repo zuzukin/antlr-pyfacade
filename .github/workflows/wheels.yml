@@ -1,14 +1,15 @@
 name: wheels
 
-# Build wheels and an sdist on every push/PR (no publish), and publish to PyPI
-# when a version tag is pushed. cibuildwheel compiles the vendored ANTLR C++
-# runtime for each platform/CPython; scikit-build-core fetches cmake/ninja.
+# Build wheels and an sdist on pushes to main (no publish), and publish to PyPI
+# when a version tag is pushed. Development happens on `dev`, which is covered by
+# the lighter `ci` workflow; the full multi-platform wheel build only runs once
+# work lands on main. cibuildwheel compiles the vendored ANTLR C++ runtime for
+# each platform/CPython; scikit-build-core fetches cmake/ninja.
 
 on:
   push:
     branches: [main]
     tags: ["v*"]
-  pull_request:
   workflow_dispatch:
 
 jobs:
