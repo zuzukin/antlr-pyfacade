@@ -19,10 +19,11 @@ instead of being written to stderr."""
 
 from __future__ import annotations
 
-import antlr_pyfacade as ap
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
+
+import antlr_pyfacade as ap
 
 RULE_JSON = JSONParser.RULE_json
 

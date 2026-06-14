@@ -40,12 +40,20 @@ BUILD = ROOT / "build-asan"
 def _build_asan_extension() -> Path:
     nb = subprocess.run(
         [sys.executable, "-m", "nanobind", "--cmake_dir"],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
     if not (BUILD / "CMakeCache.txt").exists():
         subprocess.run(
             [
-                "cmake", "-S", str(ROOT), "-B", str(BUILD), "-G", "Ninja",
+                "cmake",
+                "-S",
+                str(ROOT),
+                "-B",
+                str(BUILD),
+                "-G",
+                "Ninja",
                 "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
                 "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer -g",
                 "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address",

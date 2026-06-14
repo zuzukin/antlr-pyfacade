@@ -66,6 +66,42 @@ test-command = "python -c \"import antlr_pyfacade as a; print(a.__version__)\""
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
+[tool.ruff]
+# Lint/format the hand-written sources, tests, helper scripts, and examples. The
+# stock ANTLR-generated lexer/parser modules are excluded: they are tool output,
+# not our code, and follow ANTLR's own (non-PEP8) style.
+target-version = "py310"
+# Excluded: stock ANTLR-generated parsers, the vendored C++ runtime, build/site
+# output, and `*.pyi` (the _native stub is produced by `pixi run stubgen` and
+# hand-tweaked — formatting it here would just churn against stubgen output).
+extend-exclude = ["examples/*/generated", "vendor", "build", "build-asan", "site", "*.pyi"]
+
+[tool.ruff.lint]
+# A pragmatic core: pyflakes/pycodestyle (E, F, W), import sorting (I), pyupgrade
+# (UP), bugbear (B), comprehensions (C4), simplify (SIM), and Ruff's own lints
+# (RUF). pep8-naming (N) is intentionally omitted — the facade mirrors ANTLR's
+# camelCase callback names (enterRule, visitTerminal, ...). Line length is left
+# to the formatter (E501 off), so prose comments and literals don't nag.
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Package surfaces its public API by re-export from __init__ (no __all__).
+"src/antlr_pyfacade/__init__.py" = ["F401"]
+
+[tool.pyright]
+# Type-check the shipped library and the helper scripts. Tests and examples pull
+# in the ANTLR-generated modules via runtime sys.path manipulation, which a
+# static checker can't resolve, so they're out of scope here.
+include = ["src", "scripts"]
+exclude = ["**/__pycache__", "examples/*/generated", "vendor", "build", "build-asan", "site"]
+pythonVersion = "3.10"
+typeCheckingMode = "standard"
+# _native is a compiled nanobind extension: pyright resolves its hand-maintained
+# `_native.pyi` stub but (correctly) notes there's no Python source behind it.
+# That's expected for a C++ extension, so silence the per-import warning.
+reportMissingModuleSource = "none"
+
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
@@ -99,7 +135,9 @@ scikit-build-core = ">=0.10"
 # downstream consumer needs an `antlr-pyfacade[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
 # optional dependency.
+pyright = ">=1.1.409"
 pytest = ">=7"
+ruff = ">=0.15.16"
 
 # Java + the ANTLR tool, isolated in a dedicated feature so the Python build/test
 # environments never pull in a JDK.
@@ -140,7 +178,21 @@ description = "Run the JSON reconstruction example end to end."
 cmd = "python to_python.py"
 cwd = "examples/json"
 
-# TODO - add ruff and pyright dependencies and tasks
+[tool.pixi.tasks.lint]
+description = "Lint with ruff (report only; run `format` to apply style fixes)."
+cmd = "ruff check ."
+
+[tool.pixi.tasks.format]
+description = "Format the code with ruff (also sorts imports via `lint --fix`)."
+cmd = "ruff format ."
+
+[tool.pixi.tasks.typecheck]
+description = "Static type-check the package and scripts with pyright."
+cmd = "pyright"
+
+[tool.pixi.tasks.check]
+description = "Full local gate: lint, type-check, and run the test suite."
+depends-on = ["lint", "typecheck", "test"]
 
 [tool.pixi.tasks.test]
 description = "Run the pytest correctness suite."
@@ -169,7 +221,7 @@ cwd = "examples/json"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 
 [tool.pixi.feature.gen.tasks.gen-facade]
-description = "Regenerate the event-listener facade from the generated parser module."
+description = "Regenerate the event-listener facade from the generated parser module (run `pixi run format` afterward)."
 cmd = "antlr-pyfacade generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }

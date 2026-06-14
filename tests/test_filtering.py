@@ -17,9 +17,10 @@ stream equals the unfiltered stream with non-kept rules/tokens removed."""
 
 from __future__ import annotations
 
-import antlr_pyfacade as ap
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+
+import antlr_pyfacade as ap
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 RULE_JSON = JSONParser.RULE_json

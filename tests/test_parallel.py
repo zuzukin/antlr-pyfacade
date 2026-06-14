@@ -25,7 +25,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder

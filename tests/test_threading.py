@@ -44,20 +44,18 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-
-from antlr_pyfacade import load_specs, parse_events
-
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
+
+from antlr_pyfacade import load_specs, parse_events
 
 # Big enough that the native parse dominates per-call Python overhead.
 _N_OBJECTS = 20_000
 _BIG = (
     "["
     + ",".join(
-        '{"id": %d, "name": "item-%d", "vals": [1, 2.5, true, null], "s": "abc"}'
-        % (i, i)
+        f'{{"id": {i}, "name": "item-{i}", "vals": [1, 2.5, true, null], "s": "abc"}}'
         for i in range(_N_OBJECTS)
     )
     + "]"
@@ -80,9 +78,7 @@ def _native_parse_own_specs(_=None) -> int:
     # cached=False gives this worker its own ATN; threading.local builds it once.
     specs = getattr(_thread_local, "specs", None)
     if specs is None:
-        specs = _thread_local.specs = load_specs(
-            JSONLexer, JSONParser, cached=False
-        )
+        specs = _thread_local.specs = load_specs(JSONLexer, JSONParser, cached=False)
     parser_spec, lexer_spec = specs
     raw, errors = parse_events(parser_spec, lexer_spec, _BIG, 0, None, None)
     assert not errors
@@ -152,9 +148,7 @@ _STRESS_DOCS = [
 _STRESS_EXPECTED = [json.loads(d) for d in _STRESS_DOCS]
 
 
-@pytest.mark.skipif(
-    (os.cpu_count() or 1) < 2, reason="needs >= 2 cores to race"
-)
+@pytest.mark.skipif((os.cpu_count() or 1) < 2, reason="needs >= 2 cores to race")
 def test_shared_spec_concurrency_stress():
     """Many threads parsing varied inputs through ONE shared spec must stay
     correct, exercising concurrent cold-DFA construction over a shared ATN.
@@ -167,7 +161,11 @@ def test_shared_spec_concurrency_stress():
     load_specs(JSONLexer, JSONParser)
     threads = max(8, (os.cpu_count() or 2))
     iterations = 40
-    tasks = [i % len(_STRESS_DOCS) for _ in range(iterations) for i in range(len(_STRESS_DOCS))]
+    tasks = [
+        i % len(_STRESS_DOCS)
+        for _ in range(iterations)
+        for i in range(len(_STRESS_DOCS))
+    ]
 
     def run(doc_index: int):
         builder = JsonValueBuilder()

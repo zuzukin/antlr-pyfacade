@@ -80,7 +80,9 @@ class FacadeListener:
     _pyfacade_stop: int = -1
     _pyfacade_sourcemap: SourceMap | None = None
 
-    syntax_errors: list[_native.ParseError] = []
+    # Reassigned to a fresh list by `drive` on every walk (never mutated in
+    # place), so the shared class-level default is safe — hence the RUF012 waiver.
+    syntax_errors: list[_native.ParseError] = []  # noqa: RUF012
     """Parse diagnostics collected during the most recent `walk`.
 
     A list of [`ParseError`][antlr_pyfacade.ParseError] records, empty when the
@@ -110,6 +112,12 @@ class FacadeListener:
             sm = self._pyfacade_sourcemap = SourceMap(self._pyfacade_text)
         return sm.line_col(start)
 
+    def visitTerminal(self, token_type: int, text: str) -> None:
+        """No-op terminal callback; override in a subclass to handle tokens."""
+
+    def visitError(self, token_type: int, text: str) -> None:
+        """No-op error callback; override in a subclass to handle error nodes."""
+
     @classmethod
     def _facade_base(cls) -> type:
         """Return the generated `<Grammar>EventListener` in this class's ancestry.
@@ -125,9 +133,7 @@ class FacadeListener:
         for klass in cls.__mro__:
             if FacadeListener in klass.__bases__:
                 return klass
-        raise TypeError(
-            f"{cls.__name__} is not a generated facade listener subclass"
-        )
+        raise TypeError(f"{cls.__name__} is not a generated facade listener subclass")
 
     # TODO - pick a more precise declared base type or create a Protocol that has the expected interface
 
@@ -201,7 +207,12 @@ class FacadeListener:
             parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
             listener = make()
             drive(
-                listener, base, parser_spec, lexer_spec, text, rule,
+                listener,
+                base,
+                parser_spec,
+                lexer_spec,
+                text,
+                rule,
                 filtered=filtered,
             )
             return listener
@@ -213,10 +224,11 @@ class FacadeListener:
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             return list(pool.map(run, chunk_list))
 
+
 # TODO - should this be a method of FacadeListener?
 def drive(
     listener: FacadeListener,
-    base_cls: type, # TODO: more precise base class or Protocol
+    base_cls: type,  # TODO: more precise base class or Protocol
     # TODO: too many positional args
     parser_spec: _native.ParserSpec,
     lexer_spec: _native.LexerSpec,
@@ -299,9 +311,8 @@ def drive(
                 listener._pyfacade_start = start
                 listener._pyfacade_stop = stop
                 cb()
-        elif kind == EV_ERROR:
-            if on_error is not None:
-                listener._pyfacade_start = start
-                listener._pyfacade_stop = stop
-                err_text = text[start : stop + 1] if 0 <= start <= stop else ""
-                on_error(payload, err_text)
+        elif kind == EV_ERROR and on_error is not None:
+            listener._pyfacade_start = start
+            listener._pyfacade_stop = stop
+            err_text = text[start : stop + 1] if 0 <= start <= stop else ""
+            on_error(payload, err_text)

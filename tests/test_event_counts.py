@@ -22,10 +22,11 @@ Both must agree with the unfiltered `parse_events` kind tallies.
 
 from __future__ import annotations
 
-import antlr_pyfacade as ap
 import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+
+import antlr_pyfacade as ap
 
 antlr4 = pytest.importorskip("antlr4")
 

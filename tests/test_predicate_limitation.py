@@ -33,10 +33,10 @@ import struct
 
 from antlr4 import CommonTokenStream, InputStream
 from antlr4.error.ErrorListener import ErrorListener
-
-from antlr_pyfacade import load_specs, parse_events
 from PredLexer import PredLexer
 from PredParser import PredParser
+
+from antlr_pyfacade import load_specs, parse_events
 
 ERROR_KIND = 3  # EV_ERROR in the int32 event stream
 
@@ -51,7 +51,7 @@ class _Collector(ErrorListener):
     def __init__(self) -> None:
         self.count = 0
 
-    def syntaxError(self, *args) -> None:  # noqa: ANN002
+    def syntaxError(self, *args) -> None:
         self.count += 1
 
 

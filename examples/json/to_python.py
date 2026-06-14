@@ -30,13 +30,16 @@ from __future__ import annotations
 import json
 import sys
 
-from json_listener import JsonEventListener
-
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+from json_listener import JsonEventListener
 
 # Scalar token types (see the generated facade's token-type constants).
-_TRUE, _FALSE, _NULL = JsonEventListener.T__7, JsonEventListener.T__8, JsonEventListener.T__9
+_TRUE, _FALSE, _NULL = (
+    JsonEventListener.T__7,
+    JsonEventListener.T__8,
+    JsonEventListener.T__9,
+)
 _STRING, _NUMBER = JsonEventListener.STRING, JsonEventListener.NUMBER
 
 _MISSING = object()

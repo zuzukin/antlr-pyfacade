@@ -6,11 +6,13 @@ override the callbacks you care about, then call .walk(text, LexerCls, ParserCls
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from antlr_pyfacade import FacadeListener, drive, load_specs
 
 
 class JsonEventListener(FacadeListener):
-    ruleNames = ['json', 'obj', 'pair', 'arr', 'value']
+    ruleNames: ClassVar[list[str]] = ["json", "obj", "pair", "arr", "value"]
     START_RULE = 0  # json
 
     # token-type constants
@@ -74,5 +76,13 @@ class JsonEventListener(FacadeListener):
     ) -> JsonEventListener:
         parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls)
         rule = self._resolve_start_rule(JsonEventListener, start_rule)
-        drive(self, JsonEventListener, parser_spec, lexer_spec, text, rule, filtered=filtered)
+        drive(
+            self,
+            JsonEventListener,
+            parser_spec,
+            lexer_spec,
+            text,
+            rule,
+            filtered=filtered,
+        )
         return self

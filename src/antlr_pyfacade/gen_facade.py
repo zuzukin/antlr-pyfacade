@@ -78,6 +78,11 @@ def generate(parser_qualname: str, grammar: str) -> str:
         for cap in map(_ident, rule_names)
     )
 
+    # Emit the rule-name list as a double-quoted literal (rule names are ANTLR
+    # identifiers, so no escaping is needed) so the generated file is
+    # ruff-format-clean as written — repr() would use single quotes.
+    rule_names_src = "[" + ", ".join(f'"{name}"' for name in rule_names) + "]"
+
     # dedent() must run before .format(): an f-string would interpolate the
     # multi-line token_lines/rule_methods first, and their lower indentation would
     # then throw off dedent's common-prefix calculation.
@@ -91,11 +96,13 @@ def generate(parser_qualname: str, grammar: str) -> str:
 
         from __future__ import annotations
 
+        from typing import ClassVar
+
         from antlr_pyfacade import FacadeListener, drive, load_specs
 
 
         class {cls}(FacadeListener):
-            ruleNames = {rule_names!r}
+            ruleNames: ClassVar[list[str]] = {rule_names_src}
             START_RULE = 0  # {rule0}
 
             # token-type constants
@@ -124,7 +131,7 @@ def generate(parser_qualname: str, grammar: str) -> str:
     ).format(
         grammar=grammar,
         cls=listener_cls,
-        rule_names=rule_names,
+        rule_names_src=rule_names_src,
         rule0=rule_names[0],
         token_lines=token_lines,
         rule_methods=rule_methods,
@@ -146,9 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         "(e.g. mypkg.generated.MyParser).",
     )
     parser.add_argument("grammar", help="Grammar name prefix for the facade class.")
-    parser.add_argument(
-        "-o", "--output", help="Write to this file instead of stdout."
-    )
+    parser.add_argument("-o", "--output", help="Write to this file instead of stdout.")
     args = parser.parse_args(argv)
 
     source = generate(args.parser_module, args.grammar)

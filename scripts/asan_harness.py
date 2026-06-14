@@ -45,7 +45,7 @@ _GRAMMARS = [
         0,
         [
             '{"a": 1, "b": [2, 3, {"c": null}], "d": true}',
-            "[1, 2.5, -3, 4e10, true, false, null, \"x\"]",
+            '[1, 2.5, -3, 4e10, true, false, null, "x"]',
             "{}",
             "[]",
             '{"café": "naïve", "emoji": "\U0001f600\U0001f680"}',
@@ -156,15 +156,28 @@ def main() -> int:
     exe = BUILD_DIR / "asan_harness"
     subprocess.run(
         [
-            cxx, "-std=c++17", "-fsanitize=address", "-fno-omit-frame-pointer",
-            "-g", "-O1", "-pthread", "-DANTLR4CPP_STATIC",
-            "-I", str(src),
-            "-I", str(src / "tree" / "pattern"),
-            "-I", str(src / "tree" / "xpath"),
-            "-I", str(ROOT / "cpp"),       # events.h
-            "-I", str(BUILD_DIR),          # generated grammar_data.h
-            str(ASAN_DIR / "harness.cpp"), *sources,
-            "-o", str(exe),
+            cxx,
+            "-std=c++17",
+            "-fsanitize=address",
+            "-fno-omit-frame-pointer",
+            "-g",
+            "-O1",
+            "-pthread",
+            "-DANTLR4CPP_STATIC",
+            "-I",
+            str(src),
+            "-I",
+            str(src / "tree" / "pattern"),
+            "-I",
+            str(src / "tree" / "xpath"),
+            "-I",
+            str(ROOT / "cpp"),  # events.h
+            "-I",
+            str(BUILD_DIR),  # generated grammar_data.h
+            str(ASAN_DIR / "harness.cpp"),
+            *sources,
+            "-o",
+            str(exe),
         ],
         check=True,
     )
