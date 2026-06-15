@@ -61,6 +61,12 @@ static void parse_once(const GrammarData &g, atn::ATN &lexerAtn,
   collect_events(tree, buf, nullptr, nRules, nullptr, nToks);
   std::vector<char> keep(nRules, 1);
   collect_events(tree, buf, keep.data(), nRules, nullptr, nToks);
+
+  // Exercise the rule-span collector (outermost on/off, filtered + unfiltered).
+  std::vector<int32_t> spans;
+  collect_rule_spans(tree, spans, nullptr, nRules, /*outermost=*/true);
+  collect_rule_spans(tree, spans, nullptr, nRules, /*outermost=*/false);
+  collect_rule_spans(tree, spans, keep.data(), nRules, /*outermost=*/true);
 }
 
 int main() {

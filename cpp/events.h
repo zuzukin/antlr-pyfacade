@@ -142,4 +142,52 @@ inline void collect_events(antlr4::tree::ParseTree *root,
     }
 }
 
+// Collect the (rule_index, start, stop) character span of each parse-tree rule
+// node whose index is kept by rule_keep (nullptr = all rules). With outermost =
+// true, a matched rule's subtree is not descended into, so only the top-level
+// occurrences are emitted — the building block for rule-based chunking. Iterative
+// (like collect_events) to avoid deep recursion on tall trees.
+inline void collect_rule_spans(antlr4::tree::ParseTree *root,
+                               std::vector<int32_t> &out, const char *rule_keep,
+                               size_t n_rules, bool outermost) {
+    using namespace antlr4;
+    std::vector<std::pair<tree::ParseTree *, size_t>> stack;  // (node, child index)
+    tree::ParseTree *node = root;
+
+    while (node != nullptr) {
+        bool descend = !node->children.empty();
+        if (!tree::TerminalNode::is(*node)) {
+            auto *ctx = static_cast<ParserRuleContext *>(node);
+            size_t ridx = ctx->getRuleIndex();
+            if (rule_keep == nullptr || (ridx < n_rules && rule_keep[ridx])) {
+                int32_t start, stop;
+                rule_span(ctx, start, stop);
+                out.push_back(static_cast<int32_t>(ridx));
+                out.push_back(start);
+                out.push_back(stop);
+                if (outermost) {
+                    descend = false;  // skip the matched rule's subtree
+                }
+            }
+        }
+
+        if (descend) {
+            stack.emplace_back(node, 0);
+            node = node->children[0];
+            continue;
+        }
+
+        // Ascend to the next unvisited sibling, unwinding exhausted parents.
+        node = nullptr;
+        while (!stack.empty()) {
+            auto &top = stack.back();
+            if (++top.second < top.first->children.size()) {
+                node = top.first->children[top.second];
+                break;
+            }
+            stack.pop_back();
+        }
+    }
+}
+
 }  // namespace antlr_pyfacade_events

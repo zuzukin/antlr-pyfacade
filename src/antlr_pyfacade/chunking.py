@@ -28,11 +28,16 @@ source position, so the pieces can be parsed in parallel. Two families:
   expression, no lexer involved. Roughly an order of magnitude faster at finding
   delimiters (a few times end to end), but not token-aware — a delimiter inside a
   string literal will still match.
+- **Rule-based** ([chunk_by_rule][antlr_pyfacade.chunking.chunk_by_rule]): parse
+  the input once — **entirely in C++**, no Python crossing — and emit each
+  occurrence of a grammar rule as a chunk. Cuts on real grammar structure rather
+  than a token/regex heuristic, at the cost of a structural parse; worth it when
+  the per-chunk callback work dominates the re-parse `walk_parallel` does.
 
-Pick token-based for correctness around strings/comments, regex for raw speed when
-the delimiter can't appear in disguise. The "Chunking: lexer vs regex" notes in
-`docs/performance.md` give measured numbers; `scripts/bench_chunking.py` reproduces
-them.
+Pick token- or rule-based for correctness around strings/comments and real
+structure, regex for raw speed when the delimiter can't appear in disguise. The
+"Chunking: lexer vs regex" notes in `docs/performance.md` give measured numbers;
+`scripts/bench_chunking.py` reproduces them.
 
 A chunk spans the source between boundaries — surrounding whitespace trimmed, its
 start `(offset, line, column)` from a [SourceMap][antlr_pyfacade.SourceMap], and
@@ -49,7 +54,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from . import _native
 from .facade_runtime import Chunk
 from .location import SourceMap
-from .specs import load_lexer_spec
+from .specs import load_lexer_spec, load_specs
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -58,9 +63,13 @@ if TYPE_CHECKING:
     TokenTypes = int | Iterable[int]
     # An (open, close) bracket pair; either side may be one or several types.
     Pair = tuple[TokenTypes, TokenTypes]
+    # A grammar rule name or index, or several of them.
+    RuleTypes = str | int | Iterable[str | int]
 
 # Record layout emitted by _native.lex: (type, channel, start, stop).
 _TOK = struct.Struct("<4i")
+# Record layout emitted by _native.rule_spans: (rule_index, start, stop).
+_RULE = struct.Struct("<3i")
 
 #: The default token channel — what the lexer routes ordinary tokens to.
 DEFAULT_CHANNEL = 0
@@ -388,5 +397,74 @@ def chunk_by_pattern(
     sm = SourceMap(text)
     for m in rx.finditer(text):
         chunk = _emit(text, sm, m.start(), m.end())
+        if chunk is not None:
+            yield chunk
+
+
+def _rule_index(parser_cls: type, rule: str | int) -> int:
+    """Resolve a rule name or index to a rule index for `parser_cls`."""
+    if isinstance(rule, int):
+        return rule
+    names = list(parser_cls.ruleNames)
+    try:
+        return names.index(rule)
+    except ValueError:
+        raise ValueError(f"unknown rule {rule!r}; known rules: {names}") from None
+
+
+def chunk_by_rule(
+    text: str,
+    lexer_cls: type,
+    parser_cls: type,
+    rule: RuleTypes,
+    *,
+    start_rule: str | int | None = None,
+    outermost: bool = True,
+    cached: bool = True,
+) -> Iterator[Chunk]:
+    """Yield each occurrence of a grammar `rule` as a chunk.
+
+    Unlike the token and regex chunkers, this **parses** the whole input (with the
+    grammar's `ParserInterpreter`) to find where the rule occurs — the structural
+    counterpart to the heuristic splitters. The parse runs **entirely in C++** and
+    only the resulting `(start, stop)` spans cross into Python, so it stays cheap
+    relative to the per-chunk `walk_parallel` re-parse it feeds; prefer it when
+    that callback work dominates, or when no token/regex delimiter cleanly marks a
+    record. See `docs/performance.md`.
+
+    Args:
+        text: The source to split.
+        lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
+        parser_cls: The stock ANTLR-generated `<Grammar>Parser` class.
+        rule: The rule to chunk by — a rule name or index, or several of them
+            (e.g. `"function"`, or `{"function", "class"}`).
+        start_rule: The rule the whole input parses as — a name, an index, or
+            `None` for the grammar's start rule (index 0).
+        outermost: When `True` (default), only top-level occurrences are emitted;
+            a matched rule nested inside another match is skipped. `False` emits
+            every occurrence (which would overlap).
+        cached: Reuse the cached specs (see
+            [load_specs][antlr_pyfacade.load_specs]).
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per matched rule occurrence, in source
+        order, trimmed of surrounding whitespace and carrying its position. An
+        empty occurrence (a rule that consumed no token) is skipped.
+    """
+    parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls, cached=cached)
+    if isinstance(rule, (int, str)):
+        rule_mask = [_rule_index(parser_cls, rule)]
+    else:
+        rule_mask = [_rule_index(parser_cls, r) for r in rule]
+    start_idx = 0 if start_rule is None else _rule_index(parser_cls, start_rule)
+
+    raw, _errors = _native.rule_spans(
+        parser_spec, lexer_spec, text, start_idx, rule_mask, outermost
+    )
+    sm = SourceMap(text)
+    for _ridx, start, stop in _RULE.iter_unpack(raw):
+        if start < 0:  # empty rule occurrence — no source span
+            continue
+        chunk = _emit(text, sm, start, stop + 1)
         if chunk is not None:
             yield chunk

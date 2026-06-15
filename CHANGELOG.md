@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.9] - 2026-06-15
+
+### Added
+- Rule-based chunking: `chunk_by_rule(text, LexerCls, ParserCls, rule, *,
+  start_rule=None, outermost=True)` parses the input (entirely in C++) and yields
+  each occurrence of a grammar `rule` (one or several rule names/indices) as a
+  positioned `Chunk`. `outermost=True` keeps only top-level occurrences. For
+  records defined by grammar structure rather than a token/regex delimiter — pays
+  for a structural parse, but only the spans cross into Python. Backed by a new
+  native `rule_spans` entry.
+
 ## [0.1.8] - 2026-06-15
 
 ### Added

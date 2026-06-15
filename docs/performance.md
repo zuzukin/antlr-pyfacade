@@ -134,29 +134,38 @@ Two implementation notes, both bundled here:
 
 ### Chunking: lexer vs regex
 
-The [chunking helpers](api.md#chunking) come in two flavors — token-based
-(`split_on_token` / `split_between_tokens`) and regex-based (`split_on_pattern` /
-`chunk_by_pattern`). They cost very differently. Splitting flat JSON objects on
-`{` (so both agree on the split points), on an 18-core M5 Max:
+The [chunking helpers](api.md#chunking) come in three flavors that cost very
+differently: regex-based (`split_on_pattern` / `chunk_by_pattern`, a text scan),
+token-based (`split_on_token` / `split_between_tokens`, a lexer pass), and
+rule-based (`chunk_by_rule`, a full parse). Producing the *same* chunks — each
+object of a JSON array of 200k flat objects (~11 MB) — on an 18-core M5 Max:
 
-| splitting ~11 MB / 200k records | find delimiters | full chunking |
-| ------------------------------- | --------------: | ------------: |
-| regex (`re.finditer` / `split_on_pattern`) | ~990 MB/s | ~94 MB/s |
-| lexer (`lex` / `split_on_token`)           |  ~34 MB/s | ~25 MB/s |
+| method (~11 MB / 200k objects) | scan/parse stage | full chunking |
+| ------------------------------ | ---------------: | ------------: |
+| regex (`chunk_by_pattern`)         |  ~220 MB/s | ~99 MB/s |
+| lexer (`split_between_tokens`)     |   ~30 MB/s | ~23 MB/s |
+| rule  (`chunk_by_rule`)            |   ~14 MB/s | ~13 MB/s |
 
-The regex finds delimiters **~30× faster**, because the lexer tokenizes the
-*entire* input (then drops all but the boundary tokens in C++), whereas the regex
-scans for one pattern. End to end the gap narrows to **~4×**, because both pay the
-same per-chunk Python cost — building the `SourceMap` and, per chunk, slicing +
-trimming + position lookup — which dominates at high record counts. (Reproduce
-with `scripts/bench_chunking.py`.)
+The regex just scans; the lexer tokenizes the *entire* input (then drops all but
+the boundary tokens in C++); the rule chunker runs a full structural parse. So the
+underlying stage gets ~7× slower from regex to lexer and ~2× again to a parse —
+the last ratio grows with grammar complexity (JSON's prediction is cheap; an
+ambiguous grammar parses much slower than it lexes). End to end the gaps narrow a
+little, since all three pay the same per-chunk Python cost (the `SourceMap` plus,
+per chunk, slicing + trimming + position lookup). Reproduce with
+`scripts/bench_chunking.py`.
 
-So pick by constraint, not just speed:
+Pick by constraint, not just speed:
 
 - **Regex** is much faster, but **not token-aware** — a delimiter inside a string
   literal or comment will still match and mis-split. Use it when the delimiter
   cannot appear in disguise (or you've confirmed it can't).
 - **Token-based** never splits inside a string/comment token, and handles
-  whitespace/channels the way the grammar does. Use it when correctness around
-  those matters more than the raw splitting throughput — which, next to the parse
-  it feeds, is usually negligible either way.
+  whitespace/channels the way the grammar does.
+- **Rule-based** cuts on real grammar structure (no delimiter heuristic at all),
+  at the cost of a parse — but only the spans cross into Python. Reach for it when
+  the per-chunk `walk_parallel` callback work dominates this first parse, or when
+  records simply aren't marked by a token/regex boundary.
+
+Either way the splitting cost is usually negligible next to the per-chunk parse it
+feeds.

@@ -409,6 +409,47 @@ static nb::object lex(LexerSpec &lspec, const std::string &text,
     return nb::make_tuple(std::move(toks), std::move(err_listener.errors));
 }
 
+// ---------------------------------------------------------------------------
+// Rule-span pass: parse (entirely in C++, GIL released) and return the
+// (rule_index, start, stop) character span of each parse-tree node whose rule is
+// kept by rule_mask (nullptr = all). With outermost=true a matched rule's subtree
+// is skipped, so only top-level occurrences are returned. This is the building
+// block for rule-based chunking: the first, structural parse stays in C++ and
+// only the spans cross into Python. Empty rules with no consumed token yield -1.
+// ---------------------------------------------------------------------------
+static nb::object rule_spans(ParserSpec &pspec, LexerSpec &lspec,
+                             const std::string &text, size_t start_rule,
+                             std::optional<std::vector<int32_t>> rule_mask,
+                             bool outermost) {
+    std::vector<int32_t> buf;
+    CollectingErrorListener err_listener;
+    {
+        // Pure C++ parse + tree walk: release the GIL so independent inputs can
+        // be scanned for rule spans in parallel.
+        nb::gil_scoped_release release;
+
+        ANTLRInputStream input(text);
+        LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
+                               lspec.rule_names, lspec.channel_names,
+                               lspec.mode_names, *lspec.atn, &input);
+        CommonTokenStream tokens(&lexer);
+        ParserInterpreter parser(pspec.grammar_file_name, pspec.vocabulary,
+                                 pspec.rule_names, *pspec.atn, &tokens);
+        ParserRuleContext *tree = run_parse(pspec, lspec, input, lexer, tokens,
+                                            parser, start_rule, &err_listener);
+
+        size_t n_rules = pspec.atn->ruleToStartState.size();
+        std::vector<char> rule_keep =
+            rule_mask ? make_mask(rule_mask, n_rules) : std::vector<char>();
+        collect_rule_spans(tree, buf, rule_mask ? rule_keep.data() : nullptr,
+                           n_rules, outermost);
+    }
+
+    nb::bytes spans(reinterpret_cast<const char *>(buf.data()),
+                    buf.size() * sizeof(int32_t));
+    return nb::make_tuple(std::move(spans), std::move(err_listener.errors));
+}
+
 // Trampoline so a Python subclass can override the 4 ParseTreeListener virtuals.
 struct PyListener : public tree::ParseTreeListener {
     NB_TRAMPOLINE(tree::ParseTreeListener, 4);
@@ -533,4 +574,12 @@ NB_MODULE(_native, m) {
           "a list of ParseError diagnostics. Optional token_mask (list of token "
           "types to keep) drops the rest natively. The cheap stage used to chunk "
           "input for walk_parallel without a full parse.");
+    m.def("rule_spans", &rule_spans, nb::arg("parser_spec"),
+          nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
+          nb::arg("rule_mask") = nb::none(), nb::arg("outermost") = true,
+          "Parse (entirely in C++) and return (spans, errors): a flat int32 "
+          "buffer of 3*N values (rule_index, start, stop) for each parse-tree "
+          "rule kept by rule_mask (None = all), plus a list of ParseError "
+          "diagnostics. With outermost=True a matched rule's subtree is skipped. "
+          "Used for rule-based chunking.");
 }

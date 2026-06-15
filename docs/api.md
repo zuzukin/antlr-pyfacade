@@ -176,9 +176,10 @@ records = [
 When the input is many independent pieces, the `antlr_pyfacade.chunking` helpers
 produce the `Chunk`s for [walk_parallel](#walk_parallel), each carrying its exact
 source position. Split by **token boundary** (a single lexer pass, in C++ — never
-splits inside a string/comment) or by **regex** (no lexer, much faster but not
-token-aware). See [Chunking: lexer vs regex](performance.md#chunking-lexer-vs-regex)
-for the trade-off.
+splits inside a string/comment), by **regex** (no lexer, much faster but not
+token-aware), or by **grammar rule** (a structural parse, entirely in C++). See
+[Chunking: lexer vs regex](performance.md#chunking-lexer-vs-regex) for the
+token-vs-regex trade-off.
 
 ```python
 from antlr_pyfacade import lex, split_on_token, split_between_tokens
@@ -222,6 +223,26 @@ The regex splitters take the source text directly — no lexer:
 Either way, each chunk spans the source between boundaries, trimmed of surrounding
 whitespace, with its start `(offset, line, column)` from a `SourceMap` over the
 text; whitespace-only regions are skipped.
+
+For records defined by grammar structure rather than a delimiter, chunk by rule:
+
+- `chunk_by_rule(text, LexerCls, ParserCls, rule, *, start_rule=None,
+  outermost=True)` — parse the input (entirely in C++) and yield each occurrence
+  of `rule` (a rule name/index, or several) as a chunk. `start_rule` is the rule
+  the whole input parses as (default: the grammar's start rule); `outermost=True`
+  keeps only top-level occurrences (a match nested in another is skipped).
+
+```python
+from antlr_pyfacade import chunk_by_rule
+
+# one chunk per top-level `function` in the source:
+chunks = chunk_by_rule(text, MyLexer, MyParser, "function")
+```
+
+This pays for a structural parse — much more than lexing — but cuts on real
+grammar structure and only the spans cross into Python (the parse stays in C++).
+It's worth it when the per-chunk `walk_parallel` callback work dominates, or when
+no token/regex delimiter cleanly marks a record.
 
 ## `load_specs`
 

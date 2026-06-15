@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Benchmark: lex-based vs regex-based chunking.
+"""Benchmark: lexer- vs regex- vs rule-based chunking.
 
-Generates many flat JSON objects (no nested braces, no braces inside strings, so
-the lexer and a `\\{` regex split at exactly the same points) and compares the cost
-of producing the chunks each way. Run with:
+Generates a JSON array of many flat objects (no nested braces, no braces inside
+strings) so all three chunkers produce the *same* N object chunks, and compares
+the cost of producing them — both the underlying scan/parse and the full chunking.
+Run with:
 
     pixi run python scripts/bench_chunking.py
 """
@@ -30,19 +31,32 @@ import time
 from pathlib import Path
 from typing import Any
 
-from antlr_pyfacade import lex, split_on_pattern, split_on_token
+from antlr_pyfacade import (
+    _native,
+    chunk_by_pattern,
+    chunk_by_rule,
+    lex,
+    load_specs,
+    split_between_tokens,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "examples" / "json"))
-_mod: Any = importlib.import_module("generated.JSONLexer")
-JSONLexer = _mod.JSONLexer
+_jl: Any = importlib.import_module("generated.JSONLexer")
+_jp: Any = importlib.import_module("generated.JSONParser")
+JSONLexer = _jl.JSONLexer
+JSONParser = _jp.JSONParser
 LBRACE = JSONLexer.T__0  # '{'
+RBRACE = JSONLexer.T__2  # '}'
+OBJ = list(JSONParser.ruleNames).index("obj")
+_RECORD = r"\{[^{}]*\}"  # one flat object
 
 
 def make_input(n: int) -> str:
-    return "\n".join(
+    objs = (
         f'{{"id": {i}, "name": "item-{i}", "value": {i * 1.5}}}' for i in range(n)
     )
+    return "[" + ", ".join(objs) + "]"
 
 
 def best(fn: Any, repeat: int = 5) -> float:
@@ -58,30 +72,37 @@ def best(fn: Any, repeat: int = 5) -> float:
 def bench_one(n: int) -> None:
     text = make_input(n)
     mb = len(text) / 1e6
+    parser_spec, lexer_spec = load_specs(JSONLexer, JSONParser)
 
-    # Both chunkers must agree (flat objects -> identical split points).
-    lex_chunks = [
-        c.text for c in split_on_token(text, JSONLexer, LBRACE, where="before")
-    ]
-    rx_chunks = [c.text for c in split_on_pattern(text, r"\{", where="before")]
-    assert lex_chunks == rx_chunks, "lex and regex chunkers disagree"
+    # All three families must produce the same object chunks.
+    by_tok = [c.text for c in split_between_tokens(text, JSONLexer, (LBRACE, RBRACE))]
+    by_rx = [c.text for c in chunk_by_pattern(text, _RECORD)]
+    by_rule = [c.text for c in chunk_by_rule(text, JSONLexer, JSONParser, "obj")]
+    assert by_tok == by_rx == by_rule, "chunkers disagree"
 
-    print(f"\n{n:,} objects, {mb:.1f} MB, {len(lex_chunks):,} chunks")
+    print(f"\n{n:,} objects, {mb:.1f} MB, {len(by_rule):,} chunks")
     rows: list[tuple[str, Any]] = [
-        ("lex() keep={LBRACE}", lambda: lex(text, JSONLexer, keep=[LBRACE])),
-        ("re.finditer(r'\\{')", lambda: list(re.finditer(r"\{", text))),
+        # underlying scan / parse stage
+        ("regex finditer", lambda: list(re.finditer(_RECORD, text))),
+        ("lex (tokenize)", lambda: lex(text, JSONLexer, keep=[LBRACE, RBRACE])),
         (
-            "split_on_token  (full)",
-            lambda: list(split_on_token(text, JSONLexer, LBRACE, where="before")),
+            "rule_spans (parse)",
+            lambda: _native.rule_spans(parser_spec, lexer_spec, text, 0, [OBJ], True),
+        ),
+        # full chunking
+        ("chunk_by_pattern", lambda: list(chunk_by_pattern(text, _RECORD))),
+        (
+            "split_between_tokens",
+            lambda: list(split_between_tokens(text, JSONLexer, (LBRACE, RBRACE))),
         ),
         (
-            "split_on_pattern(full)",
-            lambda: list(split_on_pattern(text, r"\{", where="before")),
+            "chunk_by_rule",
+            lambda: list(chunk_by_rule(text, JSONLexer, JSONParser, "obj")),
         ),
     ]
     for label, fn in rows:
         t = best(fn)
-        print(f"  {label:24s} {t * 1e3:8.2f} ms   {mb / t:7.1f} MB/s")
+        print(f"  {label:24s} {t * 1e3:9.2f} ms   {mb / t:8.1f} MB/s")
 
 
 def main() -> int:

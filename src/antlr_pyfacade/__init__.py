@@ -50,6 +50,7 @@ from ._native import (
 from .chunking import (
     LexToken,
     chunk_by_pattern,
+    chunk_by_rule,
     lex,
     split_between_tokens,
     split_on_pattern,
@@ -80,6 +81,7 @@ __all__ = [
     "__version__",
     "atn_shape",
     "chunk_by_pattern",
+    "chunk_by_rule",
     "drive",
     "lex",
     "load_lexer_spec",

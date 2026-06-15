@@ -25,6 +25,7 @@ from to_python import JsonValueBuilder
 from antlr_pyfacade import (
     LexToken,
     chunk_by_pattern,
+    chunk_by_rule,
     lex,
     split_between_tokens,
     split_on_pattern,
@@ -167,3 +168,43 @@ def test_pattern_chunkers():
 
     with pytest.raises(ValueError, match="where"):
         list(split_on_pattern(text, r"\{", where="sideways"))
+
+
+def test_chunk_by_rule():
+    text = '[{"a": 1},\n {"b": [2, 3]},\n {"c": 4}]'
+
+    # Each top-level 'obj' rule occurrence is a chunk, positioned in the source.
+    chunks = list(chunk_by_rule(text, JSONLexer, JSONParser, "obj"))
+    assert [c.text for c in chunks] == ['{"a": 1}', '{"b": [2, 3]}', '{"c": 4}']
+    assert all(text[c.offset : c.offset + len(c.text)] == c.text for c in chunks)
+    assert chunks[1].line == 2  # the second object begins on line 2
+
+    # The chunks drop straight into walk_parallel and reconstruct each value.
+    results = [
+        b.result
+        for b in JsonValueBuilder.walk_parallel(
+            chunks, JSONLexer, JSONParser, start_rule="value"
+        )
+    ]
+    assert results == [{"a": 1}, {"b": [2, 3]}, {"c": 4}]
+
+    # outermost (default) keeps only top-level matches; outermost=False includes
+    # nested ones (which overlap).
+    nested = '{"x": {"y": 1}}'
+    assert [c.text for c in chunk_by_rule(nested, JSONLexer, JSONParser, "obj")] == [
+        '{"x": {"y": 1}}'
+    ]
+    assert [
+        c.text
+        for c in chunk_by_rule(nested, JSONLexer, JSONParser, "obj", outermost=False)
+    ] == ['{"x": {"y": 1}}', '{"y": 1}']
+
+    # A rule index and an explicit start_rule agree with the name form.
+    obj_idx = list(JSONParser.ruleNames).index("obj")
+    assert [
+        c.text
+        for c in chunk_by_rule(text, JSONLexer, JSONParser, obj_idx, start_rule="json")
+    ] == ['{"a": 1}', '{"b": [2, 3]}', '{"c": 4}']
+
+    with pytest.raises(ValueError, match="unknown rule"):
+        list(chunk_by_rule(text, JSONLexer, JSONParser, "nonesuch"))
