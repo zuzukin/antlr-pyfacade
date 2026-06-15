@@ -81,12 +81,15 @@ are unaffected.
 
 When your input is a sequence of **independent pieces** — the records of a log,
 the top-level definitions of a source file, the sections of a document — you can
-parse them concurrently across CPU cores. Split the text into chunks (a cheap
-string/regex pass is usually enough) and hand them to
-[`walk_parallel`](api.md#walk_parallel):
+parse them concurrently across CPU cores. Split the text into chunks — the
+[chunking helpers](api.md#chunking) split on token boundaries from a single cheap
+lexer pass, or bring your own regex — and hand them to
+[walk_parallel](api.md#walk_parallel):
 
 ```python
-chunks = split_into_records(text)               # your fast splitter -> list[str]
+from antlr_pyfacade import split_on_token
+
+chunks = split_on_token(text, MyLexer, MyLexer.RECORD, where="before")
 records = [
     ln.to_model()                               # one result per chunk, in order
     for ln in RecordListener.walk_parallel(

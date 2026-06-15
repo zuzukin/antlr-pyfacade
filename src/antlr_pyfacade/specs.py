@@ -32,6 +32,46 @@ from . import _native
 # pay the ATN deserialization cost once.
 _CACHE: dict[tuple[type, type], tuple[_native.ParserSpec, _native.LexerSpec]] = {}
 
+# Lexer-only spec cache (for chunking, which needs no parser), keyed by lexer class.
+_LEXER_CACHE: dict[type, _native.LexerSpec] = {}
+
+
+def load_lexer_spec(lexer_cls: type, *, cached: bool = True) -> _native.LexerSpec:
+    """Return the `lexer_spec` for a generated `<Grammar>Lexer` class.
+
+    The lexer-only counterpart of [load_specs][antlr_pyfacade.load_specs], for
+    code that lexes without parsing (e.g. the chunkers in
+    [antlr_pyfacade.chunking][]). Reads the serialized ATN + vocabulary off the
+    class and its module, and caches by class.
+
+    Args:
+        lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
+        cached: When `True` (default), reuse/store the result in the per-lexer
+            cache; `False` forces a fresh, uncached spec.
+
+    Returns:
+        The `lexer_spec` for the grammar.
+    """
+    if cached:
+        hit = _LEXER_CACHE.get(lexer_cls)
+        if hit is not None:
+            return hit
+
+    lexer_mod = sys.modules[lexer_cls.__module__]
+    grammar_file = getattr(lexer_cls, "grammarFileName", "<grammar>.g4")
+    spec = _native.LexerSpec(
+        grammar_file,
+        list(lexer_cls.literalNames),
+        list(lexer_cls.symbolicNames),
+        list(lexer_cls.ruleNames),
+        list(lexer_cls.channelNames),
+        list(lexer_cls.modeNames),
+        lexer_mod.serializedATN(),
+    )
+    if cached:
+        _LEXER_CACHE[lexer_cls] = spec
+    return spec
+
 
 def load_specs(
     lexer_cls: type, parser_cls: type, *, cached: bool = True

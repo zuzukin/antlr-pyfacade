@@ -47,9 +47,10 @@ from ._native import (
     parse_stage_times,
     parse_walk,
 )
+from .chunking import LexToken, lex, split_between_tokens, split_on_token
 from .facade_runtime import Chunk, FacadeListener, drive
 from .location import SourceMap
-from .specs import load_specs
+from .specs import load_lexer_spec, load_specs
 
 __version__ = _files(__name__).joinpath("VERSION").read_text(encoding="utf-8").strip()
 
@@ -58,6 +59,7 @@ __all__ = [
     "Chunk",
     "ErrorNode",
     "FacadeListener",
+    "LexToken",
     "LexerSpec",
     "ParseError",
     "ParseTree",
@@ -71,9 +73,13 @@ __all__ = [
     "__version__",
     "atn_shape",
     "drive",
+    "lex",
+    "load_lexer_spec",
     "load_specs",
     "parse_count",
     "parse_events",
     "parse_stage_times",
     "parse_walk",
+    "split_between_tokens",
+    "split_on_token",
 ]

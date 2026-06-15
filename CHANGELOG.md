@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.7] - 2026-06-15
+
+### Added
+- Token-based chunking in `antlr_pyfacade.chunking`, so `walk_parallel` input can
+  be produced without a hand-written regex splitter and with exact source
+  positions carried automatically. A single lexer pass (in C++, no parsing) drives
+  the splitters:
+  - `lex(text, LexerCls, keep=...)` returns the token stream as `LexToken(type,
+    channel, start, stop)` records; `keep` filters to specific token types in C++
+    so only those cross into Python.
+  - `split_on_token(text, LexerCls, token_types, where="before"|"after")` splits at
+    a delimiter token (one type or several).
+  - `split_between_tokens(text, LexerCls, pairs, nested=False)` yields each
+    opener/closer region; `pairs` is one `(open, close)` pair or a list of them,
+    each side one or several token types, so distinct bracket kinds match
+    correctly.
+  All yield positioned `Chunk`s. Also adds `load_lexer_spec` and the `lex` native
+  entry.
+
 ## [0.1.6] - 2026-06-14
 
 ### Added

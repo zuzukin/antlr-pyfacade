@@ -160,8 +160,9 @@ held at once. Consume it incrementally, or `list(...)` it if you want them all.
   reasoning.
 
 ```python
-# Split the source into independent pieces and parse them concurrently:
-chunks = split_into_records(text)                # your fast splitter
+# Split the source into independent pieces and parse them concurrently
+# (see Chunking below for the built-in token-based splitters):
+chunks = split_on_token(text, MyLexer, MyLexer.RECORD, where="before")
 records = [
     ln.to_model()
     for ln in RecordListener.walk_parallel(
@@ -169,6 +170,47 @@ records = [
     )
 ]
 ```
+
+## Chunking
+
+When the input is many independent pieces, the `antlr_pyfacade.chunking` helpers
+produce the `Chunk`s for [walk_parallel](#walk_parallel) by **token boundary** — a
+single lexer pass (the cheap stage, in C++) rather than a hand-written regex — and
+the chunks carry exact source positions automatically.
+
+```python
+from antlr_pyfacade import lex, split_on_token, split_between_tokens
+
+tokens = lex(text, MyLexer)            # whole-source token list (parser-free)
+# each chunk begins with a delimiter token (one type, or several):
+chunks = split_on_token(text, MyLexer, MyLexer.RECORD, where="before")
+# or one chunk per open..close region (optionally balanced):
+chunks = split_between_tokens(text, MyLexer, (MyLexer.BEGIN, MyLexer.END), nested=True)
+# multiple bracket kinds, each matched to its own partner:
+chunks = split_between_tokens(text, MyLexer, [(LPAREN, RPAREN), (LBRACK, RBRACK)])
+```
+
+- `lex(text, LexerCls, *, keep=None)` → a list of `LexToken(type, channel, start,
+  stop)` in source order (EOF omitted; `-> skip` tokens absent). `keep` limits the
+  result to specific token types — the lexer drops the rest in C++, so only those
+  cross into Python. The cheap, parser-free pass the splitters build on.
+- `split_on_token(text, LexerCls, token_types, *, where="before"|"after",
+  channel=0)` — split at each delimiter token. `token_types` is one type or several
+  (any of them delimits). `before` starts each chunk with the delimiter; `after`
+  ends each chunk with it.
+- `split_between_tokens(text, LexerCls, pairs, *, nested=False, channel=0)` — one
+  chunk per opener/closer region. `pairs` is an `(open, close)` pair or a list of
+  them, and each side may be one or several token types. With multiple pairs (e.g.
+  `[(LPAREN, RPAREN), (LBRACK, RBRACK)]`) each opener is matched only by a closer of
+  its own pair, so distinct bracket kinds nest correctly. `nested=True` matches
+  balanced pairs and emits the outermost regions.
+
+The splitters ask `lex` for only their boundary tokens, so little crosses into
+Python. Each chunk spans the source between consecutive boundaries, trimmed of
+surrounding whitespace, with its start `(offset, line, column)` from a `SourceMap`
+over the text; whitespace-only regions are skipped. Pass `channel=None` to split
+on all channels. Token types come from the generated lexer's constants
+(`MyLexer.RECORD`, `MyLexer.STRING`, …).
 
 ## `load_specs`
 

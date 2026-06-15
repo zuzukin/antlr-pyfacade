@@ -20,8 +20,9 @@
 # re-exported from it in `__init__.py` resolve.
 #
 # Regenerate with `pixi run stubgen` after changing cpp/binding.cpp, then re-apply
-# the one hand edit below that stubgen does not infer:
+# the hand edits below that stubgen does not infer:
 #   - the `parse_events` return type (`tuple[bytes, list[ParseError]]`, not `object`)
+#   - the `lex` return type (`tuple[bytes, list[ParseError]]`, not `object`)
 #
 """antlr-pyfacade: Python binding over the official ANTLR4 C++ runtime"""
 
@@ -128,4 +129,9 @@ def parse_events(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, star
 def parse_stage_times(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int) -> dict:
     """
     Diagnostic: dict of per-stage seconds (input_decode, lex_fill, parse_tree, walk) plus token/event/codepoint counts.
+    """
+
+def lex(lexer_spec: LexerSpec, text: str, token_mask: Sequence[int] | None = None) -> tuple[bytes, list[ParseError]]:
+    """
+    Run only the lexer and return (tokens, errors): a flat int32 buffer of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and a list of ParseError diagnostics. Optional token_mask (list of token types to keep) drops the rest natively. The cheap stage used to chunk input for walk_parallel without a full parse.
     """

@@ -353,6 +353,62 @@ static nb::dict parse_stage_times(ParserSpec &pspec, LexerSpec &lspec,
     return d;
 }
 
+// ---------------------------------------------------------------------------
+// Lexer-only pass: run just the LexerInterpreter + token fill (no parser, no ATN
+// prediction — the cheap stage) and return one record per token,
+// (type, channel, start, stop), as a flat int32 buffer. Used to split input into
+// chunks for walk_parallel without a full parse. `start`/`stop` are codepoint
+// offsets matching the event-stream / SourceMap convention (line/column are left
+// to the caller's SourceMap). The EOF sentinel token is omitted. An optional
+// token_mask (list of token types to keep) drops the rest in C++ — chunkers ask
+// only for their boundary tokens, so little crosses into Python.
+// ---------------------------------------------------------------------------
+static nb::object lex(LexerSpec &lspec, const std::string &text,
+                      std::optional<std::vector<int32_t>> token_mask) {
+    std::vector<int32_t> buf;
+    CollectingErrorListener err_listener;
+    {
+        // Pure C++ (arguments already converted): release the GIL so lexing of
+        // independent inputs can overlap, like the parse functions.
+        nb::gil_scoped_release release;
+
+        ANTLRInputStream input(text);
+        LexerInterpreter lexer(lspec.grammar_file_name, lspec.vocabulary,
+                               lspec.rule_names, lspec.channel_names,
+                               lspec.mode_names, *lspec.atn, &input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(&err_listener);
+        CommonTokenStream tokens(&lexer);
+        tokens.fill();
+
+        size_t n_toks = lspec.atn->maxTokenType + 1;
+        std::vector<char> keep =
+            token_mask ? make_mask(token_mask, n_toks) : std::vector<char>();
+        const char *keepp = token_mask ? keep.data() : nullptr;
+
+        size_t n = tokens.size();
+        buf.reserve(n * 4);
+        for (size_t i = 0; i < n; i++) {
+            Token *tok = tokens.get(i);
+            size_t type = tok->getType();
+            if (type == Token::EOF) {
+                continue;
+            }
+            if (keepp != nullptr && (type >= n_toks || keepp[type] == 0)) {
+                continue;
+            }
+            buf.push_back(static_cast<int32_t>(type));
+            buf.push_back(static_cast<int32_t>(tok->getChannel()));
+            buf.push_back(static_cast<int32_t>(tok->getStartIndex()));
+            buf.push_back(static_cast<int32_t>(tok->getStopIndex()));
+        }
+    }
+
+    nb::bytes toks(reinterpret_cast<const char *>(buf.data()),
+                   buf.size() * sizeof(int32_t));
+    return nb::make_tuple(std::move(toks), std::move(err_listener.errors));
+}
+
 // Trampoline so a Python subclass can override the 4 ParseTreeListener virtuals.
 struct PyListener : public tree::ParseTreeListener {
     NB_TRAMPOLINE(tree::ParseTreeListener, 4);
@@ -470,4 +526,11 @@ NB_MODULE(_native, m) {
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           "Diagnostic: dict of per-stage seconds (input_decode, lex_fill, "
           "parse_tree, walk) plus token/event/codepoint counts.");
+    m.def("lex", &lex, nb::arg("lexer_spec"), nb::arg("text"),
+          nb::arg("token_mask") = nb::none(),
+          "Run only the lexer and return (tokens, errors): a flat int32 buffer "
+          "of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and "
+          "a list of ParseError diagnostics. Optional token_mask (list of token "
+          "types to keep) drops the rest natively. The cheap stage used to chunk "
+          "input for walk_parallel without a full parse.");
 }
