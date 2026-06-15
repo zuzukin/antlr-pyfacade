@@ -16,7 +16,7 @@
 
 A generated `<Grammar>EventListener` subclass declares named callbacks
 (`enter<Rule>` / `exit<Rule>` / `visitTerminal` / `visitError`) just like the
-stock ANTLR listener. [`drive`][antlr_pyfacade.drive] runs the bulk native event
+stock ANTLR listener. [drive][antlr_pyfacade.drive] runs the bulk native event
 stream and dispatches those callbacks, instead of building a Python parse tree and
 walking it.
 
@@ -73,8 +73,8 @@ class Chunk(NamedTuple):
     position is computed); pass a `Chunk` to pin an explicit source position via
     `offset` / `line` / `column` — e.g. for pieces that are not contiguous in the
     original source. The position lets per-event
-    [`span`][antlr_pyfacade.FacadeListener.span] /
-    [`line_col`][antlr_pyfacade.FacadeListener.line_col] be reported against the
+    [span][antlr_pyfacade.FacadeListener.span] /
+    [line_col][antlr_pyfacade.FacadeListener.line_col] be reported against the
     whole source rather than the chunk.
     """
 
@@ -101,10 +101,10 @@ class FacadeListener:
     """Base for generated `<Grammar>EventListener` classes.
 
     Provides source-location access for the *current* event: while a callback is
-    running, [`span`][antlr_pyfacade.FacadeListener.span] returns its
+    running, [span][antlr_pyfacade.FacadeListener.span] returns its
     `(start, stop)` character offsets and
-    [`line_col`][antlr_pyfacade.FacadeListener.line_col] the 1-based line / 0-based
-    column of its start. [`drive`][antlr_pyfacade.drive] populates this state per
+    [line_col][antlr_pyfacade.FacadeListener.line_col] the 1-based line / 0-based
+    column of its start. [drive][antlr_pyfacade.drive] populates this state per
     dispatched callback; outside a callback it reflects the most recent one.
     """
 
@@ -113,7 +113,7 @@ class FacadeListener:
     _pyfacade_stop: int = -1
     _pyfacade_sourcemap: SourceMap | None = None
     # Source position of the parsed text's first character, so positions can be
-    # reported against the whole source (see ChunkStart / walk_parallel). The
+    # reported against the whole source (see Chunk / walk_parallel). The
     # defaults — offset 0, line 1, column 0 — leave a plain `walk` unchanged.
     _pyfacade_base_offset: int = 0
     _pyfacade_base_line: int = 1
@@ -124,7 +124,7 @@ class FacadeListener:
     syntax_errors: list[_native.ParseError] = []  # noqa: RUF012
     """Parse diagnostics collected during the most recent `walk`.
 
-    A list of [`ParseError`][antlr_pyfacade.ParseError] records, empty when the
+    A list of [ParseError][antlr_pyfacade.ParseError] records, empty when the
     parse had no errors. The default ANTLR console error listener is suppressed, so
     these are the only report of a parse failure — inspect them instead of watching
     stderr.
@@ -150,7 +150,7 @@ class FacadeListener:
             `None` when the event has no source span (e.g. an empty rule). For a
             `walk_parallel` chunk the position is reported against the whole
             source via the chunk's start. The
-            [`SourceMap`][antlr_pyfacade.SourceMap] is built once per walk on first
+            [SourceMap][antlr_pyfacade.SourceMap] is built once per walk on first
             use.
         """
         start = self._pyfacade_start
@@ -177,7 +177,7 @@ class FacadeListener:
         """Return the generated `<Grammar>EventListener` in this class's ancestry.
 
         That base (the class that directly subclasses `FacadeListener`) holds the
-        no-op callback stubs [`drive`][antlr_pyfacade.drive] compares against to
+        no-op callback stubs [drive][antlr_pyfacade.drive] compares against to
         detect overrides, plus `ruleNames` / `START_RULE`. Works whether `cls` is
         the generated class itself or a user subclass of it.
 
@@ -233,10 +233,10 @@ class FacadeListener:
                 (e.g. one record or top-level definition) that parses as
                 `start_rule`. A bare `str` is treated as contiguous with the
                 previous chunk and its source position is computed; a
-                [`Chunk`][antlr_pyfacade.Chunk] pins
+                [Chunk][antlr_pyfacade.Chunk] pins
                 an explicit `offset` / `line` / `column` so callbacks
-                report [`span`][antlr_pyfacade.FacadeListener.span] /
-                [`line_col`][antlr_pyfacade.FacadeListener.line_col] against the
+                report [span][antlr_pyfacade.FacadeListener.span] /
+                [line_col][antlr_pyfacade.FacadeListener.line_col] against the
                 whole source. Mix freely: a `Chunk` re-anchors the running position
                 for the contiguous `str` chunks that follow it.
             lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
@@ -257,7 +257,7 @@ class FacadeListener:
             flight, so neither the whole input nor all results are held at once —
             consume it incrementally (or `list(...)` it if you want them all). Each
             listener carries its accumulated state plus its
-            [`syntax_errors`][antlr_pyfacade.FacadeListener.syntax_errors].
+            [syntax_errors][antlr_pyfacade.FacadeListener.syntax_errors].
         """
         base = cls._facade_base()
         rule = cls._resolve_start_rule(base, start_rule)  # validate eagerly
@@ -334,7 +334,7 @@ def drive(
         base_cls: The generated `<Grammar>EventListener` base; its no-op stubs are
             the reference for detecting which callbacks the subclass overrode.
         parser_spec: The native parser spec (see
-            [`load_specs`][antlr_pyfacade.load_specs]).
+            [load_specs][antlr_pyfacade.load_specs]).
         lexer_spec: The native lexer spec.
         text: The source to parse.
         start_rule: The index of the rule to start parsing at.

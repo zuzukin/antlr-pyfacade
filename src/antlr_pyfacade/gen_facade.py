@@ -19,7 +19,7 @@ module (no annotated grammar, no extra inputs) and emits a `<Grammar>EventListen
 base class: named `enter<Rule>` / `exit<Rule>` no-op stubs, `visitTerminal` /
 `visitError` stubs, token-type constants, and a `walk` method that runs the bulk
 native event stream. The base subclasses
-[`FacadeListener`][antlr_pyfacade.FacadeListener], so callbacks can call
+[FacadeListener][antlr_pyfacade.FacadeListener], so callbacks can call
 `self.line_col()` for the current event's source position.
 
 The generated surface mirrors the stock ANTLR listener so consumers write the same

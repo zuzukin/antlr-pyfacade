@@ -84,7 +84,11 @@ Grammars depending on them won't parse correctly. This is pinned by
   `docs/`); build/test/tooling-only changes don't bump. See `CONTRIBUTING.md`.
 - Hand-authored `.py`/`.cpp` files carry the Apache-2.0 header; docstrings use
   mkdocstrings/Markdown style (single backticks, Google-style sections) — no
-  reStructuredText roles or `::` directives.
+  reStructuredText roles or `::` directives. Cross-references are
+  `[title][antlr_pyfacade.Symbol]` with a **plain** title — never backtick the
+  title. `` [`title`][ref] `` renders the title as inline code, which hides that
+  it's a clickable link. (Backticks remain correct for inline code that is *not* a
+  cross-reference.)
 - Package license is **Apache-2.0**; the vendored runtime under `vendor/` stays
   **BSD-3-Clause** — never relicense vendored code.
 - Public docs (README, `docs/`) compare only against alternatives the reader

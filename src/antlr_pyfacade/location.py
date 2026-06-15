@@ -17,8 +17,8 @@ Turn source character offsets into `(line, column)` positions.
 
 The event stream reports `start`/`stop` as character (codepoint) offsets into the
 source string — the same indices that slice it directly. To report a position to a
-user (e.g. on a parse error) build one [`SourceMap`][antlr_pyfacade.SourceMap] over
-the source and call [`SourceMap.line_col`][antlr_pyfacade.SourceMap.line_col]; the
+user (e.g. on a parse error) build one [SourceMap][antlr_pyfacade.SourceMap] over
+the source and call [SourceMap.line_col][antlr_pyfacade.SourceMap.line_col]; the
 newline scan is done once and each lookup is an O(log n) bisect.
 """
 
@@ -65,7 +65,7 @@ class SourceMap:
     def offset(self, line: int, column: int = 0) -> int:
         """Return the character offset for a 1-based `line` and 0-based `column`.
 
-        The inverse of [`line_col`][antlr_pyfacade.SourceMap.line_col]:
+        The inverse of [line_col][antlr_pyfacade.SourceMap.line_col]:
         `offset(*line_col(o)) == o` for any valid offset `o`.
 
         Args:

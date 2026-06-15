@@ -61,6 +61,19 @@ pixi run stubgen
 the one hand edit its header comment documents (the `parse_events` return type),
 which nanobind cannot infer.
 
+## Docstrings
+
+Docstrings are rendered into the API docs by mkdocstrings, which resolves
+cross-references written as `[title][path.to.symbol]` (e.g.
+`[walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel]`).
+
+**Do not wrap the cross-reference title in backticks.** Write `[title][ref]`, not
+`` [`title`][ref] ``. Backticks render the title as inline code, which visually
+hides that the text is a clickable link — the reference still resolves, but
+readers can't tell it's a link. Plain `[title][ref]` renders as a normal styled
+link. Backticks are still correct for inline code that is *not* a cross-reference
+(a parameter or type name with no `][ref]` after it).
+
 ## Version
 
 The version lives in one place: `src/antlr_pyfacade/VERSION`. The build reads it

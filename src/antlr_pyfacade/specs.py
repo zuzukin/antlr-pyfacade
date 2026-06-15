@@ -17,7 +17,7 @@
 `antlr-pyfacade` consumes the output of the ordinary ANTLR tool run with
 `-Dlanguage=Python3`: it reads the serialized ATN and the name/vocabulary metadata
 straight off the generated `<Grammar>Lexer` / `<Grammar>Parser` classes and hands
-them to the C++ runtime. [`load_specs`][antlr_pyfacade.load_specs] is the bridge
+them to the C++ runtime. [load_specs][antlr_pyfacade.load_specs] is the bridge
 that makes the runtime grammar-agnostic — no codegen step of our own, no annotated
 grammar, just the modules the user already generated.
 """
@@ -45,7 +45,7 @@ def load_specs(
     A spec owns a mutable ATN. With the vendored runtime's per-DFA locks, sharing
     one spec across threads is both correct and scales, so most parallel code can
     just share a cached spec (or use
-    [`FacadeListener.walk_parallel`][antlr_pyfacade.FacadeListener.walk_parallel]).
+    [FacadeListener.walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel]).
 
     Args:
         lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
