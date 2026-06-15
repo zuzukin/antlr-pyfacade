@@ -66,8 +66,8 @@ Version is single-sourced in `src/antlr_pyfacade/VERSION` (pyproject reads it
 dynamically; `antlr_pyfacade.__version__` reads it via `importlib.resources`). The
 compiled `_native` module has a checked-in stub `src/antlr_pyfacade/_native.pyi`
 (IDEs/type-checkers can't follow the editable redirector) — after changing the
-binding's public interface, `pixi run stubgen` and re-apply the one documented
-hand edit.
+binding's public interface, run `pixi run stubgen` (it re-applies the hand edits
+automatically via `scripts/stubgen.py`).
 
 ## Known limitation
 

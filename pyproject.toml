@@ -203,8 +203,8 @@ description = "Rebuild the _native C++ extension (run after editing cpp/ or the 
 cmd = "python scripts/build_native.py"
 
 [tool.pixi.tasks.stubgen]
-description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (re-apply the hand edits noted in the stub)."
-cmd = "python -m nanobind.stubgen -m antlr_pyfacade._native -o src/antlr_pyfacade/_native.pyi"
+description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
+cmd = "python scripts/stubgen.py"
 
 [tool.pixi.tasks.asan-test]
 description = "Build and run the AddressSanitizer C++ harness over the example grammars (macOS + Linux)."

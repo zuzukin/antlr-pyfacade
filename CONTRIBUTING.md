@@ -57,9 +57,10 @@ pixi run build
 pixi run stubgen
 ```
 
-`stubgen` imports the freshly built module and overwrites the stub, so re-apply
-the one hand edit its header comment documents (the `parse_events` return type),
-which nanobind cannot infer.
+`pixi run stubgen` runs `scripts/stubgen.py`, which invokes nanobind's stubgen and
+then re-applies the edits nanobind cannot infer — the license header and the
+`parse_events` / `lex` return types — so the committed stub is produced directly.
+To change those edits, edit `scripts/stubgen.py`, not the `.pyi`.
 
 ## Docstrings
 
@@ -101,6 +102,6 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 
 - If you changed C++ (`cpp/` or `vendor/antlr4-cpp/`), run `pixi run build` first.
 - Run `pixi run test` and make sure the suite is green.
-- If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` and
-  re-apply the hand edit documented in `_native.pyi`.
+- If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` (it
+  re-applies the hand edits automatically).
 - If you changed the docs, confirm `pixi run docs-build` succeeds.
