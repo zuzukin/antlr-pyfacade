@@ -79,19 +79,24 @@ are unaffected.
 
 ## Parallel parsing
 
-When your input is a sequence of **independent pieces** — the cells/subcircuits of
-a netlist, the records of a log, the top-level definitions of a source file — you
-can parse them concurrently across CPU cores. Split the text into chunks (a cheap
+When your input is a sequence of **independent pieces** — the records of a log,
+the top-level definitions of a source file, the sections of a document — you can
+parse them concurrently across CPU cores. Split the text into chunks (a cheap
 string/regex pass is usually enough) and hand them to
 [`walk_parallel`](api.md#walk_parallel):
 
 ```python
-chunks = split_into_subcircuits(netlist_text)   # your fast splitter -> list[str]
-listeners = CellListener.walk_parallel(
-    chunks, NetlistLexer, NetlistParser, start_rule="subckt"
-)
-cells = [ln.to_model() for ln in listeners]      # one result per chunk, in order
+chunks = split_into_records(text)               # your fast splitter -> list[str]
+records = [
+    ln.to_model()                               # one result per chunk, in order
+    for ln in RecordListener.walk_parallel(
+        chunks, MyLexer, MyParser, start_rule="record"
+    )
+]
 ```
+
+`walk_parallel` yields lazily with a bounded number of parses in flight, so you
+can consume results incrementally instead of holding the whole input in memory.
 
 Each chunk parses on a worker thread with the GIL released, so the parses overlap.
 Worker threads use independent specs internally, so they never contend on a shared
@@ -121,4 +126,5 @@ Two implementation notes, both bundled here:
   independent ones; edge reads were already lock-free.
 - **Cold DFA per parse.** Each parse builds its own prediction DFA from scratch, so
   very small chunks spend proportionally more time warming up. Larger chunks
-  amortize this away — real subcircuits are big enough that it's negligible.
+  amortize this away — real-world chunks are usually big enough that it's
+  negligible.

@@ -66,7 +66,7 @@ class MyGrammarEventListener(FacadeListener):
   so `result = MyListener().walk(text, L, P).result` works.
 - `walk(..., filtered=False)` forces the full unfiltered stream.
 - `start_rule` (on both `walk` and `walk_parallel`) chooses which grammar rule to
-  parse as — a rule **name** (`"subckt"`), a rule **index**, or `None` for the
+  parse as — a rule **name** (`"record"`), a rule **index**, or `None` for the
   grammar's start rule. Use it to parse a chunk that is one sub-rule rather than a
   whole document. See [`walk_parallel`](#walk_parallel) for parsing many such
   chunks concurrently.
@@ -133,17 +133,25 @@ listeners = MyListener.walk_parallel(
 )
 ```
 
-Parse independent `chunks` across a thread pool and return **one listener per
+Parse independent `chunks` across a thread pool, yielding **one listener per
 chunk, in input order**. Each chunk is a self-contained piece of source (e.g. one
-subcircuit of a netlist) that parses as `start_rule`. A fresh listener is created
-per chunk — `cls()` by default, or `factory()` if given — walked over its chunk,
-and returned with whatever state it accumulated plus its `syntax_errors`.
+record or top-level definition) that parses as `start_rule`. A fresh listener is
+created per chunk — `cls()` by default, or `factory()` if given — walked over its
+chunk, and yielded with whatever state it accumulated plus its `syntax_errors`.
+
+`chunks` is any iterable of `str` or `Chunk`. A bare `str` is treated as
+contiguous with the previous chunk (its source position is computed); a `Chunk`
+bundles text with an explicit `offset` / `line` / `column`, so callbacks'
+`span` / `line_col` report positions against the whole source. The result is a
+**lazy iterator** — chunks are pulled and parsed on demand with at most
+`max_workers` parses in flight, so neither the whole input nor all results are
+held at once. Consume it incrementally, or `list(...)` it if you want them all.
 
 - The native parse releases the GIL, so the parses overlap across cores. Each
   worker thread uses its own specs internally, so concurrent parses never contend.
 - `start_rule` — rule name, rule index, or `None` for the grammar's start rule.
-- `max_workers` — defaults to `os.cpu_count()`, capped at the chunk count. With
-  one worker or one chunk it runs inline (no pool), which keeps small inputs cheap.
+- `max_workers` — the maximum parses in flight (also the ordering window).
+  Defaults to `os.cpu_count()`. With `1` it runs inline, without a pool.
 - `factory` — a zero-arg callable returning a fresh listener, for subclasses whose
   constructor needs arguments. Defaults to the class itself.
 - Parallel speedup is bounded by how parse-heavy the work is versus per-callback
@@ -152,12 +160,12 @@ and returned with whatever state it accumulated plus its `syntax_errors`.
   reasoning.
 
 ```python
-# Split a netlist into per-subcircuit text, parse them concurrently:
-chunks = split_into_subcircuits(text)            # your fast splitter
-cells = [
+# Split the source into independent pieces and parse them concurrently:
+chunks = split_into_records(text)                # your fast splitter
+records = [
     ln.to_model()
-    for ln in CellListener.walk_parallel(
-        chunks, NetlistLexer, NetlistParser, start_rule="subckt"
+    for ln in RecordListener.walk_parallel(
+        chunks, MyLexer, MyParser, start_rule="record"
     )
 ]
 ```

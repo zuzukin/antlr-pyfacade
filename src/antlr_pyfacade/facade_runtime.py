@@ -30,15 +30,17 @@ from __future__ import annotations
 import os
 import struct
 import threading
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from . import _native
 from .location import SourceMap
 from .specs import load_specs
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Iterator
+    from concurrent.futures import Future
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 _REC = "<4i"
@@ -64,6 +66,37 @@ def _specs_for_thread(
     return specs
 
 
+class Chunk(NamedTuple):
+    """A piece of source plus where it begins, for `walk_parallel`.
+
+    Pass a bare `str` for a chunk that is contiguous with the previous one (its
+    position is computed); pass a `Chunk` to pin an explicit source position via
+    `offset` / `line` / `column` — e.g. for pieces that are not contiguous in the
+    original source. The position lets per-event
+    [`span`][antlr_pyfacade.FacadeListener.span] /
+    [`line_col`][antlr_pyfacade.FacadeListener.line_col] be reported against the
+    whole source rather than the chunk.
+    """
+
+    text: str
+    offset: int = 0  # 0-based character offset of the first character
+    line: int = 1  # 1-based line of the first character
+    column: int = 0  # 0-based column of the first character
+
+
+def _advance(chunk: Chunk) -> tuple[int, int, int]:
+    """Return the `(offset, line, column)` immediately after `chunk`.
+
+    That is where the next chunk begins when chunks are contiguous.
+    """
+    text = chunk.text
+    newlines = text.count("\n")
+    offset = chunk.offset + len(text)
+    if newlines == 0:
+        return offset, chunk.line, chunk.column + len(text)
+    return offset, chunk.line + newlines, len(text) - text.rfind("\n") - 1
+
+
 class FacadeListener:
     """Base for generated `<Grammar>EventListener` classes.
 
@@ -79,6 +112,12 @@ class FacadeListener:
     _pyfacade_start: int = -1
     _pyfacade_stop: int = -1
     _pyfacade_sourcemap: SourceMap | None = None
+    # Source position of the parsed text's first character, so positions can be
+    # reported against the whole source (see ChunkStart / walk_parallel). The
+    # defaults — offset 0, line 1, column 0 — leave a plain `walk` unchanged.
+    _pyfacade_base_offset: int = 0
+    _pyfacade_base_line: int = 1
+    _pyfacade_base_col: int = 0
 
     # Reassigned to a fresh list by `drive` on every walk (never mutated in
     # place), so the shared class-level default is safe — hence the RUF012 waiver.
@@ -92,15 +131,25 @@ class FacadeListener:
     """
 
     def span(self) -> tuple[int, int]:
-        """Return the `(start, stop)` character offsets of the current event."""
-        return self._pyfacade_start, self._pyfacade_stop
+        """Return the `(start, stop)` character offsets of the current event.
+
+        Offsets are into the whole source: for a `walk_parallel` chunk they
+        include the chunk's start offset. `(-1, -1)` when the event has no span.
+        """
+        start, stop = self._pyfacade_start, self._pyfacade_stop
+        if start < 0:
+            return start, stop
+        base = self._pyfacade_base_offset
+        return start + base, stop + base
 
     def line_col(self) -> tuple[int, int] | None:
         """Return the `(line, column)` of the current event's start, or `None`.
 
         Returns:
             The 1-based line and 0-based column of the current event's start, or
-            `None` when the event has no source span (e.g. an empty rule). The
+            `None` when the event has no source span (e.g. an empty rule). For a
+            `walk_parallel` chunk the position is reported against the whole
+            source via the chunk's start. The
             [`SourceMap`][antlr_pyfacade.SourceMap] is built once per walk on first
             use.
         """
@@ -110,7 +159,12 @@ class FacadeListener:
         sm = self._pyfacade_sourcemap
         if sm is None:
             sm = self._pyfacade_sourcemap = SourceMap(self._pyfacade_text)
-        return sm.line_col(start)
+        line, col = sm.line_col(start)
+        # Offset into the whole source. Only the chunk's first line shares a line
+        # with the chunk's start, so only it picks up the start column.
+        if line == 1:
+            return self._pyfacade_base_line, self._pyfacade_base_col + col
+        return self._pyfacade_base_line + line - 1, col
 
     def visitTerminal(self, token_type: int, text: str) -> None:
         """No-op terminal callback; override in a subclass to handle tokens."""
@@ -155,7 +209,7 @@ class FacadeListener:
     @classmethod
     def walk_parallel(
         cls,
-        chunks: Iterable[str],
+        chunks: Iterable[str | Chunk],
         # TODO - more precise base classes or Protocols for lexer/parser
         lexer_cls: type,
         parser_cls: type,
@@ -164,7 +218,7 @@ class FacadeListener:
         max_workers: int | None = None,
         filtered: bool = True,
         factory: Callable[[], FacadeListener] | None = None,
-    ) -> list[FacadeListener]:
+    ) -> Iterator[FacadeListener]:
         """Parse independent `chunks` across a thread pool, one listener each.
 
         The native parse releases the GIL, so the parses overlap across cores. Each
@@ -175,35 +229,42 @@ class FacadeListener:
         of `docs/performance.md`.
 
         Args:
-            chunks: The pieces of source to parse. Each is a self-contained piece
-                (e.g. one subcircuit of a netlist) that parses as `start_rule`.
+            chunks: The pieces of source to parse, each a self-contained piece
+                (e.g. one record or top-level definition) that parses as
+                `start_rule`. A bare `str` is treated as contiguous with the
+                previous chunk and its source position is computed; a
+                [`Chunk`][antlr_pyfacade.Chunk] pins
+                an explicit `offset` / `line` / `column` so callbacks
+                report [`span`][antlr_pyfacade.FacadeListener.span] /
+                [`line_col`][antlr_pyfacade.FacadeListener.line_col] against the
+                whole source. Mix freely: a `Chunk` re-anchors the running position
+                for the contiguous `str` chunks that follow it.
             lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
             parser_cls: The stock ANTLR-generated `<Grammar>Parser` class.
             start_rule: The rule each chunk parses as — a rule name, a rule index,
                 or `None` for the grammar's start rule.
-            max_workers: The thread-pool size. Defaults to `os.cpu_count()`, capped
-                at the chunk count. With one worker or one chunk it runs inline,
-                without a pool.
+            max_workers: The maximum number of parses in flight at once (also the
+                ordering/buffer window). Defaults to `os.cpu_count()`. With `1` it
+                runs inline, without a pool.
             filtered: When `True` (default), only overridden rules/tokens are
                 emitted by C++; `False` forces the full event stream.
             factory: A zero-argument callable returning a fresh listener, for
                 subclasses whose constructor needs arguments. Defaults to `cls`.
 
         Returns:
-            One listener per chunk, **in input order**, each carrying whatever state
-            it accumulated plus its
+            A lazy iterator of listeners, one per chunk, **in input order**. Chunks
+            are pulled and parsed on demand with at most `max_workers` parses in
+            flight, so neither the whole input nor all results are held at once —
+            consume it incrementally (or `list(...)` it if you want them all). Each
+            listener carries its accumulated state plus its
             [`syntax_errors`][antlr_pyfacade.FacadeListener.syntax_errors].
         """
         base = cls._facade_base()
-        rule = cls._resolve_start_rule(base, start_rule)
+        rule = cls._resolve_start_rule(base, start_rule)  # validate eagerly
         make = factory if factory is not None else cls
-        chunk_list = list(chunks)
+        workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
 
-        # TODO - need to pass starting line/col for each chunk to correctly compute source map
-        #  also need to provide away to pass these in along with the chunks, at least as an option
-        #  in case the chunks are not contiguous.
-
-        def run(text: str) -> FacadeListener:
+        def run(chunk: Chunk) -> FacadeListener:
             parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
             listener = make()
             drive(
@@ -211,18 +272,46 @@ class FacadeListener:
                 base,
                 parser_spec,
                 lexer_spec,
-                text,
+                chunk.text,
                 rule,
                 filtered=filtered,
+                origin=(chunk.offset, chunk.line, chunk.column),
             )
             return listener
 
-        if max_workers is None:
-            max_workers = min(len(chunk_list), os.cpu_count() or 1)
-        if max_workers <= 1 or len(chunk_list) <= 1:
-            return [run(text) for text in chunk_list]
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            return list(pool.map(run, chunk_list))
+        def resolved() -> Iterator[Chunk]:
+            # A bare str continues contiguously from the previous chunk; a Chunk
+            # pins its own position and re-anchors the str chunks that follow it.
+            pos = (0, 1, 0)
+            for item in chunks:
+                if isinstance(item, Chunk):
+                    chunk = item
+                elif isinstance(item, str):
+                    chunk = Chunk(item, *pos)
+                else:
+                    raise TypeError(
+                        f"chunks must be str or Chunk, got {type(item).__name__}"
+                    )
+                yield chunk
+                pos = _advance(chunk)
+
+        def stream() -> Iterator[FacadeListener]:
+            if workers <= 1:
+                for chunk in resolved():
+                    yield run(chunk)
+                return
+            # Bounded-window parallelism: keep ~`workers` parses in flight and yield
+            # in input order, so peak memory tracks the window, not the chunk count.
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                pending: deque[Future[FacadeListener]] = deque()
+                for chunk in resolved():
+                    pending.append(pool.submit(run, chunk))
+                    if len(pending) > workers:
+                        yield pending.popleft().result()
+                while pending:
+                    yield pending.popleft().result()
+
+        return stream()
 
 
 # TODO - should this be a method of FacadeListener?
@@ -236,6 +325,7 @@ def drive(
     start_rule: int,
     *,
     filtered: bool = True,
+    origin: tuple[int, int, int] = (0, 1, 0),
 ) -> None:
     """Run the native parse and dispatch overridden callbacks on `listener`.
 
@@ -251,6 +341,9 @@ def drive(
         filtered: When `True` (default), only overridden rules/tokens are emitted
             by C++; `False` forces a faithful full event stream regardless of
             overrides.
+        origin: The `(offset, line, column)` of `text`'s first character, so
+            callbacks report positions against the whole source. Defaults to the
+            start of the source, `(0, 1, 0)`.
     """
     cls = type(listener)
     rule_names = base_cls.ruleNames
@@ -292,6 +385,11 @@ def drive(
     # cached map so a reused listener re-derives it for this text.
     listener._pyfacade_text = text
     listener._pyfacade_sourcemap = None
+    (
+        listener._pyfacade_base_offset,
+        listener._pyfacade_base_line,
+        listener._pyfacade_base_col,
+    ) = origin
 
     for kind, payload, start, stop in struct.iter_unpack(_REC, raw):
         if kind == EV_TERMINAL:

@@ -47,7 +47,7 @@ from ._native import (
     parse_stage_times,
     parse_walk,
 )
-from .facade_runtime import FacadeListener, drive
+from .facade_runtime import Chunk, FacadeListener, drive
 from .location import SourceMap
 from .specs import load_specs
 
@@ -55,6 +55,7 @@ __version__ = _files(__name__).joinpath("VERSION").read_text(encoding="utf-8").s
 
 __all__ = [
     "AtnShape",
+    "Chunk",
     "ErrorNode",
     "FacadeListener",
     "LexerSpec",

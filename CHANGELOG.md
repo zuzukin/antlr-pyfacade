@@ -6,6 +6,30 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.6] - 2026-06-14
+
+### Added
+- `walk_parallel` now accepts `str` **or** `Chunk` items, where `Chunk` bundles a
+  chunk's text with its source `offset` / `line` / `column`, so callbacks' `span`
+  / `line_col` report positions against the whole source rather than each chunk. A
+  bare `str` is positioned contiguously after the previous chunk; a `Chunk` pins
+  an explicit position and re-anchors the bare strings that follow it. New `Chunk`
+  type is exported.
+
+### Changed
+- `walk_parallel` now returns a **lazy iterator** instead of a list. Chunks are
+  pulled and parsed on demand with at most `max_workers` parses in flight (results
+  still yielded in input order), so neither the whole input nor all results need
+  to be held in memory — enabling incremental processing. Call `list(...)` on the
+  result for the previous eager behavior.
+- `FacadeListener.span` / `line_col` report positions offset by the parsed text's
+  source origin. Unchanged for a plain `walk` (origin `(0, 1, 0)`).
+
+### Changed
+- `FacadeListener.span` / `line_col` report positions offset by the parsed
+  text's source origin. Unchanged for a plain `walk` (origin is offset 0,
+  line 1, column 0).
+
 ## [0.1.5] - 2026-06-14
 
 ### Added
