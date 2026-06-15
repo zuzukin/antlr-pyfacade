@@ -22,7 +22,14 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
-from antlr_pyfacade import LexToken, lex, split_between_tokens, split_on_token
+from antlr_pyfacade import (
+    LexToken,
+    chunk_by_pattern,
+    lex,
+    split_between_tokens,
+    split_on_pattern,
+    split_on_token,
+)
 
 # Token types from the generated lexer's class constants (the reliable source —
 # the literals are T__n in vocabulary order: '{' '}' '[' ']' ':').
@@ -136,3 +143,27 @@ def test_split_between_tokens():
     assert [
         c.text for c in split_between_tokens(mixed, JSONLexer, pairs, nested=True)
     ] == ['{"a": [1, 2]}', '[3, {"b": 4}]']
+
+
+def test_pattern_chunkers():
+    # Regex chunkers need no grammar/lexer — they work on the raw text.
+    text = '{"a": 1}\n{"b": 22}\n{"c": 3}'
+
+    # split_on_pattern mirrors split_on_token: split before each '{', positions
+    # tracked against the whole source.
+    before = list(split_on_pattern(text, r"\{", where="before"))
+    assert [c.text for c in before] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
+    assert [(c.offset, c.line, c.column) for c in before] == [
+        (0, 1, 0),
+        (9, 2, 0),
+        (19, 3, 0),
+    ]
+    after = list(split_on_pattern(text, r"\}", where="after"))
+    assert [c.text for c in after] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
+
+    # chunk_by_pattern: each match is one chunk (the pattern matches a record).
+    objs = list(chunk_by_pattern(text, r"\{[^{}]*\}"))
+    assert [c.text for c in objs] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
+
+    with pytest.raises(ValueError, match="where"):
+        list(split_on_pattern(text, r"\{", where="sideways"))

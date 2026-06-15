@@ -131,3 +131,32 @@ Two implementation notes, both bundled here:
   very small chunks spend proportionally more time warming up. Larger chunks
   amortize this away — real-world chunks are usually big enough that it's
   negligible.
+
+### Chunking: lexer vs regex
+
+The [chunking helpers](api.md#chunking) come in two flavors — token-based
+(`split_on_token` / `split_between_tokens`) and regex-based (`split_on_pattern` /
+`chunk_by_pattern`). They cost very differently. Splitting flat JSON objects on
+`{` (so both agree on the split points), on an 18-core M5 Max:
+
+| splitting ~11 MB / 200k records | find delimiters | full chunking |
+| ------------------------------- | --------------: | ------------: |
+| regex (`re.finditer` / `split_on_pattern`) | ~990 MB/s | ~94 MB/s |
+| lexer (`lex` / `split_on_token`)           |  ~34 MB/s | ~25 MB/s |
+
+The regex finds delimiters **~30× faster**, because the lexer tokenizes the
+*entire* input (then drops all but the boundary tokens in C++), whereas the regex
+scans for one pattern. End to end the gap narrows to **~4×**, because both pay the
+same per-chunk Python cost — building the `SourceMap` and, per chunk, slicing +
+trimming + position lookup — which dominates at high record counts. (Reproduce
+with `scripts/bench_chunking.py`.)
+
+So pick by constraint, not just speed:
+
+- **Regex** is much faster, but **not token-aware** — a delimiter inside a string
+  literal or comment will still match and mis-split. Use it when the delimiter
+  cannot appear in disguise (or you've confirmed it can't).
+- **Token-based** never splits inside a string/comment token, and handles
+  whitespace/channels the way the grammar does. Use it when correctness around
+  those matters more than the raw splitting throughput — which, next to the parse
+  it feeds, is usually negligible either way.

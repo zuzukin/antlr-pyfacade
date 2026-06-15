@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.8] - 2026-06-15
+
+### Added
+- Regex-based chunkers in `antlr_pyfacade.chunking`, for when a lexer pass isn't
+  needed: `split_on_pattern(text, pattern, where="before"|"after")` (the regex
+  analogue of `split_on_token`) and `chunk_by_pattern(text, pattern)` (each match
+  is a record). They take the text directly — no lexer — and yield positioned
+  `Chunk`s like the token splitters. Faster than the lexer-based splitters for
+  simple delimiters but not token-aware; see `docs/performance.md` for measured
+  numbers and the trade-off (`scripts/bench_chunking.py`).
+
 ## [0.1.7] - 2026-06-15
 
 ### Added

@@ -47,7 +47,14 @@ from ._native import (
     parse_stage_times,
     parse_walk,
 )
-from .chunking import LexToken, lex, split_between_tokens, split_on_token
+from .chunking import (
+    LexToken,
+    chunk_by_pattern,
+    lex,
+    split_between_tokens,
+    split_on_pattern,
+    split_on_token,
+)
 from .facade_runtime import Chunk, FacadeListener, drive
 from .location import SourceMap
 from .specs import load_lexer_spec, load_specs
@@ -72,6 +79,7 @@ __all__ = [
     "Token",
     "__version__",
     "atn_shape",
+    "chunk_by_pattern",
     "drive",
     "lex",
     "load_lexer_spec",
@@ -81,5 +89,6 @@ __all__ = [
     "parse_stage_times",
     "parse_walk",
     "split_between_tokens",
+    "split_on_pattern",
     "split_on_token",
 ]

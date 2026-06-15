@@ -174,9 +174,11 @@ records = [
 ## Chunking
 
 When the input is many independent pieces, the `antlr_pyfacade.chunking` helpers
-produce the `Chunk`s for [walk_parallel](#walk_parallel) by **token boundary** — a
-single lexer pass (the cheap stage, in C++) rather than a hand-written regex — and
-the chunks carry exact source positions automatically.
+produce the `Chunk`s for [walk_parallel](#walk_parallel), each carrying its exact
+source position. Split by **token boundary** (a single lexer pass, in C++ — never
+splits inside a string/comment) or by **regex** (no lexer, much faster but not
+token-aware). See [Chunking: lexer vs regex](performance.md#chunking-lexer-vs-regex)
+for the trade-off.
 
 ```python
 from antlr_pyfacade import lex, split_on_token, split_between_tokens
@@ -205,12 +207,21 @@ chunks = split_between_tokens(text, MyLexer, [(LPAREN, RPAREN), (LBRACK, RBRACK)
   its own pair, so distinct bracket kinds nest correctly. `nested=True` matches
   balanced pairs and emits the outermost regions.
 
-The splitters ask `lex` for only their boundary tokens, so little crosses into
-Python. Each chunk spans the source between consecutive boundaries, trimmed of
-surrounding whitespace, with its start `(offset, line, column)` from a `SourceMap`
-over the text; whitespace-only regions are skipped. Pass `channel=None` to split
-on all channels. Token types come from the generated lexer's constants
-(`MyLexer.RECORD`, `MyLexer.STRING`, …).
+The token splitters ask `lex` for only their boundary tokens, so little crosses
+into Python. Pass `channel=None` to split on all channels; token types come from
+the generated lexer's constants (`MyLexer.RECORD`, `MyLexer.STRING`, …).
+
+The regex splitters take the source text directly — no lexer:
+
+- `split_on_pattern(text, pattern, *, where="before"|"after", flags=0)` — the regex
+  analogue of `split_on_token`: `pattern` matches the delimiter.
+- `chunk_by_pattern(text, pattern, *, flags=0)` — `pattern` matches a whole record,
+  so each non-overlapping match *is* a chunk and the text between matches is
+  dropped.
+
+Either way, each chunk spans the source between boundaries, trimmed of surrounding
+whitespace, with its start `(offset, line, column)` from a `SourceMap` over the
+text; whitespace-only regions are skipped.
 
 ## `load_specs`
 

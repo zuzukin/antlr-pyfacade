@@ -12,23 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Token-based chunkers for [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel].
+"""Chunkers for [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel].
 
-Run the grammar's lexer once — the cheap stage, no parser and no ATN prediction —
-and split the source into [Chunk][antlr_pyfacade.Chunk]s at chosen token
-boundaries. This lets a large input be parsed in parallel without writing a regex
-splitter, and each chunk carries its exact source position.
+Split a whole source into [Chunk][antlr_pyfacade.Chunk]s, each carrying its exact
+source position, so the pieces can be parsed in parallel. Two families:
 
-The chunkers ask the lexer for **only the boundary tokens they need** (via
-`token_mask`), so little crosses into Python. A chunk then spans the source
-between consecutive boundaries — its surrounding whitespace is trimmed and its
-start `(offset, line, column)` is computed from a [SourceMap][antlr_pyfacade.SourceMap]
-over the whole text. Whitespace-only regions are skipped. The chunkers yield
-lazily and their output drops straight into `walk_parallel(chunks, ...)`.
+- **Token-based** ([split_on_token][antlr_pyfacade.chunking.split_on_token],
+  [split_between_tokens][antlr_pyfacade.chunking.split_between_tokens]): run the
+  grammar's lexer once — the cheap stage, no parser/ATN prediction — and split at
+  token boundaries. The lexer is asked for **only the boundary tokens** (via
+  `token_mask`), so little crosses into Python, and splits never land inside a
+  string or comment token.
+- **Regex-based** ([split_on_pattern][antlr_pyfacade.chunking.split_on_pattern],
+  [chunk_by_pattern][antlr_pyfacade.chunking.chunk_by_pattern]): split on a regular
+  expression, no lexer involved. Roughly an order of magnitude faster at finding
+  delimiters (a few times end to end), but not token-aware — a delimiter inside a
+  string literal will still match.
+
+Pick token-based for correctness around strings/comments, regex for raw speed when
+the delimiter can't appear in disguise. The "Chunking: lexer vs regex" notes in
+`docs/performance.md` give measured numbers; `scripts/bench_chunking.py` reproduces
+them.
+
+A chunk spans the source between boundaries — surrounding whitespace trimmed, its
+start `(offset, line, column)` from a [SourceMap][antlr_pyfacade.SourceMap], and
+whitespace-only regions skipped. All chunkers yield lazily and feed straight into
+`walk_parallel(chunks, ...)`.
 """
 
 from __future__ import annotations
 
+import re
 import struct
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -138,6 +152,13 @@ def split_on_token(
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each delimiter token.
 
+    Token-aware: because it runs the grammar's lexer, a delimiter that appears
+    inside a string or comment token never causes a split. The price is lexing the
+    whole input — roughly an order of magnitude slower than the regex
+    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern] at finding the
+    delimiters (~4x end to end), though still negligible next to the parse it
+    feeds. See the "Chunking: lexer vs regex" notes in `docs/performance.md`.
+
     Args:
         text: The source to split.
         lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
@@ -198,6 +219,11 @@ def split_between_tokens(
     channel: int | None = DEFAULT_CHANNEL,
 ) -> Iterator[Chunk]:
     """Yield a chunk for each region bounded by an opener/closer pair.
+
+    Token-aware, like [split_on_token][antlr_pyfacade.chunking.split_on_token]: it
+    lexes the whole input, so a bracket inside a string or comment is ignored, at
+    the cost of being slower than a plain regex over the text (see the "Chunking:
+    lexer vs regex" notes in `docs/performance.md`).
 
     Args:
         text: The source to split.
@@ -273,3 +299,94 @@ def split_between_tokens(
                 idx = j + 1
             else:
                 idx += 1
+
+
+def split_on_pattern(
+    text: str,
+    pattern: str | re.Pattern[str],
+    *,
+    where: str = "before",
+    flags: int | re.RegexFlag = 0,
+) -> Iterator[Chunk]:
+    """Split `text` into chunks at each match of a delimiter regex.
+
+    The regex analogue of [split_on_token][antlr_pyfacade.chunking.split_on_token].
+    No lexer is involved, so it is much faster — roughly an order of magnitude at
+    finding delimiters and a few times end to end (the per-chunk Python work is
+    shared) — but **not token-aware**: a match inside a string or comment still
+    delimits. Prefer it when the delimiter can't appear in disguise; otherwise use
+    the token-based splitter. See the "Chunking: lexer vs regex" notes in
+    `docs/performance.md`.
+
+    Args:
+        text: The source to split.
+        pattern: The delimiter regular expression (a `str` or compiled pattern).
+        where: `"before"` starts each chunk at a match; `"after"` ends each chunk
+            at a match (see split_on_token).
+        flags: `re` flags, used only when `pattern` is a `str`.
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
+        surrounding whitespace; whitespace-only regions are skipped.
+    """
+    if where not in ("before", "after"):
+        raise ValueError(f"where must be 'before' or 'after', got {where!r}")
+    rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
+    sm = SourceMap(text)
+    matches = list(rx.finditer(text))
+    n = len(text)
+    if where == "before":
+        first = matches[0].start() if matches else n
+        if first > 0:  # leading region, before the first match
+            chunk = _emit(text, sm, 0, first)
+            if chunk is not None:
+                yield chunk
+        for i, m in enumerate(matches):
+            end = matches[i + 1].start() if i + 1 < len(matches) else n
+            chunk = _emit(text, sm, m.start(), end)
+            if chunk is not None:
+                yield chunk
+    else:  # after
+        prev = 0
+        for m in matches:
+            chunk = _emit(text, sm, prev, m.end())
+            if chunk is not None:
+                yield chunk
+            prev = m.end()
+        if prev < n:  # trailing region, after the last match
+            chunk = _emit(text, sm, prev, n)
+            if chunk is not None:
+                yield chunk
+
+
+def chunk_by_pattern(
+    text: str,
+    pattern: str | re.Pattern[str],
+    *,
+    flags: int | re.RegexFlag = 0,
+) -> Iterator[Chunk]:
+    """Yield one chunk per non-overlapping match of `pattern`.
+
+    Here the pattern matches a whole record (rather than a delimiter), so each
+    match *is* a chunk and the text between matches is dropped. No lexer is
+    involved — fast, but not token-aware; see
+    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern] and the "Chunking:
+    lexer vs regex" notes in `docs/performance.md` for the speed/correctness
+    trade-off.
+
+    Args:
+        text: The source to split.
+        pattern: A regular expression matching one record (a `str` or compiled
+            pattern).
+        flags: `re` flags, used only when `pattern` is a `str`.
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per match, trimmed of surrounding
+        whitespace; empty matches are skipped.
+    """
+    rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
+    sm = SourceMap(text)
+    for m in rx.finditer(text):
+        chunk = _emit(text, sm, m.start(), m.end())
+        if chunk is not None:
+            yield chunk
