@@ -34,11 +34,13 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
-# Scalar token types (see the generated facade's token-type constants).
+# Scalar token types (see the generated facade's token-type constants). The
+# anonymous literals follow ANTLR's positional naming: 'true'/'false'/'null' are
+# token types 7/8/9, named T__6/T__7/T__8.
 _TRUE, _FALSE, _NULL = (
+    JsonEventListener.T__6,
     JsonEventListener.T__7,
     JsonEventListener.T__8,
-    JsonEventListener.T__9,
 )
 _STRING, _NUMBER = JsonEventListener.STRING, JsonEventListener.NUMBER
 

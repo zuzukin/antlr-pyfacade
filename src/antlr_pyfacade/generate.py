@@ -50,19 +50,30 @@ def generate(parser_qualname: str, grammar: str) -> str:
     parser_cls = getattr(mod, parser_qualname.rsplit(".", 1)[1])
     rule_names: list[str] = list(parser_cls.ruleNames)
     symbolic: list[str] = list(parser_cls.symbolicNames)
-    literal: list[str] = list(parser_cls.literalNames)
 
     listener_cls = f"{grammar.capitalize()}EventListener"
 
-    # token-type constants: symbolic name if present, else a literal-derived one
+    # ANTLR names anonymous string-literal tokens positionally — `T__0` is the
+    # first such token (token type 1), `T__1` the second (type 2), and so on — so
+    # the name does NOT equal the token-type value. Read those names straight off
+    # the generated parser, which already declares them, so the facade's constants
+    # line up with the lexer/parser the user has rather than a synthesized name.
+    literal_consts = {
+        value: name
+        for name, value in vars(parser_cls).items()
+        if name.startswith("T__") and isinstance(value, int)
+    }
+
+    # token-type constants: the symbolic name when ANTLR gave one, else the
+    # parser's own positional `T__n` name for the anonymous literal.
     tok_consts: list[tuple[str, int]] = []
     for ttype, sym in enumerate(symbolic):
         if ttype == 0:
             continue  # type 0 is unused / EOF sentinel
         if sym and sym != "<INVALID>":
             tok_consts.append((sym, ttype))
-        elif ttype < len(literal) and literal[ttype] not in ("<INVALID>", ""):
-            tok_consts.append((f"T__{ttype}", ttype))
+        elif ttype in literal_consts:
+            tok_consts.append((literal_consts[ttype], ttype))
 
     # token_lines / rule_methods carry their own class-body indentation; the
     # template's placeholders sit at the base column so the content lands right.

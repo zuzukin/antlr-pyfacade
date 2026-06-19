@@ -41,10 +41,11 @@ def test_generate_facade_source():
     assert "def visitError(" in src
     assert "def walk(" in src
     # Token-type constants cover both branches: symbolic names (STRING/NUMBER) and
-    # literal-only tokens, which the facade emits as T__<type> (= its value).
+    # anonymous literals, which the facade emits with ANTLR's positional name
+    # (T__0 is the first literal — token type 1 — not T__1).
     assert "STRING = " in src
     assert "NUMBER = " in src
-    assert "T__1 = 1" in src
+    assert "T__0 = 1" in src
 
     # The emitted source is valid Python and defines a working FacadeListener
     # subclass whose generated walk() actually drives a parse.
@@ -53,6 +54,14 @@ def test_generate_facade_source():
     cls = namespace["JsonEventListener"]
     assert issubclass(cls, FacadeListener)
     assert list(cls.ruleNames) == list(JSONParser.ruleNames)
+
+    # Every token constant matches the stock lexer the user has — both the
+    # symbolic names and the positional T__n names for anonymous literals.
+    token_names = [n for n in vars(JSONLexer) if n == "STRING" or n.startswith("T__")]
+    assert "T__0" in token_names and "STRING" in token_names  # sanity
+    for name in token_names:
+        assert getattr(cls, name) == getattr(JSONLexer, name), name
+
     listener = cls().walk('{"a": 1}', JSONLexer, JSONParser, start_rule="value")
     assert listener.syntax_errors == []
 

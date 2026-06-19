@@ -16,15 +16,15 @@ class JsonEventListener(FacadeListener):
     START_RULE = 0  # json
 
     # token-type constants
-    T__1 = 1
-    T__2 = 2
-    T__3 = 3
-    T__4 = 4
-    T__5 = 5
-    T__6 = 6
-    T__7 = 7
-    T__8 = 8
-    T__9 = 9
+    T__0 = 1
+    T__1 = 2
+    T__2 = 3
+    T__3 = 4
+    T__4 = 5
+    T__5 = 6
+    T__6 = 7
+    T__7 = 8
+    T__8 = 9
     STRING = 10
     NUMBER = 11
     WS = 12

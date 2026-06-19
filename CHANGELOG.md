@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.17] - 2026-06-19
+
+### Fixed
+- The generated facade's token-type constants for **anonymous string literals**
+  now use ANTLR's positional `T__n` naming (matching the stock lexer/parser:
+  `T__0` is the first literal, token type 1), instead of a name synthesized from
+  the token-type value (`T__1` for type 1). The symbolic-named constants were
+  always correct; only the anonymous literals were off, so e.g. `MyLexer.T__0`
+  now has a matching `MyEventListener.T__0`. **Regenerate facades** produced by an
+  older `antlr-pyfacade` if you reference their `T__n` constants. The bundled JSON
+  example facade and its consumer are regenerated/updated.
+
 ## [0.1.16] - 2026-06-19
 
 ### Changed
