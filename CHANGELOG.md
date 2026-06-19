@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.20] - 2026-06-19
+
+### Added
+- An `llms.txt` published at the documentation-site root (`/llms.txt`, per
+  [llmstxt.org](https://llmstxt.org/)) — a concise, LLM-oriented overview of the
+  library (install, workflow, the listener model, the public API, and doc links) to
+  help coding agents use it. Served as a raw file; it does not appear in the
+  rendered docs, nav, search, or sitemap.
+
 ## [0.1.19] - 2026-06-19
 
 ### Added
