@@ -213,6 +213,29 @@ The token splitters ask `lex` for only their boundary tokens, so little crosses
 into Python. Pass `channel=None` to split on all channels; token types come from
 the generated lexer's constants (`MyLexer.RECORD`, `MyLexer.STRING`, …).
 
+For a large file you don't want to hold in memory, `stream_on_token` is the
+streaming counterpart of `split_on_token` — it opens the file in C++ and lexes it
+incrementally over a sliding window, slicing out and freeing each chunk as it
+goes, so peak memory is ~one chunk rather than the whole file:
+
+```python
+from antlr_pyfacade import stream_on_token
+
+# lazily yields positioned Chunks from the file; feed straight into walk_parallel:
+chunks = stream_on_token("big.log", MyLexer, MyLexer.RECORD, where="before")
+results = MyEventListener.walk_parallel(chunks, MyLexer, MyParser)
+```
+
+- `stream_on_token(path, LexerCls, token_types, *, where="before"|"after",
+  encoding="utf-8", channel=0)` — same delimiter semantics and output as
+  `split_on_token`, but reads from a filesystem `path` and yields lazily, keeping
+  the whole pipeline bounded when its `Chunk`s feed `walk_parallel`. The native
+  layer opens the file as **UTF-8** (`encoding` accepts Python codec aliases for
+  UTF-8 and is reserved for future encodings); for another encoding, decode in
+  Python — `Path(p).read_text(encoding=…)` — and use the in-memory
+  `split_on_token`. Only delimiter-based splitting streams today; the open/close
+  `split_between_tokens` and rule-based `chunk_by_rule` still take the whole text.
+
 The regex splitters take the source text directly — no lexer:
 
 - `split_on_pattern(text, pattern, *, where="before"|"after", flags=0)` — the regex

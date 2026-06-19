@@ -44,8 +44,10 @@
 #include "tree/ParseTreeListener.h"
 #include "tree/ParseTreeWalker.h"
 #include "tree/TerminalNode.h"
+#include "misc/Interval.h"
 
 #include "events.h"
+#include "file_char_stream.h"
 
 namespace nb = nanobind;
 using namespace antlr4;
@@ -446,6 +448,168 @@ static nb::object rule_spans(ParserSpec &pspec, LexerSpec &lspec,
     return nb::make_tuple(std::move(spans), std::move(err_listener.errors));
 }
 
+// ---------------------------------------------------------------------------
+// Streaming token chunker: the streaming counterpart of split_on_token. Opens a
+// UTF-8 file itself and lexes it incrementally over a sliding window
+// (Utf8FileCharStream), never holding the whole input. On reaching each delimiter
+// token it slices that chunk's text out of the window and frees it, so peak
+// memory is ~one chunk. next_batch(n) pulls up to n positioned chunks; the object
+// is stateful and reused across batches. Only the requested delimiter types
+// start/end chunks (where = before/after), like split_on_token; whitespace is
+// trimmed and whitespace-only regions are skipped. Line/column are tracked
+// incrementally, with no whole-input SourceMap.
+// ---------------------------------------------------------------------------
+struct ChunkRec {
+    size_t offset;
+    size_t line;
+    size_t column;
+    std::string text;
+};
+
+struct StreamChunker {
+    std::unique_ptr<antlr_pyfacade::Utf8FileCharStream> stream;
+    std::unique_ptr<LexerInterpreter> lexer;
+    CollectingErrorListener err;
+    std::vector<char> keep;  // keep[type] != 0 => `type` is a delimiter
+    size_t n_toks;
+    int where;  // 0 = before (chunk begins at a delimiter), 1 = after (ends at one)
+    bool have_channel;
+    int channel;
+
+    size_t chunk_start = 0;  // absolute codepoint index the current chunk begins at
+    size_t origin_idx = 0;   // absolute index for which (origin_line/col) hold
+    size_t origin_line = 1;  // 1-based, like SourceMap
+    size_t origin_col = 0;   // 0-based
+    bool done = false;
+
+    StreamChunker(LexerSpec &spec, const std::string &path,
+                  std::vector<int32_t> delim_types, int where_,
+                  std::optional<int> channel_, bool lenient, size_t block)
+        : where(where_), have_channel(channel_.has_value()),
+          channel(channel_.value_or(0)) {
+        stream = std::make_unique<antlr_pyfacade::Utf8FileCharStream>(path, lenient,
+                                                                      block);
+        // The interpreter holds references into the spec (ATN + name lists), so
+        // the spec must outlive this object — see keep_alive on the binding.
+        lexer = std::make_unique<LexerInterpreter>(
+            spec.grammar_file_name, spec.vocabulary, spec.rule_names,
+            spec.channel_names, spec.mode_names, *spec.atn, stream.get());
+        lexer->removeErrorListeners();
+        lexer->addErrorListener(&err);
+        n_toks = spec.atn->maxTokenType + 1;
+        keep = make_mask(
+            std::optional<std::vector<int32_t>>(std::move(delim_types)), n_toks);
+    }
+
+    static bool is_ws(char32_t c) {
+        return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r' ||
+               c == U'\f' || c == U'\v';
+    }
+
+    // Advance (origin_line, origin_col) to absolute index `to`, counting newlines
+    // over the retained window. Matches SourceMap: line bumps on '\n', column
+    // resets after it. Precondition: origin_idx is within the window and <= `to`.
+    void advance_origin(size_t to) {
+        const std::u32string &buf = stream->buffer();
+        size_t bs = stream->bufStart();
+        for (size_t i = origin_idx - bs, end = to - bs; i < end; ++i) {
+            if (buf[i] == U'\n') {
+                origin_line++;
+                origin_col = 0;
+            } else {
+                origin_col++;
+            }
+        }
+        origin_idx = to;
+    }
+
+    // Emit the region [chunk_start, b): trim surrounding whitespace, push a
+    // positioned record (skipping a whitespace-only/empty region), and leave the
+    // origin at b. The window is dropped by the caller at a real boundary.
+    void emit_region(size_t b, std::vector<ChunkRec> &out) {
+        const std::u32string &buf = stream->buffer();
+        size_t bs = stream->bufStart();
+        size_t la = chunk_start - bs;
+        size_t lb = b - bs;
+        size_t fa = la;
+        while (fa < lb && is_ws(buf[fa])) {
+            fa++;
+        }
+        if (fa == lb) {  // whitespace-only or empty: skip, but keep positions exact
+            advance_origin(b);
+            return;
+        }
+        size_t lb2 = lb;
+        while (lb2 > fa && is_ws(buf[lb2 - 1])) {
+            lb2--;
+        }
+        size_t offset = bs + fa;
+        advance_origin(offset);
+        ChunkRec rec;
+        rec.offset = offset;
+        rec.line = origin_line;
+        rec.column = origin_col;
+        rec.text = stream->getText(antlr4::misc::Interval(
+            static_cast<ssize_t>(offset), static_cast<ssize_t>(bs + lb2 - 1)));
+        out.push_back(std::move(rec));
+        advance_origin(b);
+    }
+
+    // Lex until `n` chunks are produced or EOF. Returns whether more may remain
+    // (false once EOF's final region has been emitted).
+    bool run_batch(size_t n, std::vector<ChunkRec> &out) {
+        if (done) {
+            return false;
+        }
+        while (out.size() < n) {
+            std::unique_ptr<Token> tok = lexer->nextToken();
+            size_t type = tok->getType();
+            if (type == Token::EOF) {
+                emit_region(stream->index(), out);
+                done = true;
+                return false;
+            }
+            if (type >= n_toks || keep[type] == 0) {
+                continue;  // not a delimiter
+            }
+            if (have_channel && static_cast<int>(tok->getChannel()) != channel) {
+                continue;
+            }
+            size_t b;
+            if (where == 0) {  // before
+                size_t ds = tok->getStartIndex();
+                if (ds <= chunk_start) {
+                    continue;  // the delimiter that opens the current chunk
+                }
+                b = ds;
+            } else {  // after
+                b = tok->getStopIndex() + 1;
+            }
+            emit_region(b, out);
+            stream->dropThrough(b);
+            chunk_start = b;
+        }
+        return true;
+    }
+
+    nb::object next_batch(size_t n) {
+        std::vector<ChunkRec> recs;
+        bool more;
+        {
+            // Pure C++ (file IO + decode + lex + getText): release the GIL for the
+            // whole batch like lex(); only building the result list below needs it.
+            nb::gil_scoped_release release;
+            more = run_batch(n, recs);
+        }
+        nb::list rows;
+        for (ChunkRec &r : recs) {
+            rows.append(nb::make_tuple(r.offset, r.line, r.column,
+                                       nb::str(r.text.data(), r.text.size())));
+        }
+        return nb::make_tuple(std::move(rows), more);
+    }
+};
+
 // Trampoline so a Python subclass can override the 4 ParseTreeListener virtuals.
 struct PyListener : public tree::ParseTreeListener {
     NB_TRAMPOLINE(tree::ParseTreeListener, 4);
@@ -515,6 +679,18 @@ NB_MODULE(_native, m) {
              nb::arg("grammar_file_name"), nb::arg("literal_names"),
              nb::arg("symbolic_names"), nb::arg("rule_names"),
              nb::arg("serialized"));
+
+    nb::class_<StreamChunker>(m, "StreamChunker")
+        .def(nb::init<LexerSpec &, const std::string &, std::vector<int32_t>, int,
+                      std::optional<int>, bool, size_t>(),
+             nb::arg("lexer_spec"), nb::arg("path"), nb::arg("delim_types"),
+             nb::arg("where"), nb::arg("channel").none(), nb::arg("lenient"),
+             nb::arg("block") = 0, nb::keep_alive<1, 2>())
+        .def("next_batch", &StreamChunker::next_batch, nb::arg("n"),
+             "Pull up to n chunk records from the streaming token chunker. Returns "
+             "(rows, more): rows is a list of (offset, line, column, text) tuples "
+             "(whitespace trimmed, whitespace-only regions skipped) and more is "
+             "False once the final region at EOF has been emitted.");
 
     // Minimal node/token surface the listener callbacks need.
     nb::class_<Token>(m, "Token")

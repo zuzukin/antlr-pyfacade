@@ -48,6 +48,7 @@ from .chunking import (
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_on_token,
 )
 from .location import SourceMap
 from .specs import load_lexer_spec, load_specs
@@ -72,4 +73,5 @@ __all__ = [
     "split_between_tokens",
     "split_on_pattern",
     "split_on_token",
+    "stream_on_token",
 ]

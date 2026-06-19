@@ -24,12 +24,15 @@ from to_python import JsonValueBuilder
 
 from antlr_pyfacade import (
     LexToken,
+    _native,
     chunk_by_pattern,
     chunk_by_rule,
     lex,
+    load_lexer_spec,
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_on_token,
 )
 
 # Token types from the generated lexer's class constants (the reliable source —
@@ -104,6 +107,98 @@ def test_split_on_token():
 
     with pytest.raises(ValueError, match="where"):
         list(split_on_token(text, JSONLexer, LBRACE, where="sideways"))
+
+
+# (text, delimiter, where) cases exercising the streaming chunker against the
+# in-memory split_on_token oracle: leading/trailing regions, whitespace trimming
+# and whitespace-only skips, adjacent delimiters, a single chunk, zero
+# delimiters, multibyte UTF-8, and several delimiter types.
+_STREAM_CASES = [
+    ('{"a": 1}\n{"b": 22}\n{"c": 3}', LBRACE, "before"),
+    ('{"a": 1}\n{"b": 22}\n{"c": 3}', RBRACE, "after"),
+    ('1 {"x": 2}', LBRACE, "before"),
+    ('{"x": 2} trailing', RBRACE, "after"),
+    ('   \n {"a":1}  \n  {"b":2}  \n ', LBRACE, "before"),
+    ('{"a":1}{"b":2}', LBRACE, "before"),
+    ('{"a":1}', LBRACE, "before"),
+    ("no delimiters here", LBRACE, "before"),
+    ('{"café": 1}\n{"日本語": 2}\n{"emoji": "😀🚀"}', LBRACE, "before"),
+    ('{"a": 1} [2, 3] {"b": 4}', [LBRACE, LBRACK], "before"),
+]
+
+
+def test_stream_on_token(tmp_path):
+    # stream_on_token reads the file incrementally but must reproduce
+    # split_on_token's output exactly — across block sizes, so multi-byte
+    # sequences and chunk boundaries straddle the read window (_block_bytes forces
+    # tiny reads; 0 is the production 64 KiB block).
+    for i, (text, delim, where) in enumerate(_STREAM_CASES):
+        path = tmp_path / f"case{i}.json"
+        path.write_text(text, encoding="utf-8")
+        want = [
+            (c.text, c.offset, c.line, c.column)
+            for c in split_on_token(text, JSONLexer, delim, where=where)
+        ]
+        for block in (0, 1, 2, 3, 4, 7):
+            got = [
+                (c.text, c.offset, c.line, c.column)
+                for c in stream_on_token(
+                    path, JSONLexer, delim, where=where, _block_bytes=block
+                )
+            ]
+            assert got == want, (text, where, block)
+
+    path = tmp_path / "values.json"
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+
+    # channel=None considers all channels (here all default-channel, so unchanged).
+    assert [
+        c.text for c in stream_on_token(path, JSONLexer, LBRACE, channel=None)
+    ] == ['{"a": 1}', '{"b": 2}']
+
+    # The streamed chunks drop straight into walk_parallel and reconstruct values.
+    chunks = list(stream_on_token(path, JSONLexer, LBRACE, where="before"))
+    results = [
+        b.result
+        for b in JsonValueBuilder.walk_parallel(
+            chunks, JSONLexer, JSONParser, start_rule="value"
+        )
+    ]
+    assert results == [{"a": 1}, {"b": 2}]
+
+    with pytest.raises(ValueError, match="where"):
+        list(stream_on_token(path, JSONLexer, LBRACE, where="sideways"))
+
+
+def test_stream_on_token_encoding_and_errors(tmp_path):
+    path = tmp_path / "ok.json"
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+
+    # Python codec aliases for UTF-8 are accepted; any other encoding is rejected
+    # (decode in Python and use split_on_token for those).
+    for enc in ("utf-8", "utf8", "UTF-8", "U8"):
+        assert [
+            c.text for c in stream_on_token(path, JSONLexer, LBRACE, encoding=enc)
+        ] == ['{"a": 1}', '{"b": 2}']
+    with pytest.raises(ValueError, match="UTF-8"):
+        list(stream_on_token(path, JSONLexer, LBRACE, encoding="latin-1"))
+
+    # A missing file surfaces as an error from the native layer.
+    with pytest.raises(RuntimeError):
+        list(stream_on_token(tmp_path / "nope.json", JSONLexer, LBRACE))
+
+    # Invalid UTF-8: lenient (stream_on_token's default) substitutes U+FFFD and
+    # keeps going; strict (via the native chunker directly) raises.
+    bad = tmp_path / "bad.json"
+    bad.write_bytes(b'{"a": "\xff\xfe"}\n{"b": 2}')
+    lenient = [c.text for c in stream_on_token(bad, JSONLexer, LBRACE, where="before")]
+    assert "�" in lenient[0]
+    assert lenient[1] == '{"b": 2}'
+
+    spec = load_lexer_spec(JSONLexer)
+    strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, 0)
+    with pytest.raises(RuntimeError):
+        strict.next_batch(10)
 
 
 def test_split_between_tokens():

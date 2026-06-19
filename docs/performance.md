@@ -169,3 +169,12 @@ Pick by constraint, not just speed:
 
 Either way the splitting cost is usually negligible next to the per-chunk parse it
 feeds.
+
+For a file too large to hold in memory, `stream_on_token`
+([api](api.md#chunking)) is the delimiter splitter's streaming form: it opens the
+file in C++ and lexes it over a sliding window, materializing one chunk at a time
+instead of the whole text plus a whole-input `SourceMap`. Paired with
+`walk_parallel` (which already pulls chunks lazily with a bounded number of parses
+in flight), peak memory is roughly one chunk plus the parses in flight — flat in
+the file size. It still tokenizes the entire input, so throughput tracks the
+token-based row above; what changes is the memory profile, not the speed.

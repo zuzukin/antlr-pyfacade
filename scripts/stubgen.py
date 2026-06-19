@@ -40,6 +40,8 @@ RETURN_TYPES = {
     "parse_events": "tuple[bytes, list[ParseError]]",
     "lex": "tuple[bytes, list[ParseError]]",
     "rule_spans": "tuple[bytes, list[ParseError]]",
+    # StreamChunker.next_batch — a method; the regex below is indentation-agnostic.
+    "next_batch": "tuple[list[tuple[int, int, int, str]], bool]",
 }
 
 THIS_YEAR = datetime.date.today().year

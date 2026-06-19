@@ -47,6 +47,8 @@ whitespace-only regions skipped. All chunkers yield lazily and feed straight int
 
 from __future__ import annotations
 
+import codecs
+import os
 import re
 import struct
 from typing import TYPE_CHECKING, NamedTuple
@@ -221,6 +223,82 @@ def split_on_token(
             chunk = _emit(text, sm, prev, n)
             if chunk is not None:
                 yield chunk
+
+
+def stream_on_token(
+    path: str | os.PathLike[str],
+    lexer_cls: type,
+    token_types: TokenTypes,
+    *,
+    where: str = "before",
+    encoding: str = "utf-8",
+    channel: int | None = DEFAULT_CHANNEL,
+    batch: int = 256,
+    cached: bool = True,
+    _block_bytes: int = 0,
+) -> Iterator[Chunk]:
+    """Stream chunks from a file at each delimiter token, without holding it all.
+
+    The streaming counterpart of [split_on_token][antlr_pyfacade.chunking.split_on_token]:
+    instead of taking the whole source as a `str`, it opens `path` in C++ and lexes
+    it incrementally over a sliding window, slicing out and freeing each chunk as it
+    goes — so peak memory is roughly one chunk rather than the whole file. The
+    yielded [Chunk][antlr_pyfacade.Chunk]s drop straight into
+    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel], which pulls them
+    lazily, keeping the whole pipeline bounded.
+
+    Args:
+        path: Filesystem path to the source (opened by the native layer as UTF-8).
+        lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
+        token_types: The delimiter token type, or several types that all act as
+            delimiters (see [split_on_token][antlr_pyfacade.chunking.split_on_token]).
+        where: `"before"` starts a new chunk at each delimiter; `"after"` ends a
+            chunk at each delimiter (see split_on_token).
+        encoding: The source encoding. Only UTF-8 is supported today (Python codec
+            aliases such as `"utf8"` are accepted); the keyword is reserved so other
+            encodings can be added later. For a non-UTF-8 source now, decode it in
+            Python (`Path(p).read_text(encoding=...)`) and use the in-memory
+            [split_on_token][antlr_pyfacade.chunking.split_on_token].
+        channel: Only tokens on this channel are split on (default: the default
+            channel). Pass `None` to consider all channels.
+        batch: How many chunk records to pull from C++ per call — a throughput knob,
+            not observable in the output.
+        cached: Reuse the cached lexer spec (see
+            [load_lexer_spec][antlr_pyfacade.load_lexer_spec]).
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per region between delimiters, trimmed of
+        surrounding whitespace and carrying its source position; whitespace-only
+        regions are skipped. Equivalent to `split_on_token` over the file's text.
+
+    Raises:
+        ValueError: If `where` is not `"before"`/`"after"`, or `encoding` is not
+            UTF-8.
+    """
+    if where not in ("before", "after"):
+        raise ValueError(f"where must be 'before' or 'after', got {where!r}")
+    # Reserve the keyword for future encodings while only UTF-8 is implemented.
+    # codecs.lookup normalizes aliases ("utf8", "UTF-8", "U8") to "utf-8".
+    if codecs.lookup(encoding).name != "utf-8":
+        raise ValueError(
+            f"stream_on_token currently supports only UTF-8, got {encoding!r}; "
+            f"decode in Python and use split_on_token for other encodings"
+        )
+    spec = load_lexer_spec(lexer_cls, cached=cached)
+    chunker = _native.StreamChunker(
+        spec,
+        os.fspath(path),
+        list(_as_set(token_types)),
+        0 if where == "before" else 1,
+        channel,
+        True,  # lenient: substitute U+FFFD for malformed bytes
+        _block_bytes,
+    )
+    more = True
+    while more:
+        rows, more = chunker.next_batch(batch)
+        for offset, line, column, body in rows:
+            yield Chunk(body, offset, line, column)
 
 
 def split_between_tokens(

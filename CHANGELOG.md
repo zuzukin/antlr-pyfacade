@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.13] - 2026-06-19
+
+### Added
+- `stream_on_token(path, LexerCls, token_types, *, where=..., encoding="utf-8",
+  channel=...)` — the streaming counterpart of `split_on_token`. The native layer
+  opens the file itself and lexes it incrementally over a sliding window
+  (`Utf8FileCharStream`), slicing out and freeing each chunk as it goes, so peak
+  memory is ~one chunk rather than the whole file. Yields positioned `Chunk`s
+  lazily, so paired with `walk_parallel` the whole pipeline is bounded in the file
+  size. Reads UTF-8 (the `encoding` keyword accepts Python codec aliases for UTF-8
+  and is reserved for future encodings); for other encodings, decode in Python and
+  use `split_on_token`. Only delimiter-based splitting streams so far —
+  `split_between_tokens` and `chunk_by_rule` still take the whole text.
+
+## [0.1.12] - 2026-06-15
+
+### Changed
+- `lex` now yields its tokens lazily (an iterator) instead of returning a list;
+  wrap in `list(...)` for random access. Internally the native lexer streams
+  tokens (a `nextToken()` loop) instead of buffering the whole token stream, so
+  peak memory no longer scales with the total token count — only the kept tokens
+  cross into Python. The chunkers' behavior and output are unchanged.
+
 ## [0.1.11] - 2026-06-15
 
 ### Added
