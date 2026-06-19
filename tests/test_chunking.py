@@ -157,9 +157,10 @@ def test_stream_on_token(tmp_path):
     path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
 
     # channel=None considers all channels (here all default-channel, so unchanged).
-    assert [
-        c.text for c in stream_on_token(path, JSONLexer, LBRACE, channel=None)
-    ] == ['{"a": 1}', '{"b": 2}']
+    assert [c.text for c in stream_on_token(path, JSONLexer, LBRACE, channel=None)] == [
+        '{"a": 1}',
+        '{"b": 2}',
+    ]
 
     # The streamed chunks drop straight into walk_parallel and reconstruct values.
     chunks = list(stream_on_token(path, JSONLexer, LBRACE, where="before"))
@@ -294,26 +295,38 @@ def test_sourcename(tmp_path):
 
     assert next(stream_on_pattern(path, r"\{")).sourcename == str(path)
     assert next(stream_on_pattern(io.StringIO(text), r"\{")).sourcename is None
-    assert next(stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")).sourcename == "m"
-    assert next(stream_on_pattern(path, r"\{", sourcename="alias")).sourcename == "alias"
+    assert (
+        next(stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")).sourcename
+        == "m"
+    )
+    assert (
+        next(stream_on_pattern(path, r"\{", sourcename="alias")).sourcename == "alias"
+    )
     assert next(stream_on_token(path, JSONLexer, LBRACE)).sourcename == str(path)
-    assert next(
-        stream_on_token(path, JSONLexer, LBRACE, sourcename="alias")
-    ).sourcename == "alias"
+    assert (
+        next(stream_on_token(path, JSONLexer, LBRACE, sourcename="alias")).sourcename
+        == "alias"
+    )
 
     # The in-memory chunkers take it too (None by default).
     assert next(split_on_token(text, JSONLexer, LBRACE)).sourcename is None
-    assert next(
-        split_on_token(text, JSONLexer, LBRACE, sourcename="s")
-    ).sourcename == "s"
+    assert (
+        next(split_on_token(text, JSONLexer, LBRACE, sourcename="s")).sourcename == "s"
+    )
     assert next(split_on_pattern(text, r"\{", sourcename="s")).sourcename == "s"
     assert next(chunk_by_pattern(text, r"\{[^{}]*\}", sourcename="s")).sourcename == "s"
-    assert next(
-        split_between_tokens(text, JSONLexer, (LBRACE, RBRACE), sourcename="s")
-    ).sourcename == "s"
-    assert next(
-        chunk_by_rule('[{"a": 1}]', JSONLexer, JSONParser, "obj", sourcename="s")
-    ).sourcename == "s"
+    assert (
+        next(
+            split_between_tokens(text, JSONLexer, (LBRACE, RBRACE), sourcename="s")
+        ).sourcename
+        == "s"
+    )
+    assert (
+        next(
+            chunk_by_rule('[{"a": 1}]', JSONLexer, JSONParser, "obj", sourcename="s")
+        ).sourcename
+        == "s"
+    )
 
     # A bare str chunk inherits the source name of the chunk it follows.
     assert Chunk("x", 0, 1, 0, "src").after("yy").sourcename == "src"

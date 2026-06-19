@@ -53,9 +53,7 @@ _RECORD = r"\{[^{}]*\}"  # one flat object
 
 
 def make_input(n: int) -> str:
-    objs = (
-        f'{{"id": {i}, "name": "item-{i}", "value": {i * 1.5}}}' for i in range(n)
-    )
+    objs = (f'{{"id": {i}, "name": "item-{i}", "value": {i * 1.5}}}' for i in range(n))
     return "[" + ", ".join(objs) + "]"
 
 
