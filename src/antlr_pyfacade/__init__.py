@@ -39,7 +39,7 @@ from ._native import (
     ParserSpec,
     parse_events,
 )
-from .base import Chunk, FacadeListener, drive
+from .base import Chunk, FacadeListener
 from .chunking import (
     LexToken,
     chunk_by_pattern,
@@ -65,7 +65,6 @@ __all__ = [
     "__version__",
     "chunk_by_pattern",
     "chunk_by_rule",
-    "drive",
     "lex",
     "load_lexer_spec",
     "load_specs",

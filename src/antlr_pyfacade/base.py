@@ -16,7 +16,7 @@
 
 A generated `<Grammar>EventListener` subclass declares named callbacks
 (`enter<Rule>` / `exit<Rule>` / `visitTerminal` / `visitError`) just like the
-stock ANTLR listener. [drive][antlr_pyfacade.drive] runs the bulk native event
+stock ANTLR listener. [drive][antlr_pyfacade.FacadeListener.drive] runs the bulk native event
 stream and dispatches those callbacks, instead of building a Python parse tree and
 walking it.
 
@@ -83,18 +83,18 @@ class Chunk(NamedTuple):
     line: int = 1  # 1-based line of the first character
     column: int = 0  # 0-based column of the first character
 
+    def after(self, text: str) -> Chunk:
+        """Return a `Chunk` for `text` positioned immediately after this one.
 
-def _advance(chunk: Chunk) -> tuple[int, int, int]:
-    """Return the `(offset, line, column)` immediately after `chunk`.
-
-    That is where the next chunk begins when chunks are contiguous.
-    """
-    text = chunk.text
-    newlines = text.count("\n")
-    offset = chunk.offset + len(text)
-    if newlines == 0:
-        return offset, chunk.line, chunk.column + len(text)
-    return offset, chunk.line + newlines, len(text) - text.rfind("\n") - 1
+        That is the next chunk when the two are contiguous in the source: it
+        begins where this chunk's text ends.
+        """
+        newlines = self.text.count("\n")
+        offset = self.offset + len(self.text)
+        if newlines == 0:
+            return Chunk(text, offset, self.line, self.column + len(self.text))
+        column = len(self.text) - self.text.rfind("\n") - 1
+        return Chunk(text, offset, self.line + newlines, column)
 
 
 class FacadeListener:
@@ -104,7 +104,7 @@ class FacadeListener:
     running, [span][antlr_pyfacade.FacadeListener.span] returns its
     `(start, stop)` character offsets and
     [line_col][antlr_pyfacade.FacadeListener.line_col] the 1-based line / 0-based
-    column of its start. [drive][antlr_pyfacade.drive] populates this state per
+    column of its start. [drive][antlr_pyfacade.FacadeListener.drive] populates this state per
     dispatched callback; outside a callback it reflects the most recent one.
     """
 
@@ -177,7 +177,7 @@ class FacadeListener:
         """Return the generated `<Grammar>EventListener` in this class's ancestry.
 
         That base (the class that directly subclasses `FacadeListener`) holds the
-        no-op callback stubs [drive][antlr_pyfacade.drive] compares against to
+        no-op callback stubs [drive][antlr_pyfacade.FacadeListener.drive] compares against to
         detect overrides, plus `ruleNames` / `START_RULE`. Works whether `cls` is
         the generated class itself or a user subclass of it.
 
@@ -267,9 +267,7 @@ class FacadeListener:
         def run(chunk: Chunk) -> FacadeListener:
             parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
             listener = make()
-            drive(
-                listener,
-                base,
+            listener.drive(
                 parser_spec,
                 lexer_spec,
                 chunk.text,
@@ -282,18 +280,18 @@ class FacadeListener:
         def resolved() -> Iterator[Chunk]:
             # A bare str continues contiguously from the previous chunk; a Chunk
             # pins its own position and re-anchors the str chunks that follow it.
-            pos = (0, 1, 0)
+            # The empty seed chunk starts the first str at the origin (0, 1, 0).
+            chunk = Chunk("")
             for item in chunks:
                 if isinstance(item, Chunk):
                     chunk = item
                 elif isinstance(item, str):
-                    chunk = Chunk(item, *pos)
+                    chunk = chunk.after(item)
                 else:
                     raise TypeError(
                         f"chunks must be str or Chunk, got {type(item).__name__}"
                     )
                 yield chunk
-                pos = _advance(chunk)
 
         def stream() -> Iterator[FacadeListener]:
             if workers <= 1:
@@ -313,104 +311,104 @@ class FacadeListener:
 
         return stream()
 
+    def drive(
+        self,
+        parser_spec: _native.ParserSpec,
+        lexer_spec: _native.LexerSpec,
+        text: str,
+        start_rule: int,
+        *,
+        filtered: bool = True,
+        origin: tuple[int, int, int] = (0, 1, 0),
+    ) -> None:
+        """Run the native parse and dispatch this listener's overridden callbacks.
 
-# TODO - should this be a method of FacadeListener?
-def drive(
-    listener: FacadeListener,
-    base_cls: type,  # TODO: more precise base class or Protocol
-    # TODO: too many positional args
-    parser_spec: _native.ParserSpec,
-    lexer_spec: _native.LexerSpec,
-    text: str,
-    start_rule: int,
-    *,
-    filtered: bool = True,
-    origin: tuple[int, int, int] = (0, 1, 0),
-) -> None:
-    """Run the native parse and dispatch overridden callbacks on `listener`.
+        Usually invoked for you by the generated `walk` /
+        [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel]; call it
+        directly to drive a listener from already-loaded specs.
 
-    Args:
-        listener: The listener instance whose overridden callbacks are dispatched.
-        base_cls: The generated `<Grammar>EventListener` base; its no-op stubs are
-            the reference for detecting which callbacks the subclass overrode.
-        parser_spec: The native parser spec (see
-            [load_specs][antlr_pyfacade.load_specs]).
-        lexer_spec: The native lexer spec.
-        text: The source to parse.
-        start_rule: The index of the rule to start parsing at.
-        filtered: When `True` (default), only overridden rules/tokens are emitted
-            by C++; `False` forces a faithful full event stream regardless of
-            overrides.
-        origin: The `(offset, line, column)` of `text`'s first character, so
-            callbacks report positions against the whole source. Defaults to the
-            start of the source, `(0, 1, 0)`.
-    """
-    cls = type(listener)
-    rule_names = base_cls.ruleNames
+        Args:
+            parser_spec: The native parser spec (see
+                [load_specs][antlr_pyfacade.load_specs]).
+            lexer_spec: The native lexer spec.
+            text: The source to parse.
+            start_rule: The index of the rule to start parsing at.
+            filtered: When `True` (default), only overridden rules/tokens are
+                emitted by C++; `False` forces a faithful full event stream
+                regardless of overrides.
+            origin: The `(offset, line, column)` of `text`'s first character, so
+                callbacks report positions against the whole source. Defaults to
+                the start of the source, `(0, 1, 0)`.
+        """
+        cls = type(self)
+        # The generated <Grammar>EventListener base holds the no-op callback stubs
+        # to compare against for override detection, plus ruleNames.
+        base_cls = self._facade_base()
+        rule_names = base_cls.ruleNames
 
-    enter: list[Callable | None] = [None] * len(rule_names)
-    leave: list[Callable | None] = [None] * len(rule_names)
-    rule_mask: list[int] = []
-    for idx, name in enumerate(rule_names):
-        cap = name[0].upper() + name[1:]
-        e_over = getattr(cls, "enter" + cap) is not getattr(base_cls, "enter" + cap)
-        x_over = getattr(cls, "exit" + cap) is not getattr(base_cls, "exit" + cap)
-        if e_over:
-            enter[idx] = getattr(listener, "enter" + cap)
-        if x_over:
-            leave[idx] = getattr(listener, "exit" + cap)
-        if e_over or x_over:
-            rule_mask.append(idx)
+        enter: list[Callable | None] = [None] * len(rule_names)
+        leave: list[Callable | None] = [None] * len(rule_names)
+        rule_mask: list[int] = []
+        for idx, name in enumerate(rule_names):
+            cap = name[0].upper() + name[1:]
+            e_over = getattr(cls, "enter" + cap) is not getattr(base_cls, "enter" + cap)
+            x_over = getattr(cls, "exit" + cap) is not getattr(base_cls, "exit" + cap)
+            if e_over:
+                enter[idx] = getattr(self, "enter" + cap)
+            if x_over:
+                leave[idx] = getattr(self, "exit" + cap)
+            if e_over or x_over:
+                rule_mask.append(idx)
 
-    visit = None
-    token_mask: list[int] | None = []
-    if cls.visitTerminal is not base_cls.visitTerminal:
-        visit = listener.visitTerminal
-        toks = getattr(cls, "TERMINAL_TOKENS", None)
-        token_mask = list(toks) if toks is not None else None
+        visit = None
+        token_mask: list[int] | None = []
+        if cls.visitTerminal is not base_cls.visitTerminal:
+            visit = self.visitTerminal
+            toks = getattr(cls, "TERMINAL_TOKENS", None)
+            token_mask = list(toks) if toks is not None else None
 
-    on_error = None
-    if cls.visitError is not base_cls.visitError:
-        on_error = listener.visitError
+        on_error = None
+        if cls.visitError is not base_cls.visitError:
+            on_error = self.visitError
 
-    # filtered=False forces a faithful full stream regardless of overrides.
-    r_mask = rule_mask if filtered else None
-    t_mask = token_mask if filtered else None
-    raw, errors = _native.parse_events(
-        parser_spec, lexer_spec, text, start_rule, r_mask, t_mask
-    )
-    listener.syntax_errors = errors
+        # filtered=False forces a faithful full stream regardless of overrides.
+        r_mask = rule_mask if filtered else None
+        t_mask = token_mask if filtered else None
+        raw, errors = _native.parse_events(
+            parser_spec, lexer_spec, text, start_rule, r_mask, t_mask
+        )
+        self.syntax_errors = errors
 
-    # Source-location state read by FacadeListener.span / .line_col. Reset the
-    # cached map so a reused listener re-derives it for this text.
-    listener._pyfacade_text = text
-    listener._pyfacade_sourcemap = None
-    (
-        listener._pyfacade_base_offset,
-        listener._pyfacade_base_line,
-        listener._pyfacade_base_col,
-    ) = origin
+        # Source-location state read by span / line_col. Reset the cached map so a
+        # reused listener re-derives it for this text.
+        self._pyfacade_text = text
+        self._pyfacade_sourcemap = None
+        (
+            self._pyfacade_base_offset,
+            self._pyfacade_base_line,
+            self._pyfacade_base_col,
+        ) = origin
 
-    for kind, payload, start, stop in struct.iter_unpack(_REC, raw):
-        if kind == EV_TERMINAL:
-            if visit is not None:
-                listener._pyfacade_start = start
-                listener._pyfacade_stop = stop
-                visit(payload, text[start : stop + 1])
-        elif kind == EV_ENTER:
-            cb = enter[payload]
-            if cb is not None:
-                listener._pyfacade_start = start
-                listener._pyfacade_stop = stop
-                cb()
-        elif kind == EV_EXIT:
-            cb = leave[payload]
-            if cb is not None:
-                listener._pyfacade_start = start
-                listener._pyfacade_stop = stop
-                cb()
-        elif kind == EV_ERROR and on_error is not None:
-            listener._pyfacade_start = start
-            listener._pyfacade_stop = stop
-            err_text = text[start : stop + 1] if 0 <= start <= stop else ""
-            on_error(payload, err_text)
+        for kind, payload, start, stop in struct.iter_unpack(_REC, raw):
+            if kind == EV_TERMINAL:
+                if visit is not None:
+                    self._pyfacade_start = start
+                    self._pyfacade_stop = stop
+                    visit(payload, text[start : stop + 1])
+            elif kind == EV_ENTER:
+                cb = enter[payload]
+                if cb is not None:
+                    self._pyfacade_start = start
+                    self._pyfacade_stop = stop
+                    cb()
+            elif kind == EV_EXIT:
+                cb = leave[payload]
+                if cb is not None:
+                    self._pyfacade_start = start
+                    self._pyfacade_stop = stop
+                    cb()
+            elif kind == EV_ERROR and on_error is not None:
+                self._pyfacade_start = start
+                self._pyfacade_stop = stop
+                err_text = text[start : stop + 1] if 0 <= start <= stop else ""
+                on_error(payload, err_text)

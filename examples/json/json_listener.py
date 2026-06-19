@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from antlr_pyfacade import FacadeListener, drive, load_specs
+from antlr_pyfacade import FacadeListener, load_specs
 
 
 class JsonEventListener(FacadeListener):
@@ -76,13 +76,5 @@ class JsonEventListener(FacadeListener):
     ) -> JsonEventListener:
         parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls)
         rule = self._resolve_start_rule(JsonEventListener, start_rule)
-        drive(
-            self,
-            JsonEventListener,
-            parser_spec,
-            lexer_spec,
-            text,
-            rule,
-            filtered=filtered,
-        )
+        self.drive(parser_spec, lexer_spec, text, rule, filtered=filtered)
         return self

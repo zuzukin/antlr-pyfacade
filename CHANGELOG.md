@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.11] - 2026-06-15
+
+### Added
+- `Chunk.after(text)` returns the next contiguous chunk for `text`, positioned
+  where this chunk's text ends (replaces the internal `_advance` helper).
+
+### Changed
+- `drive` is now a method of `FacadeListener`
+  (`listener.drive(parser_spec, lexer_spec, text, start_rule, *, filtered=...,
+  origin=...)`) rather than a standalone function, and it derives the generated
+  base class itself (one fewer argument). It is no longer exported as
+  `antlr_pyfacade.drive`. The generated facade's `walk` now calls `self.drive(...)`
+  and no longer imports `drive` — **regenerate facades** produced by an older
+  `antlr-pyfacade`.
+
 ## [0.1.10] - 2026-06-15
 
 ### Changed
