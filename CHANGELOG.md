@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.18] - 2026-06-19
+
+### Changed
+- Reorganized the documentation site into four header tabs — **User Guide /
+  Installation / Reference / About** — modeled on whl2conda. The **Reference** is now
+  generated from the package docstrings via mkdocstrings (a single API page plus a
+  command-line page); the old hand-written `api.md` is replaced by pared-down
+  Chunking and Parallel-parsing guide pages that defer signatures to the Reference.
+  Adds an Installation tab and an About tab (release notes, license, motivation,
+  acknowledgements). Documentation only — no code or API changes.
+
 ## [0.1.17] - 2026-06-19
 
 ### Fixed
