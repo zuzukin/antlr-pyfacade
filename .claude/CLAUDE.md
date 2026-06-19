@@ -10,11 +10,19 @@ package, generate a small facade, and write a pure-Python event listener.
 ## Layout
 
 - `src/antlr_pyfacade/` — the Python package (src/ layout).
-  - `specs.py` — `load_specs(LexerCls, ParserCls)` reads ATN + metadata off the
-    stock-generated Python lexer/parser classes; the grammar-agnostic bridge.
-  - `facade_runtime.py` — `drive()`: introspects which callbacks a facade
-    subclass overrides, builds native rule/token masks, runs the event loop.
-  - `gen_facade.py` — the `antlr-pyfacade` console script; emits a
+  - `specs.py` — `load_specs(LexerCls, ParserCls)` / `load_lexer_spec` read ATN +
+    metadata off the stock-generated Python lexer/parser classes; the
+    grammar-agnostic bridge.
+  - `base.py` — `FacadeListener` (base of every generated facade) and its
+    `drive()` method: introspects which callbacks a subclass overrides, builds
+    native rule/token masks, runs the event loop. Also `Chunk` and the
+    `walk_parallel` thread-pool driver.
+  - `chunking.py` — the chunkers that produce `Chunk`s for `walk_parallel`:
+    `split_on_token` / `split_between_tokens` (token), `split_on_pattern` /
+    `chunk_by_pattern` (regex), `chunk_by_rule` (grammar rule), `stream_on_token` /
+    `stream_on_pattern` (bounded-memory streaming), and `lex`.
+  - `location.py` — `SourceMap` (char offset ↔ line/column).
+  - `generate.py` — the `antlr-pyfacade` console script; emits a
     `<Grammar>EventListener` base class from a generated parser module.
 - `cpp/` — the nanobind extension sources (`binding.cpp`, `events.h`); module
   name `_native`.
