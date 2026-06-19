@@ -648,12 +648,25 @@ NB_MODULE(_native, m) {
     m.def("atn_shape", &atn_shape, nb::arg("serialized"),
           "Deserialize a serialized ATN int list and return its shape.");
 
-    nb::class_<SyntaxError>(m, "ParseError")
-        .def_ro("line", &SyntaxError::line)
-        .def_ro("column", &SyntaxError::column)
-        .def_ro("start", &SyntaxError::start)
-        .def_ro("stop", &SyntaxError::stop)
-        .def_ro("message", &SyntaxError::message)
+    nb::class_<SyntaxError>(
+        m, "ParseError",
+        "A collected parse diagnostic, as found on a listener's "
+        "[syntax_errors][antlr_pyfacade.FacadeListener.syntax_errors]. The default "
+        "ANTLR console error listener is suppressed, so these are the only report "
+        "of a parse failure.")
+        .def_ro("line", &SyntaxError::line,
+                "1-based line of the offending token.")
+        .def_ro("column", &SyntaxError::column,
+                "0-based column of the offending token.")
+        .def_ro("start", &SyntaxError::start,
+                "0-based codepoint offset of the offending token's first "
+                "character (matching the event-stream offsets), or -1 when there "
+                "is no token (e.g. a lexer error).")
+        .def_ro("stop", &SyntaxError::stop,
+                "0-based codepoint offset of the offending token's last character, "
+                "inclusive, or -1 when there is no token.")
+        .def_ro("message", &SyntaxError::message,
+                "ANTLR's human-readable error message.")
         .def("__repr__", [](const SyntaxError &e) {
             return "ParseError(line=" + std::to_string(e.line) +
                    ", column=" + std::to_string(e.column) +
@@ -662,7 +675,13 @@ NB_MODULE(_native, m) {
                    e.message + ")";
         });
 
-    nb::class_<LexerSpec>(m, "LexerSpec")
+    nb::class_<LexerSpec>(
+        m, "LexerSpec",
+        "A deserialized lexer specification — the grammar's vocabulary, name "
+        "lists, and ATN — that the native lex/parse entry points run on. Build one "
+        "with [load_lexer_spec][antlr_pyfacade.load_lexer_spec] (or "
+        "[load_specs][antlr_pyfacade.load_specs]) from a generated lexer class "
+        "rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -672,7 +691,12 @@ NB_MODULE(_native, m) {
              nb::arg("channel_names"), nb::arg("mode_names"),
              nb::arg("serialized"));
 
-    nb::class_<ParserSpec>(m, "ParserSpec")
+    nb::class_<ParserSpec>(
+        m, "ParserSpec",
+        "A deserialized parser specification — the grammar's vocabulary, rule "
+        "names, and ATN — that the native parse entry points run on. Build one "
+        "with [load_specs][antlr_pyfacade.load_specs] from a generated parser "
+        "class rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
                       const std::vector<int32_t> &>(),

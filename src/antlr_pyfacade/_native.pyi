@@ -45,27 +45,48 @@ def atn_shape(serialized: Sequence[int]) -> AtnShape:
     """Deserialize a serialized ATN int list and return its shape."""
 
 class ParseError:
-    @property
-    def line(self) -> int: ...
+    """
+    A collected parse diagnostic, as found on a listener's [syntax_errors][antlr_pyfacade.FacadeListener.syntax_errors]. The default ANTLR console error listener is suppressed, so these are the only report of a parse failure.
+    """
 
     @property
-    def column(self) -> int: ...
+    def line(self) -> int:
+        """1-based line of the offending token."""
 
     @property
-    def start(self) -> int: ...
+    def column(self) -> int:
+        """0-based column of the offending token."""
 
     @property
-    def stop(self) -> int: ...
+    def start(self) -> int:
+        """
+        0-based codepoint offset of the offending token's first character (matching the event-stream offsets), or -1 when there is no token (e.g. a lexer error).
+        """
 
     @property
-    def message(self) -> str: ...
+    def stop(self) -> int:
+        """
+        0-based codepoint offset of the offending token's last character, inclusive, or -1 when there is no token.
+        """
+
+    @property
+    def message(self) -> str:
+        """ANTLR's human-readable error message."""
 
     def __repr__(self) -> str: ...
 
 class LexerSpec:
+    """
+    A deserialized lexer specification — the grammar's vocabulary, name lists, and ATN — that the native lex/parse entry points run on. Build one with [load_lexer_spec][antlr_pyfacade.load_lexer_spec] (or [load_specs][antlr_pyfacade.load_specs]) from a generated lexer class rather than constructing it directly.
+    """
+
     def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], channel_names: Sequence[str], mode_names: Sequence[str], serialized: Sequence[int]) -> None: ...
 
 class ParserSpec:
+    """
+    A deserialized parser specification — the grammar's vocabulary, rule names, and ATN — that the native parse entry points run on. Build one with [load_specs][antlr_pyfacade.load_specs] from a generated parser class rather than constructing it directly.
+    """
+
     def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], serialized: Sequence[int]) -> None: ...
 
 class StreamChunker:

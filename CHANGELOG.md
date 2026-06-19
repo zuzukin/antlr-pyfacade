@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.19] - 2026-06-19
+
+### Added
+- Docstrings on the native `ParseError`, `LexerSpec`, and `ParserSpec` classes (and
+  on `ParseError`'s fields), carried into the `_native.pyi` stub by `stubgen` and
+  rendered in the API Reference — previously these showed only signatures. No
+  behavior change.
+
 ## [0.1.18] - 2026-06-19
 
 ### Changed
