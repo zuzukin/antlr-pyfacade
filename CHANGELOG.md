@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.16] - 2026-06-19
+
+### Changed
+- The chunk source-name added in 0.1.15 is now spelled **`sourcename`** (was
+  `name`) throughout — `Chunk.sourcename`, the `sourcename=` keyword, and
+  `FacadeListener.sourcename()` / `drive(..., sourcename=...)` — and is now an
+  option on **every** chunker (`split_on_token`, `split_between_tokens`,
+  `split_on_pattern`, `chunk_by_pattern`, `chunk_by_rule`, and the streaming pair),
+  not just the streaming ones. The in-memory chunkers leave it `None` unless given;
+  the streaming ones still default it to their file path.
+
 ## [0.1.15] - 2026-06-19
 
 ### Added

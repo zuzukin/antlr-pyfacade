@@ -84,7 +84,7 @@ def visitError(self, token_type: int, text: str) -> None:
     pos = self.line_col()        # (line, column) of the offending token, or None
     if pos is not None:
         line, col = pos
-        where = self.source_name() or "<input>"
+        where = self.sourcename() or "<input>"
         print(f"{where}:{line}:{col}: unexpected {text!r}")
 ```
 
@@ -93,10 +93,10 @@ def visitError(self, token_type: int, text: str) -> None:
   or `None` when the event has no source span (e.g. an inserted/missing token,
   or an empty rule).
 - `self.span()` → the raw `(start, stop)` character offsets of the current event.
-- `self.source_name()` → the name of the source being parsed (e.g. a filename), or
-  `None`. Set from the [`Chunk`](#walk_parallel)'s `name` — the streaming chunkers
-  fill it from their file path or an explicit `name=` — for reporting a position as
-  `name:line:column`.
+- `self.sourcename()` → the name of the source being parsed (e.g. a filename), or
+  `None`. Set from the [`Chunk`](#walk_parallel)'s `sourcename` — every chunker
+  takes a `sourcename=`, and the streaming ones default it to their file path — for
+  reporting a position as `sourcename:line:column`.
 
 These are valid for every callback — `enter<Rule>`/`exit<Rule>` report the rule's
 extent, terminals and errors report the token. The underlying
@@ -267,7 +267,7 @@ chunks = stream_on_pattern("big.log", r"^\d{4}-\d\d-\d\d", where="before")
 ```
 
 - `stream_on_pattern(source, pattern, *, where="before"|"after", flags=0,
-  window_chars=65536, window_lines=None, encoding="utf-8", name=None)` — same
+  window_chars=65536, window_lines=None, encoding="utf-8", sourcename=None)` — same
   delimiter semantics and output as `split_on_pattern`, streamed. `source` is a
   filesystem path (opened with `encoding`), an already-open text file, or an
   iterable of `str` pieces (for an in-memory string, use `split_on_pattern`).
@@ -276,11 +276,11 @@ chunks = stream_on_pattern("big.log", r"^\d{4}-\d\d-\d\d", where="before")
   read boundary as long as it fits within the window. A region with no delimiter is
   buffered in full.
 
-Both streamers record a **source name** on every chunk for diagnostics — the file
-path by default, or an explicit `name=` (the only way to name a path-less stream or
-iterable). It surfaces during the parse as
-[`source_name()`](#source-location-in-a-callback), so a callback can report a
-position as `name:line:column`.
+Every chunker takes a `sourcename=` that is recorded on each chunk for diagnostics
+(the streaming ones default it to their file path; it is the only way to name a
+path-less `stream_on_pattern` source). It surfaces during the parse as
+[`sourcename()`](#source-location-in-a-callback), so a callback can report a
+position as `sourcename:line:column`.
 
 For records defined by grammar structure rather than a delimiter, chunk by rule:
 

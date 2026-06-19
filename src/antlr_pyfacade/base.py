@@ -77,31 +77,33 @@ class Chunk(NamedTuple):
     [line_col][antlr_pyfacade.FacadeListener.line_col] be reported against the
     whole source rather than the chunk.
 
-    `name` optionally identifies the source (e.g. a filename) for diagnostics; it
-    is surfaced during a `walk_parallel` parse as
-    [source_name][antlr_pyfacade.FacadeListener.source_name]. The streaming chunkers
-    set it from their file path (or an explicit `name`); a bare `str` chunk inherits
-    the name of the chunk it follows.
+    `sourcename` optionally identifies the source (e.g. a filename) for
+    diagnostics; it is surfaced during a `walk_parallel` parse as
+    [sourcename][antlr_pyfacade.FacadeListener.sourcename]. The chunkers can set it
+    (the streaming ones default it to their file path); a bare `str` chunk inherits
+    the source name of the chunk it follows.
     """
 
     text: str
     offset: int = 0  # 0-based character offset of the first character
     line: int = 1  # 1-based line of the first character
     column: int = 0  # 0-based column of the first character
-    name: str | None = None  # source name (e.g. filename) for diagnostics
+    sourcename: str | None = None  # source name (e.g. filename) for diagnostics
 
     def after(self, text: str) -> Chunk:
         """Return a `Chunk` for `text` positioned immediately after this one.
 
         That is the next chunk when the two are contiguous in the source: it
-        begins where this chunk's text ends, and carries this chunk's `name`.
+        begins where this chunk's text ends, and carries this chunk's `sourcename`.
         """
         newlines = self.text.count("\n")
         offset = self.offset + len(self.text)
         if newlines == 0:
-            return Chunk(text, offset, self.line, self.column + len(self.text), self.name)
+            return Chunk(
+                text, offset, self.line, self.column + len(self.text), self.sourcename
+            )
         column = len(self.text) - self.text.rfind("\n") - 1
-        return Chunk(text, offset, self.line + newlines, column, self.name)
+        return Chunk(text, offset, self.line + newlines, column, self.sourcename)
 
 
 class FacadeListener:
@@ -126,8 +128,8 @@ class FacadeListener:
     _pyfacade_base_line: int = 1
     _pyfacade_base_col: int = 0
     # Name of the source being parsed (e.g. a filename), for diagnostics. None
-    # unless a Chunk carried a name or `drive` was given one.
-    _pyfacade_source_name: str | None = None
+    # unless a Chunk carried a sourcename or `drive` was given one.
+    _pyfacade_sourcename: str | None = None
 
     # Reassigned to a fresh list by `drive` on every walk (never mutated in
     # place), so the shared class-level default is safe — hence the RUF012 waiver.
@@ -176,16 +178,16 @@ class FacadeListener:
             return self._pyfacade_base_line, self._pyfacade_base_col + col
         return self._pyfacade_base_line + line - 1, col
 
-    def source_name(self) -> str | None:
+    def sourcename(self) -> str | None:
         """Return the name of the source being parsed, or `None`.
 
-        This is the `name` of the [Chunk][antlr_pyfacade.Chunk] being parsed (set
-        by the streaming chunkers from their file path or an explicit `name`), or
-        whatever was passed to [drive][antlr_pyfacade.FacadeListener.drive]. Use it
-        with [line_col][antlr_pyfacade.FacadeListener.line_col] to report a position
-        as `name:line:column`.
+        This is the `sourcename` of the [Chunk][antlr_pyfacade.Chunk] being parsed
+        (the chunkers can set it; the streaming ones default it to their file path),
+        or whatever was passed to [drive][antlr_pyfacade.FacadeListener.drive]. Use
+        it with [line_col][antlr_pyfacade.FacadeListener.line_col] to report a
+        position as `sourcename:line:column`.
         """
-        return self._pyfacade_source_name
+        return self._pyfacade_sourcename
 
     def visitTerminal(self, token_type: int, text: str) -> None:
         """No-op terminal callback; override in a subclass to handle tokens."""
@@ -295,7 +297,7 @@ class FacadeListener:
                 rule,
                 filtered=filtered,
                 origin=(chunk.offset, chunk.line, chunk.column),
-                source_name=chunk.name,
+                sourcename=chunk.sourcename,
             )
             return listener
 
@@ -342,7 +344,7 @@ class FacadeListener:
         *,
         filtered: bool = True,
         origin: tuple[int, int, int] = (0, 1, 0),
-        source_name: str | None = None,
+        sourcename: str | None = None,
     ) -> None:
         """Run the native parse and dispatch this listener's overridden callbacks.
 
@@ -362,8 +364,8 @@ class FacadeListener:
             origin: The `(offset, line, column)` of `text`'s first character, so
                 callbacks report positions against the whole source. Defaults to
                 the start of the source, `(0, 1, 0)`.
-            source_name: Optional name of the source (e.g. a filename), returned by
-                [source_name][antlr_pyfacade.FacadeListener.source_name] during the
+            sourcename: Optional name of the source (e.g. a filename), returned by
+                [sourcename][antlr_pyfacade.FacadeListener.sourcename] during the
                 walk.
         """
         cls = type(self)
@@ -409,7 +411,7 @@ class FacadeListener:
         # reused listener re-derives it for this text.
         self._pyfacade_text = text
         self._pyfacade_sourcemap = None
-        self._pyfacade_source_name = source_name
+        self._pyfacade_sourcename = sourcename
         (
             self._pyfacade_base_offset,
             self._pyfacade_base_line,

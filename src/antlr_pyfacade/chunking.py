@@ -127,7 +127,9 @@ def lex(
         yield LexToken(*rec)
 
 
-def _emit(text: str, sm: SourceMap, start: int, stop: int) -> Chunk | None:
+def _emit(
+    text: str, sm: SourceMap, start: int, stop: int, sourcename: str | None = None
+) -> Chunk | None:
     """Build a positioned `Chunk` for `text[start:stop]`, trimming surrounding
     whitespace; return `None` if the region is whitespace-only."""
     seg = text[start:stop]
@@ -137,7 +139,7 @@ def _emit(text: str, sm: SourceMap, start: int, stop: int) -> Chunk | None:
         return None
     offset = start + (len(seg) - len(stripped))  # advance past leading whitespace
     line, column = sm.line_col(offset)
-    return Chunk(body, offset, line, column)
+    return Chunk(body, offset, line, column, sourcename)
 
 
 def _as_set(types: TokenTypes) -> frozenset[int]:
@@ -167,6 +169,7 @@ def split_on_token(
     *,
     where: str = "before",
     channel: int | None = DEFAULT_CHANNEL,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each delimiter token.
 
@@ -188,6 +191,9 @@ def split_on_token(
             one), so content after the last delimiter is a trailing chunk.
         channel: Only tokens on this channel are split on (default: the default
             channel). Pass `None` to consider all channels.
+        sourcename: Optional source name (e.g. a filename) recorded on each
+            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
+            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per region between delimiters, trimmed of
@@ -207,23 +213,23 @@ def split_on_token(
     if where == "before":
         first = bounds[0].start if bounds else n
         if first > 0:  # leading region, before the first delimiter
-            chunk = _emit(text, sm, 0, first)
+            chunk = _emit(text, sm, 0, first, sourcename)
             if chunk is not None:
                 yield chunk
         for i, b in enumerate(bounds):
             end = bounds[i + 1].start if i + 1 < len(bounds) else n
-            chunk = _emit(text, sm, b.start, end)
+            chunk = _emit(text, sm, b.start, end, sourcename)
             if chunk is not None:
                 yield chunk
     else:  # after
         prev = 0
         for b in bounds:
-            chunk = _emit(text, sm, prev, b.stop + 1)
+            chunk = _emit(text, sm, prev, b.stop + 1, sourcename)
             if chunk is not None:
                 yield chunk
             prev = b.stop + 1
         if prev < n:  # trailing region, after the last delimiter
-            chunk = _emit(text, sm, prev, n)
+            chunk = _emit(text, sm, prev, n, sourcename)
             if chunk is not None:
                 yield chunk
 
@@ -236,7 +242,7 @@ def stream_on_token(
     where: str = "before",
     encoding: str = "utf-8",
     channel: int | None = DEFAULT_CHANNEL,
-    name: str | None = None,
+    sourcename: str | None = None,
     batch: int = 256,
     cached: bool = True,
     _block_bytes: int = 0,
@@ -265,9 +271,9 @@ def stream_on_token(
             [split_on_token][antlr_pyfacade.chunking.split_on_token].
         channel: Only tokens on this channel are split on (default: the default
             channel). Pass `None` to consider all channels.
-        name: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
-            surfaced as [source_name][antlr_pyfacade.FacadeListener.source_name]
-            during a walk). Defaults to `str(path)`.
+        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
+            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during
+            a walk). Defaults to `str(path)`.
         batch: How many chunk records to pull from C++ per call — a throughput knob,
             not observable in the output.
         cached: Reuse the cached lexer spec (see
@@ -292,7 +298,8 @@ def stream_on_token(
             f"decode in Python and use split_on_token for other encodings"
         )
     src_path = os.fspath(path)
-    src_name = name if name is not None else src_path
+    if sourcename is None:
+        sourcename = src_path
     spec = load_lexer_spec(lexer_cls, cached=cached)
     chunker = _native.StreamChunker(
         spec,
@@ -307,7 +314,7 @@ def stream_on_token(
     while more:
         rows, more = chunker.next_batch(batch)
         for offset, line, column, body in rows:
-            yield Chunk(body, offset, line, column, src_name)
+            yield Chunk(body, offset, line, column, sourcename)
 
 
 def split_between_tokens(
@@ -317,6 +324,7 @@ def split_between_tokens(
     *,
     nested: bool = False,
     channel: int | None = DEFAULT_CHANNEL,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Yield a chunk for each region bounded by an opener/closer pair.
 
@@ -340,6 +348,9 @@ def split_between_tokens(
             pair and scanning resumes after it.
         channel: Only tokens on this channel are considered (default: the default
             channel). Pass `None` to consider all channels.
+        sourcename: Optional source name (e.g. a filename) recorded on each
+            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
+            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per region — the text from the opener's
@@ -379,7 +390,9 @@ def split_between_tokens(
                 if stack and stack[-1] == close_to_pair[ttype]:
                     stack.pop()
                     if not stack and start is not None:
-                        chunk = _emit(text, sm, toks[start].start, toks[idx].stop + 1)
+                        chunk = _emit(
+                            text, sm, toks[start].start, toks[idx].stop + 1, sourcename
+                        )
                         if chunk is not None:
                             yield chunk
                         start = None
@@ -393,7 +406,7 @@ def split_between_tokens(
                     j += 1
                 if j >= n:
                     break  # opener with no matching closer
-                chunk = _emit(text, sm, toks[idx].start, toks[j].stop + 1)
+                chunk = _emit(text, sm, toks[idx].start, toks[j].stop + 1, sourcename)
                 if chunk is not None:
                     yield chunk
                 idx = j + 1
@@ -407,6 +420,7 @@ def split_on_pattern(
     *,
     where: str = "before",
     flags: int | re.RegexFlag = 0,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each match of a delimiter regex.
 
@@ -424,6 +438,9 @@ def split_on_pattern(
         where: `"before"` starts each chunk at a match; `"after"` ends each chunk
             at a match (see split_on_token).
         flags: `re` flags, used only when `pattern` is a `str`.
+        sourcename: Optional source name (e.g. a filename) recorded on each
+            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
+            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
@@ -438,23 +455,23 @@ def split_on_pattern(
     if where == "before":
         first = matches[0].start() if matches else n
         if first > 0:  # leading region, before the first match
-            chunk = _emit(text, sm, 0, first)
+            chunk = _emit(text, sm, 0, first, sourcename)
             if chunk is not None:
                 yield chunk
         for i, m in enumerate(matches):
             end = matches[i + 1].start() if i + 1 < len(matches) else n
-            chunk = _emit(text, sm, m.start(), end)
+            chunk = _emit(text, sm, m.start(), end, sourcename)
             if chunk is not None:
                 yield chunk
     else:  # after
         prev = 0
         for m in matches:
-            chunk = _emit(text, sm, prev, m.end())
+            chunk = _emit(text, sm, prev, m.end(), sourcename)
             if chunk is not None:
                 yield chunk
             prev = m.end()
         if prev < n:  # trailing region, after the last match
-            chunk = _emit(text, sm, prev, n)
+            chunk = _emit(text, sm, prev, n, sourcename)
             if chunk is not None:
                 yield chunk
 
@@ -495,7 +512,7 @@ def _read_increments(
 
 
 def _split_stream(
-    increments: Iterator[str], rx: re.Pattern[str], where: str, name: str | None
+    increments: Iterator[str], rx: re.Pattern[str], where: str, sourcename: str | None
 ) -> Iterator[Chunk]:
     """Split the concatenation of `increments` at each `rx` match, streaming.
 
@@ -540,7 +557,7 @@ def _split_stream(
         advance_origin(offset)
         line, column = oline, ocol
         advance_origin(b)
-        return Chunk(body, offset, line, column, name)
+        return Chunk(body, offset, line, column, sourcename)
 
     while True:
         match = rx.search(buf, resume - base)
@@ -580,7 +597,7 @@ def stream_on_pattern(
     window_chars: int | None = 65536,
     window_lines: int | None = None,
     encoding: str = "utf-8",
-    name: str | None = None,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Stream chunks from a text source at each delimiter regex match.
 
@@ -615,10 +632,10 @@ def stream_on_pattern(
             delimiters. Ignored for a plain `str` iterable, which is consumed as-is.
         encoding: Text encoding, used only when `source` is a path. Any codec
             Python supports.
-        name: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
-            surfaced as [source_name][antlr_pyfacade.FacadeListener.source_name]
-            during a walk). Defaults to the path when `source` is a path, else
-            `None` — pass it for a stream or iterable that has no path.
+        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
+            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during
+            a walk). Defaults to the path when `source` is a path, else `None` — pass
+            it for a stream or iterable that has no path.
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
@@ -634,11 +651,10 @@ def stream_on_pattern(
     rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
 
     opened = None
-    src_name = name
     if isinstance(source, (str, os.PathLike)):
         fspath = os.fspath(source)
-        if src_name is None:
-            src_name = fspath
+        if sourcename is None:
+            sourcename = fspath
         opened = open(fspath, encoding=encoding)  # noqa: SIM115
         increments = _read_increments(opened, window_chars, window_lines)
     elif hasattr(source, "read"):
@@ -646,7 +662,7 @@ def stream_on_pattern(
     else:
         increments = iter(source)
     try:
-        yield from _split_stream(increments, rx, where, src_name)
+        yield from _split_stream(increments, rx, where, sourcename)
     finally:
         if opened is not None:
             opened.close()
@@ -657,6 +673,7 @@ def chunk_by_pattern(
     pattern: str | re.Pattern[str],
     *,
     flags: int | re.RegexFlag = 0,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Yield one chunk per non-overlapping match of `pattern`.
 
@@ -672,6 +689,9 @@ def chunk_by_pattern(
         pattern: A regular expression matching one record (a `str` or compiled
             pattern).
         flags: `re` flags, used only when `pattern` is a `str`.
+        sourcename: Optional source name (e.g. a filename) recorded on each
+            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
+            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per match, trimmed of surrounding
@@ -680,7 +700,7 @@ def chunk_by_pattern(
     rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
     sm = SourceMap(text)
     for m in rx.finditer(text):
-        chunk = _emit(text, sm, m.start(), m.end())
+        chunk = _emit(text, sm, m.start(), m.end(), sourcename)
         if chunk is not None:
             yield chunk
 
@@ -705,6 +725,7 @@ def chunk_by_rule(
     start_rule: str | int | None = None,
     outermost: bool = True,
     cached: bool = True,
+    sourcename: str | None = None,
 ) -> Iterator[Chunk]:
     """Yield each occurrence of a grammar `rule` as a chunk.
 
@@ -729,6 +750,9 @@ def chunk_by_rule(
             every occurrence (which would overlap).
         cached: Reuse the cached specs (see
             [load_specs][antlr_pyfacade.load_specs]).
+        sourcename: Optional source name (e.g. a filename) recorded on each
+            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
+            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per matched rule occurrence, in source
@@ -749,6 +773,6 @@ def chunk_by_rule(
     for _ridx, start, stop in _RULE.iter_unpack(raw):
         if start < 0:  # empty rule occurrence — no source span
             continue
-        chunk = _emit(text, sm, start, stop + 1)
+        chunk = _emit(text, sm, start, stop + 1, sourcename)
         if chunk is not None:
             yield chunk

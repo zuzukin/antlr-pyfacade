@@ -284,35 +284,52 @@ def test_stream_on_pattern_encoding(tmp_path):
         assert got == want, enc
 
 
-def test_stream_source_name(tmp_path):
-    # The streaming chunkers record a source name on each Chunk: the path by
-    # default, an explicit `name` when given (required for a nameless stream).
+def test_sourcename(tmp_path):
+    # Every chunker can record a source name on each Chunk. The streaming chunkers
+    # default it to the file path; an explicit `sourcename` overrides (and is the
+    # only way to name a path-less stream).
     path = tmp_path / "data.json"
     path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
     text = path.read_text(encoding="utf-8")
 
-    assert next(stream_on_pattern(path, r"\{")).name == str(path)
-    assert next(stream_on_pattern(io.StringIO(text), r"\{")).name is None
-    assert next(stream_on_pattern(io.StringIO(text), r"\{", name="mem")).name == "mem"
-    assert next(stream_on_pattern(path, r"\{", name="alias")).name == "alias"
-    assert next(stream_on_token(path, JSONLexer, LBRACE)).name == str(path)
-    assert next(stream_on_token(path, JSONLexer, LBRACE, name="alias")).name == "alias"
+    assert next(stream_on_pattern(path, r"\{")).sourcename == str(path)
+    assert next(stream_on_pattern(io.StringIO(text), r"\{")).sourcename is None
+    assert next(stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")).sourcename == "m"
+    assert next(stream_on_pattern(path, r"\{", sourcename="alias")).sourcename == "alias"
+    assert next(stream_on_token(path, JSONLexer, LBRACE)).sourcename == str(path)
+    assert next(
+        stream_on_token(path, JSONLexer, LBRACE, sourcename="alias")
+    ).sourcename == "alias"
 
-    # A bare str chunk inherits the name of the chunk it follows.
-    assert Chunk("x", 0, 1, 0, "src").after("yy").name == "src"
+    # The in-memory chunkers take it too (None by default).
+    assert next(split_on_token(text, JSONLexer, LBRACE)).sourcename is None
+    assert next(
+        split_on_token(text, JSONLexer, LBRACE, sourcename="s")
+    ).sourcename == "s"
+    assert next(split_on_pattern(text, r"\{", sourcename="s")).sourcename == "s"
+    assert next(chunk_by_pattern(text, r"\{[^{}]*\}", sourcename="s")).sourcename == "s"
+    assert next(
+        split_between_tokens(text, JSONLexer, (LBRACE, RBRACE), sourcename="s")
+    ).sourcename == "s"
+    assert next(
+        chunk_by_rule('[{"a": 1}]', JSONLexer, JSONParser, "obj", sourcename="s")
+    ).sourcename == "s"
 
-    # The name surfaces as FacadeListener.source_name() during the walk, for
-    # reporting positions as name:line:column.
+    # A bare str chunk inherits the source name of the chunk it follows.
+    assert Chunk("x", 0, 1, 0, "src").after("yy").sourcename == "src"
+
+    # The name surfaces as FacadeListener.sourcename() during the walk, for
+    # reporting positions as sourcename:line:column.
     listeners = list(
         JsonValueBuilder.walk_parallel(
-            stream_on_pattern(io.StringIO(text), r"\{", name="mem.json"),
+            stream_on_pattern(io.StringIO(text), r"\{", sourcename="mem.json"),
             JSONLexer,
             JSONParser,
             start_rule="value",
         )
     )
     assert [b.result for b in listeners] == [{"a": 1}, {"b": 2}]
-    assert [b.source_name() for b in listeners] == ["mem.json", "mem.json"]
+    assert [b.sourcename() for b in listeners] == ["mem.json", "mem.json"]
 
 
 def test_split_between_tokens():
