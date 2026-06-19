@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.14] - 2026-06-19
+
+### Added
+- `stream_on_pattern(source, pattern, *, where=..., flags=..., window_chars=...,
+  window_lines=..., encoding="utf-8")` — the streaming counterpart of
+  `split_on_pattern`. Reads `source` (a filesystem path opened with `encoding`, an
+  open text file, or any iterable of `str`) incrementally and yields positioned
+  `Chunk`s without holding the whole input, so paired with `walk_parallel` the
+  pipeline stays bounded. The regex runs Python-side, so any text encoding works
+  (unlike the UTF-8-only, C++-side `stream_on_token`). A delimiter is committed
+  only once a character past it has been read, so it is never split across a read
+  boundary as long as it fits within the `window_chars`/`window_lines` window; a
+  region with no delimiter is buffered in full.
+
 ## [0.1.13] - 2026-06-19
 
 ### Added

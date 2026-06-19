@@ -48,6 +48,7 @@ from .chunking import (
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_on_pattern,
     stream_on_token,
 )
 from .location import SourceMap
@@ -73,5 +74,6 @@ __all__ = [
     "split_between_tokens",
     "split_on_pattern",
     "split_on_token",
+    "stream_on_pattern",
     "stream_on_token",
 ]

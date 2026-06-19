@@ -17,6 +17,9 @@ that turn a whole source into positioned `Chunk`s for `walk_parallel`."""
 
 from __future__ import annotations
 
+import io
+import re
+
 import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
@@ -32,6 +35,7 @@ from antlr_pyfacade import (
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_on_pattern,
     stream_on_token,
 )
 
@@ -199,6 +203,84 @@ def test_stream_on_token_encoding_and_errors(tmp_path):
     strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, 0)
     with pytest.raises(RuntimeError):
         strict.next_batch(10)
+
+
+# (text, pattern, flags, where) cases for the streaming regex chunker, checked
+# against split_on_pattern: leading/trailing/whitespace regions, multi-character
+# and line-anchored (MULTILINE) delimiters, multibyte, and no delimiter.
+_PATTERN_CASES = [
+    ('{"a": 1}\n{"b": 22}\n{"c": 3}', r"\{", 0, "before"),
+    ('{"a": 1}\n{"b": 22}\n{"c": 3}', r"\}", 0, "after"),
+    ("1 {2} {3}", r"\{", 0, "before"),
+    ("a;; b;; c", r";;", 0, "after"),
+    ("--\nrec1\n--\nrec2\n--\nrec3\n", r"^--$", re.MULTILINE, "before"),
+    ('{"café": 1}\n{"日本語": 2}\n{"emoji": "😀🚀"}', r"\{", 0, "before"),
+    ("   \n {a}  \n  {b}  \n ", r"\{", 0, "before"),
+    ("no delimiters here", r"\{", 0, "before"),
+    ("", r"\{", 0, "before"),
+]
+
+
+def test_stream_on_pattern(tmp_path):
+    # stream_on_pattern reads incrementally but must reproduce split_on_pattern
+    # over the same text — from a path, an open stream, or an iterable, and across
+    # window sizes small enough that multi-character delimiters straddle reads.
+    for i, (text, pat, flags, where) in enumerate(_PATTERN_CASES):
+        path = tmp_path / f"p{i}.txt"
+        path.write_text(text, encoding="utf-8")
+        want = [
+            (c.text, c.offset, c.line, c.column)
+            for c in split_on_pattern(text, pat, where=where, flags=flags)
+        ]
+
+        def run(source, **kw):
+            return [
+                (c.text, c.offset, c.line, c.column)
+                for c in stream_on_pattern(source, pat, where=where, flags=flags, **kw)  # noqa: B023
+            ]
+
+        for wc in (1, 2, 3, 65536):
+            assert run(path, window_chars=wc) == want, (text, where, wc)
+        assert run(io.StringIO(text), window_chars=2) == want  # open stream
+        assert run(text.splitlines(keepends=True)) == want  # iterable of lines
+        assert run(path, window_lines=1) == want  # line windows
+
+    # The streamed chunks feed walk_parallel like any other chunker.
+    path = tmp_path / "values.txt"
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    results = [
+        b.result
+        for b in JsonValueBuilder.walk_parallel(
+            stream_on_pattern(path, r"\{", where="before"),
+            JSONLexer,
+            JSONParser,
+            start_rule="value",
+        )
+    ]
+    assert results == [{"a": 1}, {"b": 2}]
+
+    with pytest.raises(ValueError, match="where"):
+        list(stream_on_pattern(io.StringIO("x"), r"a", where="sideways"))
+
+
+def test_stream_on_pattern_encoding(tmp_path):
+    # The regex runs on Python's side, so any encoding a text file supports works
+    # (Python decodes); offsets match split_on_pattern over the decoded text.
+    text = '{"café": 1}\n{"naïve": 2}\n{"x": 3}'
+    for enc in ("latin-1", "utf-16", "cp1252"):
+        path = tmp_path / f"{enc}.txt"
+        path.write_text(text, encoding=enc)
+        want = [
+            (c.text, c.offset, c.line, c.column)
+            for c in split_on_pattern(text, r"\{", where="before")
+        ]
+        got = [
+            (c.text, c.offset, c.line, c.column)
+            for c in stream_on_pattern(
+                path, r"\{", where="before", encoding=enc, window_chars=3
+            )
+        ]
+        assert got == want, enc
 
 
 def test_split_between_tokens():

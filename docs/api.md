@@ -248,6 +248,28 @@ Either way, each chunk spans the source between boundaries, trimmed of surroundi
 whitespace, with its start `(offset, line, column)` from a `SourceMap` over the
 text; whitespace-only regions are skipped.
 
+`stream_on_pattern` is the streaming form of `split_on_pattern` — it reads the
+source incrementally instead of taking the whole text, so it pairs with
+`walk_parallel` to stay bounded in memory. Because the regex is Python's, the
+encoding is handled on the Python side (any text encoding works), unlike the
+C++-side, UTF-8-only `stream_on_token`:
+
+```python
+from antlr_pyfacade import stream_on_pattern
+
+# from a path (decoded with `encoding`), an open text file, or any str iterable:
+chunks = stream_on_pattern("big.log", r"^\d{4}-\d\d-\d\d", where="before")
+```
+
+- `stream_on_pattern(source, pattern, *, where="before"|"after", flags=0,
+  window_chars=65536, window_lines=None, encoding="utf-8")` — same delimiter
+  semantics and output as `split_on_pattern`, streamed. `source` is a filesystem
+  path (opened with `encoding`), an already-open text file, or an iterable of `str`
+  pieces (for an in-memory string, use `split_on_pattern`). `window_chars` /
+  `window_lines` set the read/search increment — a delimiter is committed only once
+  a character past it is read, so it is never split across a read boundary as long
+  as it fits within the window. A region with no delimiter is buffered in full.
+
 For records defined by grammar structure rather than a delimiter, chunk by rule:
 
 - `chunk_by_rule(text, LexerCls, ParserCls, rule, *, start_rule=None,

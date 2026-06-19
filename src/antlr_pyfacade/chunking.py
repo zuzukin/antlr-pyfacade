@@ -61,6 +61,9 @@ from .specs import load_lexer_spec, load_specs
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
+    # A streaming text source: a filesystem path, an open text file object, or any
+    # iterable of str pieces (a file object iterates as lines; a generator works).
+    TextSource = str | os.PathLike[str] | Iterable[str]
     # One token type, or several treated as equivalent.
     TokenTypes = int | Iterable[int]
     # An (open, close) bracket pair; either side may be one or several types.
@@ -448,6 +451,190 @@ def split_on_pattern(
             chunk = _emit(text, sm, prev, n)
             if chunk is not None:
                 yield chunk
+
+
+def _read_increments(
+    fobj: object, window_chars: int | None, window_lines: int | None
+) -> Iterator[str]:
+    """Yield successive text increments from a text file-like `fobj`.
+
+    With `window_lines` set, reads that many lines per step (capped at
+    `window_chars` characters if also set); otherwise reads `window_chars`-sized
+    blocks. The increment size only affects how often the regex re-runs and how
+    much read-ahead is buffered — never the output.
+    """
+    if window_lines is not None and window_lines > 0:
+        cap = window_chars if window_chars and window_chars > 0 else None
+        while True:
+            lines: list[str] = []
+            total = 0
+            for _ in range(window_lines):
+                line = fobj.readline()  # type: ignore[attr-defined]
+                if not line:
+                    break
+                lines.append(line)
+                total += len(line)
+                if cap is not None and total >= cap:
+                    break
+            if not lines:
+                return
+            yield "".join(lines)
+    else:
+        size = window_chars if window_chars and window_chars > 0 else 65536
+        while True:
+            piece = fobj.read(size)  # type: ignore[attr-defined]
+            if not piece:
+                return
+            yield piece
+
+
+def _split_stream(
+    increments: Iterator[str], rx: re.Pattern[str], where: str
+) -> Iterator[Chunk]:
+    """Split the concatenation of `increments` at each `rx` match, streaming.
+
+    Holds only the current open chunk plus one read-ahead increment: it searches a
+    growing buffer for the next delimiter, and only commits a match once a
+    character past it has been read (or EOF) — so a match is never truncated by a
+    read boundary. Reproduces `split_on_pattern` over the same text for delimiters
+    that fit within the buffer.
+    """
+    before = where == "before"
+    buf = ""
+    base = 0  # absolute codepoint offset of buf[0]; kept == chunk_start
+    chunk_start = 0  # absolute start of the current open (un-emitted) chunk
+    resume = 0  # absolute offset to resume searching from (>= chunk_start)
+    origin = 0  # absolute offset for which (oline, ocol) hold
+    oline = 1  # 1-based line, like SourceMap
+    ocol = 0  # 0-based column
+    eof = False
+
+    def advance_origin(to: int) -> None:
+        nonlocal origin, oline, ocol
+        seg = buf[origin - base : to - base]
+        if seg:
+            newlines = seg.count("\n")
+            if newlines:
+                oline += newlines
+                ocol = len(seg) - seg.rindex("\n") - 1
+            else:
+                ocol += len(seg)
+            origin = to
+
+    def make_chunk(a: int, b: int) -> Chunk | None:
+        # Region [a, b): trim surrounding whitespace, advance origin to b, and
+        # return a positioned Chunk (None for a whitespace-only region).
+        seg = buf[a - base : b - base]
+        stripped = seg.lstrip()
+        body = stripped.rstrip()
+        if not body:
+            advance_origin(b)
+            return None
+        offset = a + (len(seg) - len(stripped))
+        advance_origin(offset)
+        line, column = oline, ocol
+        advance_origin(b)
+        return Chunk(body, offset, line, column)
+
+    while True:
+        match = rx.search(buf, resume - base)
+        if match is not None and (match.end() < len(buf) or eof):
+            mstart = base + match.start()
+            mend = base + match.end()
+            boundary = mstart if before else mend
+            chunk = make_chunk(chunk_start, boundary)
+            if chunk is not None:
+                yield chunk
+            chunk_start = boundary
+            # Resume past this delimiter (non-overlapping, like finditer); guard a
+            # zero-width match so the search position always advances.
+            resume = mend if mend > mstart else mstart + 1
+            if chunk_start > base:  # drop the emitted prefix
+                buf = buf[chunk_start - base :]
+                base = chunk_start
+            continue
+        if eof:
+            chunk = make_chunk(chunk_start, base + len(buf))
+            if chunk is not None:
+                yield chunk
+            return
+        piece = next(increments, None)
+        if piece is None:
+            eof = True
+        elif piece:
+            buf += piece
+
+
+def stream_on_pattern(
+    source: TextSource,
+    pattern: str | re.Pattern[str],
+    *,
+    where: str = "before",
+    flags: int | re.RegexFlag = 0,
+    window_chars: int | None = 65536,
+    window_lines: int | None = None,
+    encoding: str = "utf-8",
+) -> Iterator[Chunk]:
+    """Stream chunks from a text source at each delimiter regex match.
+
+    The streaming counterpart of
+    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern]: it reads `source`
+    incrementally and yields positioned [Chunk][antlr_pyfacade.Chunk]s without
+    holding the whole input, so paired with
+    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel] the pipeline stays
+    bounded. Because the regex is Python's, encoding is handled on the Python side
+    (unlike the lexer-based
+    [stream_on_token][antlr_pyfacade.chunking.stream_on_token], which reads UTF-8 in
+    C++) — any encoding a text file supports works.
+
+    A delimiter match is only committed once a character past it has been read (or
+    the source ends), so a match is never split across a read boundary, **as long
+    as the delimiter fits within the read window**. A region with no delimiter is
+    buffered in full (like the other streamers).
+
+    Args:
+        source: A filesystem `path` (opened with `encoding`), an already-open text
+            file object, or any iterable of `str` pieces (e.g. lines, or a
+            generator). For an in-memory string, use `split_on_pattern` instead.
+        pattern: The delimiter regular expression (a `str` or compiled pattern).
+        where: `"before"` starts each chunk at a match; `"after"` ends each chunk at
+            a match (see split_on_pattern).
+        flags: `re` flags, used only when `pattern` is a `str`.
+        window_chars: Read/search increment in characters (default 64K). Controls
+            how often the regex re-runs and how much read-ahead is buffered, not the
+            output. Used when reading a path or file object.
+        window_lines: If set, read this many lines per step instead (still capped by
+            `window_chars` if both are given) — convenient for line-oriented
+            delimiters. Ignored for a plain `str` iterable, which is consumed as-is.
+        encoding: Text encoding, used only when `source` is a path. Any codec
+            Python supports.
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
+        surrounding whitespace and carrying its source position; whitespace-only
+        regions are skipped. Equivalent to `split_on_pattern` over the source's
+        decoded text.
+
+    Raises:
+        ValueError: If `where` is not `"before"`/`"after"`.
+    """
+    if where not in ("before", "after"):
+        raise ValueError(f"where must be 'before' or 'after', got {where!r}")
+    rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
+
+    opened = None
+    if isinstance(source, (str, os.PathLike)):
+        opened = open(os.fspath(source), encoding=encoding)  # noqa: SIM115
+        increments = _read_increments(opened, window_chars, window_lines)
+    elif hasattr(source, "read"):
+        increments = _read_increments(source, window_chars, window_lines)
+    else:
+        increments = iter(source)
+    try:
+        yield from _split_stream(increments, rx, where)
+    finally:
+        if opened is not None:
+            opened.close()
 
 
 def chunk_by_pattern(

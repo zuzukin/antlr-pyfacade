@@ -178,3 +178,6 @@ instead of the whole text plus a whole-input `SourceMap`. Paired with
 in flight), peak memory is roughly one chunk plus the parses in flight — flat in
 the file size. It still tokenizes the entire input, so throughput tracks the
 token-based row above; what changes is the memory profile, not the speed.
+`stream_on_pattern` is the same idea for the regex splitter — it reads the source
+incrementally (Python-side, so any text encoding), committing a delimiter once a
+character past it is read; throughput tracks the regex row, memory stays flat.
