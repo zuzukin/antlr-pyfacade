@@ -51,11 +51,15 @@ for the details and how to tell.
 
 ## Where to go next
 
-- **[Getting started](getting-started.md)** — the full install → generate →
-  write a listener → run walkthrough. Start here.
+- [Installation](installation.md) — `pip install`, supported Pythons/platforms, and
+  the ANTLR tool you need to generate parsers.
+- **[Getting started](getting-started.md)** — the full generate → write a listener →
+  run walkthrough. Start here.
+- [Chunking](chunking.md) and [Parallel parsing](parallel-parsing.md) — split large
+  or many-record input and parse the pieces across cores.
 - [Migrating from antlr4-python3-runtime](migrating.md) — if you already use the
   official runtime's `ParseTreeListener`, this maps it onto the facade.
-- [API reference](api.md) — every callback, option, and helper.
+- [API reference](reference/api.md) — every callback, option, and helper.
 - [How it works](concepts.md) — optional background on *why* it's fast.
 - [Performance & limitations](performance.md) — the speed ceiling and the
   predicate/action boundary, in full.

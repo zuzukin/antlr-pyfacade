@@ -64,4 +64,5 @@ which is useful for diagnostics and for the correctness tests.
 There is no generated C++ parser and no compilation of your grammar. The C++
 runtime is driven entirely from the **serialized ATN** that the stock
 `-Dlanguage=Python3` ANTLR tool already emits, plus the rule/token name metadata
-read off the generated Python classes (see [`load_specs`](api.md#load_specs)).
+read off the generated Python classes (see
+[`load_specs`](reference/api.md#antlr_pyfacade.load_specs)).

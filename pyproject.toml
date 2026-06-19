@@ -165,6 +165,9 @@ python = ">=3.10"
 
 [tool.pixi.feature.docs.pypi-dependencies]
 zensical = "*"
+# API reference generated from docstrings (Python handler pulls in mkdocstrings +
+# griffe). Static analysis only — the docs env never builds the C++ extension.
+mkdocstrings-python = "*"
 
 # conda-forge recipe builder (rattler-build). Isolated with no default feature:
 # rattler-build creates its own sandboxed build/host environment from the recipe,

@@ -82,9 +82,9 @@ are unaffected.
 When your input is a sequence of **independent pieces** — the records of a log,
 the top-level definitions of a source file, the sections of a document — you can
 parse them concurrently across CPU cores. Split the text into chunks — the
-[chunking helpers](api.md#chunking) split on token boundaries from a single cheap
+[chunking helpers](chunking.md) split on token boundaries from a single cheap
 lexer pass, or bring your own regex — and hand them to
-[walk_parallel](api.md#walk_parallel):
+[walk_parallel](parallel-parsing.md):
 
 ```python
 from antlr_pyfacade import split_on_token
@@ -134,7 +134,7 @@ Two implementation notes, both bundled here:
 
 ### Chunking: lexer vs regex
 
-The [chunking helpers](api.md#chunking) come in three flavors that cost very
+The [chunking helpers](chunking.md) come in three flavors that cost very
 differently: regex-based (`split_on_pattern` / `chunk_by_pattern`, a text scan),
 token-based (`split_on_token` / `split_between_tokens`, a lexer pass), and
 rule-based (`chunk_by_rule`, a full parse). Producing the *same* chunks — each
@@ -171,7 +171,7 @@ Either way the splitting cost is usually negligible next to the per-chunk parse 
 feeds.
 
 For a file too large to hold in memory, `stream_on_token`
-([api](api.md#chunking)) is the delimiter splitter's streaming form: it opens the
+([chunking](chunking.md)) is the delimiter splitter's streaming form: it opens the
 file in C++ and lexes it over a sliding window, materializing one chunk at a time
 instead of the whole text plus a whole-input `SourceMap`. Paired with
 `walk_parallel` (which already pulls chunks lazily with a bounded number of parses

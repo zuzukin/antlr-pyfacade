@@ -7,20 +7,34 @@
 site_name = "antlr-pyfacade"
 site_description = "Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream facade over the official ANTLR4 C++ runtime, driven by stock Python3-target output."
 site_author = "Christopher Barber"
-site_url = "https://analog-cbarber.github.io/antlr-pyfacade/"
-repo_url = "https://github.com/analog-cbarber/antlr-pyfacade"
-repo_name = "analog-cbarber/antlr-pyfacade"
+site_url = "https://zuzukin.github.io/antlr-pyfacade/"
+repo_url = "https://github.com/zuzukin/antlr-pyfacade"
+repo_name = "zuzukin/antlr-pyfacade"
 copyright = """
 Copyright &copy; 2026 Christopher Barber
 """
 
 nav = [
-  { "Overview" = "index.md" },
-  { "Getting started" = "getting-started.md" },
-  { "API reference" = "api.md" },
-  { "Migrating" = "migrating.md" },
-  { "Performance & limitations" = "performance.md" },
-  { "How it works" = "concepts.md" },
+  { "User Guide" = [
+    { "Overview" = "index.md" },
+    { "Getting started" = "getting-started.md" },
+    { "Chunking" = "chunking.md" },
+    { "Parallel parsing" = "parallel-parsing.md" },
+    { "Migrating" = "migrating.md" },
+    { "How it works" = "concepts.md" },
+    { "Performance & limitations" = "performance.md" },
+  ] },
+  { "Installation" = "installation.md" },
+  { "Reference" = [
+    { "API" = "reference/api.md" },
+    { "Command line" = "reference/cli.md" },
+  ] },
+  { "About" = [
+    { "Release notes" = "about/changelog.md" },
+    { "Motivation" = "about/motivation.md" },
+    { "License" = "about/license.md" },
+    { "Acknowledgements" = "about/acknowledgements.md" },
+  ] },
 ]
 
 [project.theme]
@@ -36,6 +50,7 @@ features = [
   "navigation.instant.prefetch",
   "navigation.path",
   "navigation.sections",
+  "navigation.tabs",
   "navigation.top",
   "navigation.tracking",
   "search.highlight",
@@ -53,10 +68,25 @@ toggle.name = "Switch to light mode"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/analog-cbarber/antlr-pyfacade"
+link = "https://github.com/zuzukin/antlr-pyfacade"
 
 [project.plugins.offline]
 enabled = false
+
+# API reference generated from the package docstrings (Reference tab). Static
+# analysis of src/ (the docs env doesn't build the extension): griffe reads the
+# .py sources and the generated _native.pyi stub.
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+inherited_members = true
+show_source = false
+show_root_heading = true
+show_if_no_docstring = false
+members_order = "source"
 
 # Recommended Markdown extension baseline (mirrors the Zensical default template).
 [project.markdown_extensions.abbr]
@@ -69,6 +99,10 @@ enabled = false
 permalink = true
 [project.markdown_extensions.pymdownx.betterem]
 [project.markdown_extensions.pymdownx.caret]
+# Lets the About pages embed the repo-root CHANGELOG.md / LICENSE via `--8<--`.
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["."]
+check_paths = true
 [project.markdown_extensions.pymdownx.details]
 [project.markdown_extensions.pymdownx.emoji]
 emoji_generator = "zensical.extensions.emoji.to_svg"

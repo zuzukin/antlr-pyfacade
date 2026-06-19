@@ -38,8 +38,9 @@ def visitTerminal(self, token_type, text):
 The runtime slices `text[start : stop + 1]` for you, so there is no `Token`
 object. You still get the position: inside any callback, `self.line_col()`
 returns the current event's `(line, column)` and `self.span()` its raw
-`(start, stop)` char offsets — see the
-[source-location section](api.md#source-location-in-a-callback).
+`(start, stop)` char offsets — see
+[`FacadeListener.line_col`](reference/api.md#antlr_pyfacade.FacadeListener.line_col) /
+[`span`](reference/api.md#antlr_pyfacade.FacadeListener.span).
 
 ## Handling errors
 

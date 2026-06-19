@@ -1,8 +1,10 @@
 # Getting started
 
-This walks you from nothing to a working parser in four steps: **install**,
-**generate a parser** from your grammar, **generate a facade**, and **write a
-listener**. The whole thing is plain Python — no C/C++ to write or compile.
+This walks you from a grammar to a working parser in three steps: **generate a
+parser** from your grammar, **generate a facade**, and **write a listener**. The
+whole thing is plain Python — no C/C++ to write or compile.
+
+First, [install `antlr-pyfacade` and the ANTLR tool](installation.md).
 
 The examples below use a JSON grammar, which ships with the package under
 [`examples/json/`](https://github.com/analog-cbarber/antlr-pyfacade/tree/main/examples/json).
@@ -18,23 +20,7 @@ Swap in your own `.g4` grammar and the steps are identical.
     `antlr4-python3-runtime`. See
     [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions).
 
-## 1. Install
-
-```sh
-pip install antlr-pyfacade
-```
-
-This pulls in the official `antlr4-python3-runtime` automatically (your generated
-parser modules import it).
-
-To generate a parser from a `.g4` grammar you also need the **ANTLR tool** itself,
-which is a Java program. The easiest way is the `antlr4-tools` helper:
-
-```sh
-pip install antlr4-tools     # provides the `antlr4` command (downloads the jar + a JDK on first use)
-```
-
-## 2. Generate a parser from your grammar
+## 1. Generate a parser from your grammar
 
 Run the stock ANTLR tool with the **Python3** target. Nothing here is specific to
 `antlr-pyfacade` — this is the ordinary ANTLR workflow:
@@ -47,7 +33,7 @@ This writes `generated/JSONLexer.py` and `generated/JSONParser.py` (plus a coupl
 of support files). These are the same files you'd use with the pure-Python
 runtime.
 
-## 3. Generate a facade
+## 2. Generate a facade
 
 The *facade* is a small Python base class with one named callback per grammar
 rule. Point `antlr-pyfacade` at your generated **parser module** (an importable
@@ -57,7 +43,7 @@ dotted path) and give it a name prefix:
 antlr-pyfacade generated.JSONParser JSON -o json_listener.py
 ```
 
-That emits `json_listener.py` containing a `JSONEventListener` class with:
+That emits `json_listener.py` containing a `JsonEventListener` class with:
 
 - `enterJson` / `exitJson`, `enterObj` / `exitObj`, `enterPair` / … — a pair of
   callbacks for every rule in the grammar,
@@ -67,17 +53,17 @@ That emits `json_listener.py` containing a `JSONEventListener` class with:
 
 You don't edit this file — you subclass it.
 
-## 4. Write a listener
+## 3. Write a listener
 
 Subclass the generated facade and override only the callbacks you need. Here is a
 complete program that collects every string token in a JSON document:
 
 ```python
-from json_listener import JSONEventListener        # from step 3
+from json_listener import JsonEventListener        # from step 3
 from generated.JSONLexer import JSONLexer           # from step 2
 from generated.JSONParser import JSONParser
 
-class StringCollector(JSONEventListener):
+class StringCollector(JsonEventListener):
     def __init__(self):
         self.strings = []
 
@@ -135,8 +121,8 @@ parse.
   `ParseTreeListener`, this maps each piece onto the facade.
 - [Parallel parsing](performance.md#parallel-parsing) — if your input is many
   independent pieces (records, definitions, sections), parse them
-  concurrently with [`walk_parallel`](api.md#walk_parallel).
-- [API reference](api.md) — every callback, `walk` option, source-position
+  concurrently with [`walk_parallel`](parallel-parsing.md).
+- [API reference](reference/api.md) — every callback, `walk` option, source-position
   helpers, and the raw event buffer for power users.
 - [How it works](concepts.md) — optional background on why batching the events
   makes it fast.
