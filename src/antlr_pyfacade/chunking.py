@@ -95,8 +95,11 @@ def lex(
     *,
     keep: Iterable[int] | None = None,
     cached: bool = True,
-) -> list[LexToken]:
+) -> Iterator[LexToken]:
     """Tokenize `text` with the grammar's lexer (no parsing).
+
+    Lazy: the work runs as the result is iterated. Wrap in `list(...)` for random
+    access. The native lexer streams tokens rather than buffering the whole stream.
 
     Args:
         text: The source to tokenize.
@@ -106,7 +109,7 @@ def lex(
         cached: Reuse the cached lexer spec (see
             [load_lexer_spec][antlr_pyfacade.load_lexer_spec]).
 
-    Returns:
+    Yields:
         The kept tokens in source order (the EOF sentinel omitted). Tokens the
         lexer drops via `-> skip` do not appear; tokens routed to a non-default
         channel (`-> channel(...)`) appear with that `channel`. Lexer errors are
@@ -115,7 +118,8 @@ def lex(
     spec = load_lexer_spec(lexer_cls, cached=cached)
     mask = None if keep is None else list(keep)
     raw, _errors = _native.lex(spec, text, mask)
-    return [LexToken(*rec) for rec in _TOK.iter_unpack(raw)]
+    for rec in _TOK.iter_unpack(raw):
+        yield LexToken(*rec)
 
 
 def _emit(text: str, sm: SourceMap, start: int, stop: int) -> Chunk | None:

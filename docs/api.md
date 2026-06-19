@@ -193,9 +193,10 @@ chunks = split_between_tokens(text, MyLexer, (MyLexer.BEGIN, MyLexer.END), neste
 chunks = split_between_tokens(text, MyLexer, [(LPAREN, RPAREN), (LBRACK, RBRACK)])
 ```
 
-- `lex(text, LexerCls, *, keep=None)` → a list of `LexToken(type, channel, start,
-  stop)` in source order (EOF omitted; `-> skip` tokens absent). `keep` limits the
-  result to specific token types — the lexer drops the rest in C++, so only those
+- `lex(text, LexerCls, *, keep=None)` → a lazy iterator of `LexToken(type, channel,
+  start, stop)` in source order (EOF omitted; `-> skip` tokens absent), produced as
+  it's consumed (wrap in `list(...)` for random access). `keep` limits it to
+  specific token types — the lexer streams and drops the rest in C++, so only those
   cross into Python. The cheap, parser-free pass the splitters build on.
 - `split_on_token(text, LexerCls, token_types, *, where="before"|"after",
   channel=0)` — split at each delimiter token. `token_types` is one type or several

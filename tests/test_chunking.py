@@ -45,7 +45,7 @@ NUMBER = JSONLexer.NUMBER
 
 def test_lex():
     text = '{"a": 1}\n[2]'
-    toks = lex(text, JSONLexer)
+    toks = list(lex(text, JSONLexer))  # lex is lazy; materialize to index/reiterate
 
     # Tokens in source order, EOF omitted; whitespace is `-> skip` so absent.
     assert [t.type for t in toks] == [

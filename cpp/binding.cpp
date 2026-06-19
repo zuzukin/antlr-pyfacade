@@ -378,22 +378,18 @@ static nb::object lex(LexerSpec &lspec, const std::string &text,
                                lspec.mode_names, *lspec.atn, &input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(&err_listener);
-        CommonTokenStream tokens(&lexer);
-        tokens.fill();
 
         size_t n_toks = lspec.atn->maxTokenType + 1;
         std::vector<char> keep =
             token_mask ? make_mask(token_mask, n_toks) : std::vector<char>();
         const char *keepp = token_mask ? keep.data() : nullptr;
 
-        size_t n = tokens.size();
-        buf.reserve(n * 4);
-        for (size_t i = 0; i < n; i++) {
-            Token *tok = tokens.get(i);
+        // Pull tokens one at a time and keep only the requested types, so the
+        // whole token stream is never buffered (unlike CommonTokenStream.fill):
+        // each token is freed as the loop advances. EOF is not emitted.
+        std::unique_ptr<Token> tok;
+        while ((tok = lexer.nextToken())->getType() != Token::EOF) {
             size_t type = tok->getType();
-            if (type == Token::EOF) {
-                continue;
-            }
             if (keepp != nullptr && (type >= n_toks || keepp[type] == 0)) {
                 continue;
             }

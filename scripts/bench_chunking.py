@@ -84,7 +84,7 @@ def bench_one(n: int) -> None:
     rows: list[tuple[str, Any]] = [
         # underlying scan / parse stage
         ("regex finditer", lambda: list(re.finditer(_RECORD, text))),
-        ("lex (tokenize)", lambda: lex(text, JSONLexer, keep=[LBRACE, RBRACE])),
+        ("lex (tokenize)", lambda: list(lex(text, JSONLexer, keep=[LBRACE, RBRACE]))),
         (
             "rule_spans (parse)",
             lambda: _native.rule_spans(parser_spec, lexer_spec, text, 0, [OBJ], True),
