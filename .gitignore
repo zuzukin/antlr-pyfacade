@@ -1,6 +1,8 @@
 # Build artifacts
 /build/
 /dist/
+# Coverage artifacts (pixi run coverage): data file, HTML site, JSON report
+/.coverage/
 # Zensical documentation site output
 /site/
 /.zensical/

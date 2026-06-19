@@ -102,6 +102,15 @@ typeCheckingMode = "standard"
 # That's expected for a C++ extension, so silence the per-import warning.
 reportMissingModuleSource = "none"
 
+# Coverage (pytest-cov / coverage.py), driven by the `coverage` pixi task. Measure
+# only the shipped package under src/ (the editable install imports it from there),
+# and keep every artifact in the git-ignored .coverage/ directory: the data file,
+# the HTML site, and the JSON report. The task also prints a summary to stdout.
+[tool.coverage.run]
+source = ["src/antlr_pyfacade"]
+branch = true
+data_file = ".coverage/.coverage"
+
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
@@ -137,6 +146,7 @@ scikit-build-core = ">=0.10"
 # optional dependency.
 pyright = ">=1.1.409"
 pytest = ">=7"
+pytest-cov = ">=4"
 ruff = ">=0.15.16"
 
 # Java + the ANTLR tool, isolated in a dedicated feature so the Python build/test
@@ -197,6 +207,10 @@ depends-on = ["lint", "typecheck", "test"]
 [tool.pixi.tasks.test]
 description = "Run the pytest correctness suite."
 cmd = "pytest"
+
+[tool.pixi.tasks.coverage]
+description = "Run the test suite under coverage; write an HTML site + JSON report into .coverage/ and print a summary to stdout."
+cmd = "mkdir -p .coverage && pytest --cov --cov-report=term-missing --cov-report=html:.coverage/html --cov-report=json:.coverage/coverage.json"
 
 [tool.pixi.tasks.build]
 description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."

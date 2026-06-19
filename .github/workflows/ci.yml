@@ -27,7 +27,9 @@ jobs:
           environments: default
           cache: true
       - run: pixi run build
-      - run: pixi run test
+      # Run the suite under coverage (only src/ is measured); the summary lands in
+      # the job log and the HTML/JSON artifacts in .coverage/.
+      - run: pixi run coverage
 
   asan:
     name: addresssanitizer (linux)
