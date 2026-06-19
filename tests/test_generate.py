@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The `antlr-pyfacade` facade generator — `generate()` and the `main()` CLI,
+"""The `antlrope` facade generator — `generate()` and the `main()` CLI,
 driven directly (no subprocess) against the bundled JSON example's parser."""
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
-from antlr_pyfacade import FacadeListener, __version__
-from antlr_pyfacade.generate import generate, main
+from antlrope import FacadeListener, __version__
+from antlrope.generate import generate, main
 
 PARSER_MODULE = "generated.JSONParser"
 

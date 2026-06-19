@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Regenerates `src/antlr_pyfacade/_native.pyi` and fixes up some type annotations.
+Regenerates `src/antlrope/_native.pyi` and fixes up some type annotations.
 
 This is invoked by `pixi run stubgen`.
 
@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-STUB = ROOT / "src" / "antlr_pyfacade" / "_native.pyi"
+STUB = ROOT / "src" / "antlrope" / "_native.pyi"
 
 # Functions whose return nanobind reports as `object` (it can't infer
 # `nb::make_tuple(...)`), with the real type to substitute.
@@ -81,7 +81,7 @@ def main() -> int:
             "-m",
             "nanobind.stubgen",
             "-m",
-            "antlr_pyfacade._native",
+            "antlrope._native",
             "-o",
             str(STUB),
         ],

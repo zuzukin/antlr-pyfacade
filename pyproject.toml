@@ -3,8 +3,8 @@ requires = ["scikit-build-core>=0.10", "nanobind>=2.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "antlr-pyfacade"
-# Single source of truth: src/antlr_pyfacade/VERSION (read at build time below).
+name = "antlrope"
+# Single source of truth: src/antlrope/VERSION (read at build time below).
 dynamic = ["version"]
 description = "Fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars"
 readme = "README.md"
@@ -27,29 +27,29 @@ classifiers = [
 dependencies = ["antlr4-python3-runtime>=4.13"]
 
 [project.urls]
-Homepage = "https://github.com/analog-cbarber/antlr-pyfacade"
-Source = "https://github.com/analog-cbarber/antlr-pyfacade"
+Homepage = "https://github.com/zuzukin/antlrope"
+Source = "https://github.com/zuzukin/antlrope"
 
 [project.scripts]
-antlr-pyfacade = "antlr_pyfacade.generate:main"
+antlrope = "antlrope.generate:main"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 # Rebuild explicitly with `pixi run build`, not on every import. The C++ rarely
-# changes, and rebuild-on-import made `import antlr_pyfacade` shell out to cmake,
+# changes, and rebuild-on-import made `import antlrope` shell out to cmake,
 # which fails wherever the env is not activated (e.g. PyCharm using the prefix as
 # a plain interpreter). With this off, imports never touch the build toolchain.
 editable.rebuild = false
 editable.verbose = false
 # Python package lives under src/; the C++ extension sources are in cpp/.
-wheel.packages = ["src/antlr_pyfacade"]
+wheel.packages = ["src/antlrope"]
 
 # Project version is read from the VERSION file in the package (the single source
 # of truth). `dynamic = ["version"]` above defers to this provider.
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.regex"
-input = "src/antlr_pyfacade/VERSION"
+input = "src/antlrope/VERSION"
 regex = '(?P<value>.+)'
 
 [tool.cibuildwheel]
@@ -61,7 +61,7 @@ skip = "*-musllinux* *_i686 *-win32"
 build-frontend = "build"
 # Smoke-test each built wheel: import the extension and print its version. No
 # extra test deps are needed — the wheel pulls antlr4-python3-runtime itself.
-test-command = "python -c \"import antlr_pyfacade as a; print(a.__version__)\""
+test-command = "python -c \"import antlrope as a; print(a.__version__)\""
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
@@ -87,7 +87,7 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 # Package surfaces its public API by re-export from __init__ (no __all__).
-"src/antlr_pyfacade/__init__.py" = ["F401"]
+"src/antlrope/__init__.py" = ["F401"]
 
 [tool.pyright]
 # Type-check the shipped library and the helper scripts. Tests and examples pull
@@ -107,7 +107,7 @@ reportMissingModuleSource = "none"
 # and keep every artifact in the git-ignored .coverage/ directory: the data file,
 # the HTML site, and the JSON report. The task also prints a summary to stdout.
 [tool.coverage.run]
-source = ["src/antlr_pyfacade"]
+source = ["src/antlrope"]
 branch = true
 data_file = ".coverage/.coverage"
 
@@ -124,12 +124,12 @@ antlr4-python3-runtime = ">=4.13"
 
 [tool.pixi.pypi-dependencies]
 # Installs the package from source tree
-antlr-pyfacade = { path = ".", editable = true }
+antlrope = { path = ".", editable = true }
 
 # Build the editable package against the env's own toolchain (not an isolated,
 # throwaway one), so the rebuild-on-import hook resolves cmake/ninja correctly.
 [tool.pixi.pypi-options]
-no-build-isolation = ["antlr-pyfacade"]
+no-build-isolation = ["antlrope"]
 
 [tool.pixi.activation.env]
 MACOSX_DEPLOYMENT_TARGET = "11.0"
@@ -141,7 +141,7 @@ ninja = "*"
 nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
 # pytest drives the correctness suite. It is a dev tool only — no end user or
-# downstream consumer needs an `antlr-pyfacade[test]` extra (the suite isn't
+# downstream consumer needs an `antlrope[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
 # optional dependency.
 pyright = ">=1.1.409"
@@ -220,7 +220,7 @@ description = "Rebuild the _native C++ extension (run after editing cpp/ or the 
 cmd = "python scripts/build_native.py"
 
 [tool.pixi.tasks.stubgen]
-description = "Regenerate src/antlr_pyfacade/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
+description = "Regenerate src/antlrope/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
 cmd = "python scripts/stubgen.py"
 
 [tool.pixi.tasks.asan-test]
@@ -239,7 +239,7 @@ env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 
 [tool.pixi.feature.gen.tasks.gen-facade]
 description = "Regenerate the event-listener facade from the generated parser module (run `pixi run format` afterward)."
-cmd = "antlr-pyfacade generated.JSONParser JSON -o json_listener.py"
+cmd = "antlrope generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }
 

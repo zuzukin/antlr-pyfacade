@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.0] - 2026-06-19
+
+### Changed
+- **Renamed the project from `antlr-pyfacade` to `antlrope`** — a single word (no
+  dash) and a pun on *antelope* that extends ANTLR's antler imagery, where **OPE =
+  Ordered Parse Events** (the parse tree is delivered as one DFS-ordered stream of
+  events). The import package, the distribution name, and the console script all
+  become `antlrope` (`import antlrope`, `pip install antlrope`, `antlrope …`).
+  **Regenerate facades** produced by an older release: their generated header and
+  `from antlr_pyfacade import …` line become `antlrope`. Entries below predate the
+  rename and refer to the old name.
+
 ## [0.1.23] - 2026-06-19
 
 ### Added

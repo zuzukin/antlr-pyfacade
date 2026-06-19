@@ -23,7 +23,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
-import antlr_pyfacade as ap
+import antlrope as ap
 
 RULE_JSON = JSONParser.RULE_json
 

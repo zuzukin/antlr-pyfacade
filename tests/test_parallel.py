@@ -30,7 +30,7 @@ from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 from to_python import JsonValueBuilder
 
-from antlr_pyfacade import Chunk
+from antlrope import Chunk
 
 # A spread of independent JSON values, each parsed as the `value` sub-rule.
 _CHUNKS = [

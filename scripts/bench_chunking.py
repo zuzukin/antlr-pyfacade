@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from antlr_pyfacade import (
+from antlrope import (
     _native,
     chunk_by_pattern,
     chunk_by_rule,

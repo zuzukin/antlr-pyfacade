@@ -6,7 +6,7 @@
   </defs>
   <rect x="0" y="0" width="820" height="412" rx="18" fill="#0b1220"/>
   <rect x="1" y="1" width="818" height="410" rx="17" fill="none" stroke="#1e293b"/>
-  <text x="40" y="48" fill="#f1f5f9" font-size="23" font-weight="800">antlr-pyfacade vs. the alternatives</text>
+  <text x="40" y="48" fill="#f1f5f9" font-size="23" font-weight="800">antlrope vs. the alternatives</text>
   <text x="40" y="74" fill="#94a3b8" font-size="13.5">Parse + read a 2.6&#8202;MB SystemRDL file &#183; lower is better &#183; ~21&#215; faster than pure-Python, ~8&#215; faster than speedy-antlr</text>
 <text x="60" y="98" fill="#cbd5e1" font-size="14" font-weight="600">Time (ms)</text>
 <line x1="60" y1="318" x2="390" y2="318" stroke="#1e293b" stroke-width="1"/>
@@ -31,5 +31,5 @@
 <rect x="307.6" y="372" width="13" height="13" rx="3" fill="#fbbf24"/>
 <text x="326.6" y="383" fill="#cbd5e1" font-size="12.5">speedy-antlr</text>
 <rect x="454.8" y="372" width="13" height="13" rx="3" fill="#34d399"/>
-<text x="473.8" y="383" fill="#cbd5e1" font-size="12.5">antlr-pyfacade</text>
+<text x="473.8" y="383" fill="#cbd5e1" font-size="12.5">antlrope</text>
 </svg>

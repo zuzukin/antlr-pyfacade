@@ -1,12 +1,14 @@
-# antlr-pyfacade
+# antlrope
 
 A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
+
+*antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — your parse delivered as one ordered stream of events, not a per-node tree walk.
 
 > **10–20× faster** than the official pure-Python `antlr4-python3-runtime` on
 > workloads that touch most nodes — and more when your listener subscribes to
 > only a subset of the grammar.
 
-[![Parsing and reading a 2.6 MB SystemRDL file: antlr-pyfacade is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](docs/benchmarks/systemrdl.svg)](docs/benchmarks/systemrdl.md)
+[![Parsing and reading a 2.6 MB SystemRDL file: antlrope is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](docs/benchmarks/systemrdl.svg)](docs/benchmarks/systemrdl.md)
 
 <sub>Parsing + reading a real 2.6 MB SystemRDL file — see the [full benchmark](docs/benchmarks/systemrdl.md) (vs the pure-Python runtime and the `speedy-antlr` accelerator).</sub>
 
@@ -25,7 +27,7 @@ generated parser, a faster way to consume it.
 ## Install
 
 ```sh
-pip install antlr-pyfacade
+pip install antlrope
 ```
 
 ## Quickstart
@@ -39,7 +41,7 @@ pip install antlr-pyfacade
 2. **Generate the facade** from the generated parser module:
 
    ```sh
-   antlr-pyfacade generated.MyGrammarParser MyGrammar -o my_listener.py
+   antlrope generated.MyGrammarParser MyGrammar -o my_listener.py
    ```
 
    This emits a `MyGrammarEventListener` base class with `enter<Rule>` /
@@ -91,7 +93,7 @@ Development setup, pixi environments, and the vendored-runtime workflow live in
 
 ## Documentation
 
-Full documentation: **[zuzukin.github.io/antlr-pyfacade](https://zuzukin.github.io/antlr-pyfacade/)**.
+Full documentation: **[zuzukin.github.io/antlrope](https://zuzukin.github.io/antlrope/)**.
 In the repo, see [`docs/`](docs/index.md): [getting started](docs/getting-started.md),
 [installation](docs/installation.md),
 [API reference](docs/reference/api.md),

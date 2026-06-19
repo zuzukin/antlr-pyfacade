@@ -4,12 +4,12 @@
 # See https://zensical.org/docs/ for the full reference.
 
 [project]
-site_name = "antlr-pyfacade"
+site_name = "antlrope"
 site_description = "Fast, C++-accelerated ANTLR runtime for Python: a bulk filtered event-stream facade over the official ANTLR4 C++ runtime, driven by stock Python3-target output."
 site_author = "Christopher Barber"
-site_url = "https://zuzukin.github.io/antlr-pyfacade/"
-repo_url = "https://github.com/zuzukin/antlr-pyfacade"
-repo_name = "zuzukin/antlr-pyfacade"
+site_url = "https://zuzukin.github.io/antlrope/"
+repo_url = "https://github.com/zuzukin/antlrope"
+repo_name = "zuzukin/antlrope"
 copyright = """
 Copyright &copy; 2026 Christopher Barber
 """
@@ -69,7 +69,7 @@ toggle.name = "Switch to light mode"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/zuzukin/antlr-pyfacade"
+link = "https://github.com/zuzukin/antlrope"
 
 [project.plugins.offline]
 enabled = false

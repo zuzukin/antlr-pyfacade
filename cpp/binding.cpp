@@ -54,7 +54,7 @@
 
 namespace nb = nanobind;
 using namespace antlr4;
-using namespace antlr_pyfacade_events;
+using namespace antlrope_events;
 
 // ---------------------------------------------------------------------------
 // ATN shape report (kept for the ATN-transfer / spec-load gate).
@@ -470,7 +470,7 @@ struct ChunkRec {
 };
 
 struct StreamChunker {
-    std::unique_ptr<antlr_pyfacade::Utf8FileCharStream> stream;
+    std::unique_ptr<antlrope::Utf8FileCharStream> stream;
     std::unique_ptr<LexerInterpreter> lexer;
     CollectingErrorListener err;
     std::vector<char> keep;  // keep[type] != 0 => `type` is a delimiter
@@ -490,7 +490,7 @@ struct StreamChunker {
                   std::optional<int> channel_, bool lenient, size_t block)
         : where(where_), have_channel(channel_.has_value()),
           channel(channel_.value_or(0)) {
-        stream = std::make_unique<antlr_pyfacade::Utf8FileCharStream>(path, lenient,
+        stream = std::make_unique<antlrope::Utf8FileCharStream>(path, lenient,
                                                                       block);
         // The interpreter holds references into the spec (ATN + name lists), so
         // the spec must outlive this object — see keep_alive on the binding.
@@ -628,7 +628,7 @@ struct StreamChunker {
 // ---------------------------------------------------------------------------
 struct StreamRuleChunker {
     CollectingErrorListener err;
-    std::unique_ptr<antlr_pyfacade::Utf8FileCharStream> stream;
+    std::unique_ptr<antlrope::Utf8FileCharStream> stream;
     std::unique_ptr<LexerInterpreter> lexer;
     std::unique_ptr<UnbufferedTokenStream> tokens;
     std::unique_ptr<ParserInterpreter> parser;
@@ -644,7 +644,7 @@ struct StreamRuleChunker {
     StreamRuleChunker(ParserSpec &pspec, LexerSpec &lspec,
                       const std::string &path, std::vector<int32_t> rule_indices,
                       bool lenient, size_t block) {
-        stream = std::make_unique<antlr_pyfacade::Utf8FileCharStream>(path, lenient,
+        stream = std::make_unique<antlrope::Utf8FileCharStream>(path, lenient,
                                                                       block);
         // The interpreters hold references into the specs (ATN + name lists), so
         // both specs must outlive this object — see keep_alive on the binding.
@@ -773,9 +773,9 @@ struct PyListener : public tree::ParseTreeListener {
 };
 
 NB_MODULE(_native, m) {
-    m.doc() = "antlr-pyfacade: Python binding over the official ANTLR4 C++ runtime";
+    m.doc() = "antlrope: Python binding over the official ANTLR4 C++ runtime";
     // No __version__ here: the package version lives in the VERSION file and is
-    // surfaced via antlr_pyfacade.__version__ (see __init__.py).
+    // surfaced via antlrope.__version__ (see __init__.py).
 
     nb::class_<AtnShape>(m, "AtnShape")
         .def_ro("grammar_type", &AtnShape::grammar_type)
@@ -796,7 +796,7 @@ NB_MODULE(_native, m) {
     nb::class_<SyntaxError>(
         m, "ParseError",
         "A collected parse diagnostic, as found on a listener's "
-        "[syntax_errors][antlr_pyfacade.FacadeListener.syntax_errors]. The default "
+        "[syntax_errors][antlrope.FacadeListener.syntax_errors]. The default "
         "ANTLR console error listener is suppressed, so these are the only report "
         "of a parse failure.")
         .def_ro("line", &SyntaxError::line,
@@ -824,8 +824,8 @@ NB_MODULE(_native, m) {
         m, "LexerSpec",
         "A deserialized lexer specification — the grammar's vocabulary, name "
         "lists, and ATN — that the native lex/parse entry points run on. Build one "
-        "with [load_lexer_spec][antlr_pyfacade.load_lexer_spec] (or "
-        "[load_specs][antlr_pyfacade.load_specs]) from a generated lexer class "
+        "with [load_lexer_spec][antlrope.load_lexer_spec] (or "
+        "[load_specs][antlrope.load_specs]) from a generated lexer class "
         "rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -840,7 +840,7 @@ NB_MODULE(_native, m) {
         m, "ParserSpec",
         "A deserialized parser specification — the grammar's vocabulary, rule "
         "names, and ATN — that the native parse entry points run on. Build one "
-        "with [load_specs][antlr_pyfacade.load_specs] from a generated parser "
+        "with [load_specs][antlrope.load_specs] from a generated parser "
         "class rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,

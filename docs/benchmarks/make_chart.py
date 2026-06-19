@@ -26,10 +26,10 @@ from __future__ import annotations
 from pathlib import Path
 
 # End-to-end (parse + read identifiers), large input (2.6 MB) — see systemrdl.md.
-TOOLS = ["pure-Python", "speedy-antlr", "antlr-pyfacade"]
-COLOR = {"pure-Python": "#64748b", "speedy-antlr": "#fbbf24", "antlr-pyfacade": "#34d399"}
-TIME_MS = {"pure-Python": 3963, "speedy-antlr": 1618, "antlr-pyfacade": 174}
-MEM_MB = {"pure-Python": 418, "speedy-antlr": 1398, "antlr-pyfacade": 218}
+TOOLS = ["pure-Python", "speedy-antlr", "antlrope"]
+COLOR = {"pure-Python": "#64748b", "speedy-antlr": "#fbbf24", "antlrope": "#34d399"}
+TIME_MS = {"pure-Python": 3963, "speedy-antlr": 1618, "antlrope": 174}
+MEM_MB = {"pure-Python": 418, "speedy-antlr": 1398, "antlrope": 218}
 
 W, H = 820, 412
 BASE_Y, BAR_MAX, BAR_W = 318, 188, 64
@@ -52,7 +52,7 @@ def bars(title: str, data: dict[str, int], px: int, fmt: str, hero_note: str) ->
         h = max(3, round(v / top * BAR_MAX))
         x = px + 20 + i * 100
         y = BASE_Y - h
-        hero = name == "antlr-pyfacade"
+        hero = name == "antlrope"
         glow = ' filter="url(#glow)"' if hero else ""
         out.append(
             f'<rect x="{x}" y="{y}" width="{BAR_W}" height="{h}" rx="5" '
@@ -74,7 +74,9 @@ def legend() -> str:
     out = []
     x = 168
     for name in TOOLS:
-        out.append(f'<rect x="{x}" y="372" width="13" height="13" rx="3" fill="{COLOR[name]}"/>')
+        out.append(
+            f'<rect x="{x}" y="372" width="13" height="13" rx="3" fill="{COLOR[name]}"/>'
+        )
         out.append(
             f'<text x="{x + 19}" y="383" fill="#cbd5e1" font-size="12.5">{name}</text>'
         )
@@ -92,7 +94,7 @@ font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <rect x="0" y="0" width="{W}" height="{H}" rx="18" fill="#0b1220"/>
   <rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="17" fill="none" stroke="#1e293b"/>
   <text x="40" y="48" fill="#f1f5f9" font-size="23" font-weight="800">\
-antlr-pyfacade vs. the alternatives</text>
+antlrope vs. the alternatives</text>
   <text x="40" y="74" fill="#94a3b8" font-size="13.5">\
 Parse + read a 2.6&#8202;MB SystemRDL file &#183; lower is better &#183; \
 ~21&#215; faster than pure-Python, ~8&#215; faster than speedy-antlr</text>

@@ -1,10 +1,10 @@
 # API reference
 
-The public API of `antlr_pyfacade`, generated from the package docstrings. For
+The public API of `antlrope`, generated from the package docstrings. For
 task-oriented guidance see the [User Guide](../getting-started.md); the
-`antlr-pyfacade` generator command is documented under [Command line](cli.md).
+`antlrope` generator command is documented under [Command line](cli.md).
 
-::: antlr_pyfacade
+::: antlrope
     options:
       show_root_heading: false
       show_root_toc_entry: false

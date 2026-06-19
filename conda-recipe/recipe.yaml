@@ -1,15 +1,15 @@
 schema_version: 1
 
 # rattler-build recipe for conda-forge. To submit: copy this directory to
-# conda-forge/staged-recipes under recipes/antlr-pyfacade/, fill in the real
+# conda-forge/staged-recipes under recipes/antlrope/, fill in the real
 # sdist sha256 (from the PyPI release), and open a PR. Once merged it becomes a
 # feedstock. Builds the C++ extension from the vendored ANTLR4 runtime carried in
 # the sdist, so no external runtime is fetched.
 
 context:
-  name: antlr-pyfacade
+  name: antlrope
   # Pinned to the PUBLISHED release this recipe packages (it builds from the PyPI
-  # sdist below) — not read from the repo's src/antlr_pyfacade/VERSION, which is
+  # sdist below) — not read from the repo's src/antlrope/VERSION, which is
   # the dev version and may be ahead of the latest release. On conda-forge the
   # autotick bot bumps this on each PyPI release.
   version: "0.1.0"
@@ -21,7 +21,7 @@ package:
 source:
   # Prefer the PyPI sdist (carries the vendored runtime). Replace sha256 on each
   # release.
-  url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/antlr_pyfacade-${{ version }}.tar.gz
+  url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/antlrope-${{ version }}.tar.gz
   sha256: "0000000000000000000000000000000000000000000000000000000000000000"
 
 build:
@@ -50,16 +50,16 @@ requirements:
 tests:
   - python:
       imports:
-        - antlr_pyfacade
+        - antlrope
       pip_check: true
   - script:
-      - python -c "import antlr_pyfacade as a; assert a.__version__"
-      - antlr-pyfacade --help
+      - python -c "import antlrope as a; assert a.__version__"
+      - antlrope --help
 
 about:
-  homepage: https://github.com/analog-cbarber/antlr-pyfacade
-  repository: https://github.com/analog-cbarber/antlr-pyfacade
-  documentation: https://github.com/analog-cbarber/antlr-pyfacade/tree/main/docs
+  homepage: https://github.com/analog-cbarber/antlrope
+  repository: https://github.com/analog-cbarber/antlrope
+  documentation: https://github.com/analog-cbarber/antlrope/tree/main/docs
   license: Apache-2.0
   license_file:
     - LICENSE

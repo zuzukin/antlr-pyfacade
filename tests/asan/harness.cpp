@@ -33,7 +33,7 @@
 #include "grammar_data.h"
 
 using namespace antlr4;
-using namespace antlr_pyfacade_events;
+using namespace antlrope_events;
 
 static std::unique_ptr<atn::ATN> deserialize(const std::vector<int32_t> &data) {
   atn::ATNDeserializer d;

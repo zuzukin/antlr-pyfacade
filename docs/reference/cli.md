@@ -1,12 +1,12 @@
 # Command line
 
-Installing the package provides the `antlr-pyfacade` command, which generates a
+Installing the package provides the `antlrope` command, which generates a
 grammar-specific event-listener **facade** from an already-generated ANTLR Python
 parser module. (It reads the parser's `ruleNames` and token-name metadata — no
 annotated grammar or other input.)
 
 ```text
-antlr-pyfacade PARSER_MODULE GRAMMAR [-o OUTPUT]
+antlrope PARSER_MODULE GRAMMAR [-o OUTPUT]
 ```
 
 ## Arguments
@@ -27,7 +27,7 @@ antlr-pyfacade PARSER_MODULE GRAMMAR [-o OUTPUT]
 ## Example
 
 ```sh
-antlr-pyfacade generated.JSONParser JSON -o json_listener.py
+antlrope generated.JSONParser JSON -o json_listener.py
 ```
 
 emits `json_listener.py` with a `JsonEventListener` base class: an `enter<Rule>` /

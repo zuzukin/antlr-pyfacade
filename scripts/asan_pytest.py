@@ -86,7 +86,7 @@ def main() -> int:
         return 0
 
     asan_so = _build_asan_extension()
-    installed = Path(sysconfig.get_paths()["purelib"]) / "antlr_pyfacade" / asan_so.name
+    installed = Path(sysconfig.get_paths()["purelib"]) / "antlrope" / asan_so.name
     backup = installed.parent / (installed.name + ".orig")
     shutil.copy2(installed, backup)
     try:

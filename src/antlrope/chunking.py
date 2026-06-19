@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Chunkers for [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel].
+"""Chunkers for [walk_parallel][antlrope.FacadeListener.walk_parallel].
 
-Split a whole source into [Chunk][antlr_pyfacade.Chunk]s, each carrying its exact
+Split a whole source into [Chunk][antlrope.Chunk]s, each carrying its exact
 source position, so the pieces can be parsed in parallel. Two families:
 
-- **Token-based** ([split_on_token][antlr_pyfacade.chunking.split_on_token],
-  [split_between_tokens][antlr_pyfacade.chunking.split_between_tokens]): run the
+- **Token-based** ([split_on_token][antlrope.chunking.split_on_token],
+  [split_between_tokens][antlrope.chunking.split_between_tokens]): run the
   grammar's lexer once — the cheap stage, no parser/ATN prediction — and split at
   token boundaries. The lexer is asked for **only the boundary tokens** (via
   `token_mask`), so little crosses into Python, and splits never land inside a
   string or comment token.
-- **Regex-based** ([split_on_pattern][antlr_pyfacade.chunking.split_on_pattern],
-  [chunk_by_pattern][antlr_pyfacade.chunking.chunk_by_pattern]): split on a regular
+- **Regex-based** ([split_on_pattern][antlrope.chunking.split_on_pattern],
+  [chunk_by_pattern][antlrope.chunking.chunk_by_pattern]): split on a regular
   expression, no lexer involved. Roughly an order of magnitude faster at finding
   delimiters (a few times end to end), but not token-aware — a delimiter inside a
   string literal will still match.
-- **Rule-based** ([chunk_by_rule][antlr_pyfacade.chunking.chunk_by_rule]): parse
+- **Rule-based** ([chunk_by_rule][antlrope.chunking.chunk_by_rule]): parse
   the input once — **entirely in C++**, no Python crossing — and emit each
   occurrence of a grammar rule as a chunk. Cuts on real grammar structure rather
   than a token/regex heuristic, at the cost of a structural parse; worth it when
@@ -40,7 +40,7 @@ structure, regex for raw speed when the delimiter can't appear in disguise. The
 `scripts/bench_chunking.py` reproduces them.
 
 A chunk spans the source between boundaries — surrounding whitespace trimmed, its
-start `(offset, line, column)` from a [SourceMap][antlr_pyfacade.SourceMap], and
+start `(offset, line, column)` from a [SourceMap][antlrope.SourceMap], and
 whitespace-only regions skipped. All chunkers yield lazily and feed straight into
 `walk_parallel(chunks, ...)`.
 """
@@ -81,10 +81,10 @@ DEFAULT_CHANNEL = 0
 
 
 class LexToken(NamedTuple):
-    """One token from [lex][antlr_pyfacade.chunking.lex].
+    """One token from [lex][antlrope.chunking.lex].
 
     `line` / `column` are not carried (they are cheap to derive from `start` with
-    a [SourceMap][antlr_pyfacade.SourceMap]); keeping the record to four ints keeps
+    a [SourceMap][antlrope.SourceMap]); keeping the record to four ints keeps
     a full-stream `lex()` light.
     """
 
@@ -112,7 +112,7 @@ def lex(
         keep: Optional token types to return; the lexer drops every other token in
             C++ so only these cross into Python. `None` returns all tokens.
         cached: Reuse the cached lexer spec (see
-            [load_lexer_spec][antlr_pyfacade.load_lexer_spec]).
+            [load_lexer_spec][antlrope.load_lexer_spec]).
 
     Yields:
         The kept tokens in source order (the EOF sentinel omitted). Tokens the
@@ -176,7 +176,7 @@ def split_on_token(
     Token-aware: because it runs the grammar's lexer, a delimiter that appears
     inside a string or comment token never causes a split. The price is lexing the
     whole input — roughly an order of magnitude slower than the regex
-    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern] at finding the
+    [split_on_pattern][antlrope.chunking.split_on_pattern] at finding the
     delimiters (~4x end to end), though still negligible next to the parse it
     feeds. See the "Chunking: lexer vs regex" notes in `docs/performance.md`.
 
@@ -192,11 +192,11 @@ def split_on_token(
         channel: Only tokens on this channel are split on (default: the default
             channel). Pass `None` to consider all channels.
         sourcename: Optional source name (e.g. a filename) recorded on each
-            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
-            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
+            [Chunk][antlrope.Chunk], surfaced during a walk as
+            [sourcename][antlrope.FacadeListener.sourcename].
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per region between delimiters, trimmed of
+        One [Chunk][antlrope.Chunk] per region between delimiters, trimmed of
         surrounding whitespace and carrying its source position. Whitespace-only
         regions are skipped.
     """
@@ -249,38 +249,38 @@ def stream_on_token(
 ) -> Iterator[Chunk]:
     """Stream chunks from a file at each delimiter token, without holding it all.
 
-    The streaming counterpart of [split_on_token][antlr_pyfacade.chunking.split_on_token]:
+    The streaming counterpart of [split_on_token][antlrope.chunking.split_on_token]:
     instead of taking the whole source as a `str`, it opens `path` in C++ and lexes
     it incrementally over a sliding window, slicing out and freeing each chunk as it
     goes — so peak memory is roughly one chunk rather than the whole file. The
-    yielded [Chunk][antlr_pyfacade.Chunk]s drop straight into
-    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel], which pulls them
+    yielded [Chunk][antlrope.Chunk]s drop straight into
+    [walk_parallel][antlrope.FacadeListener.walk_parallel], which pulls them
     lazily, keeping the whole pipeline bounded.
 
     Args:
         path: Filesystem path to the source (opened by the native layer as UTF-8).
         lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
         token_types: The delimiter token type, or several types that all act as
-            delimiters (see [split_on_token][antlr_pyfacade.chunking.split_on_token]).
+            delimiters (see [split_on_token][antlrope.chunking.split_on_token]).
         where: `"before"` starts a new chunk at each delimiter; `"after"` ends a
             chunk at each delimiter (see split_on_token).
         encoding: The source encoding. Only UTF-8 is supported today (Python codec
             aliases such as `"utf8"` are accepted); the keyword is reserved so other
             encodings can be added later. For a non-UTF-8 source now, decode it in
             Python (`Path(p).read_text(encoding=...)`) and use the in-memory
-            [split_on_token][antlr_pyfacade.chunking.split_on_token].
+            [split_on_token][antlrope.chunking.split_on_token].
         channel: Only tokens on this channel are split on (default: the default
             channel). Pass `None` to consider all channels.
-        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
-            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during
+        sourcename: Source name recorded on each [Chunk][antlrope.Chunk] (and
+            surfaced as [sourcename][antlrope.FacadeListener.sourcename] during
             a walk). Defaults to `str(path)`.
         batch: How many chunk records to pull from C++ per call — a throughput knob,
             not observable in the output.
         cached: Reuse the cached lexer spec (see
-            [load_lexer_spec][antlr_pyfacade.load_lexer_spec]).
+            [load_lexer_spec][antlrope.load_lexer_spec]).
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per region between delimiters, trimmed of
+        One [Chunk][antlrope.Chunk] per region between delimiters, trimmed of
         surrounding whitespace and carrying its source position; whitespace-only
         regions are skipped. Equivalent to `split_on_token` over the file's text.
 
@@ -328,7 +328,7 @@ def split_between_tokens(
 ) -> Iterator[Chunk]:
     """Yield a chunk for each region bounded by an opener/closer pair.
 
-    Token-aware, like [split_on_token][antlr_pyfacade.chunking.split_on_token]: it
+    Token-aware, like [split_on_token][antlrope.chunking.split_on_token]: it
     lexes the whole input, so a bracket inside a string or comment is ignored, at
     the cost of being slower than a plain regex over the text (see the "Chunking:
     lexer vs regex" notes in `docs/performance.md`).
@@ -349,11 +349,11 @@ def split_between_tokens(
         channel: Only tokens on this channel are considered (default: the default
             channel). Pass `None` to consider all channels.
         sourcename: Optional source name (e.g. a filename) recorded on each
-            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
-            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
+            [Chunk][antlrope.Chunk], surfaced during a walk as
+            [sourcename][antlrope.FacadeListener.sourcename].
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per region — the text from the opener's
+        One [Chunk][antlrope.Chunk] per region — the text from the opener's
         start to the closer's stop, inclusive — in source order. An unmatched
         opener yields nothing; a closer with no matching open is ignored.
     """
@@ -424,7 +424,7 @@ def split_on_pattern(
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each match of a delimiter regex.
 
-    The regex analogue of [split_on_token][antlr_pyfacade.chunking.split_on_token].
+    The regex analogue of [split_on_token][antlrope.chunking.split_on_token].
     No lexer is involved, so it is much faster — roughly an order of magnitude at
     finding delimiters and a few times end to end (the per-chunk Python work is
     shared) — but **not token-aware**: a match inside a string or comment still
@@ -439,11 +439,11 @@ def split_on_pattern(
             at a match (see split_on_token).
         flags: `re` flags, used only when `pattern` is a `str`.
         sourcename: Optional source name (e.g. a filename) recorded on each
-            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
-            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
+            [Chunk][antlrope.Chunk], surfaced during a walk as
+            [sourcename][antlrope.FacadeListener.sourcename].
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
+        One [Chunk][antlrope.Chunk] per region between matches, trimmed of
         surrounding whitespace; whitespace-only regions are skipped.
     """
     if where not in ("before", "after"):
@@ -602,13 +602,13 @@ def stream_on_pattern(
     """Stream chunks from a text source at each delimiter regex match.
 
     The streaming counterpart of
-    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern]: it reads `source`
-    incrementally and yields positioned [Chunk][antlr_pyfacade.Chunk]s without
+    [split_on_pattern][antlrope.chunking.split_on_pattern]: it reads `source`
+    incrementally and yields positioned [Chunk][antlrope.Chunk]s without
     holding the whole input, so paired with
-    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel] the pipeline stays
+    [walk_parallel][antlrope.FacadeListener.walk_parallel] the pipeline stays
     bounded. Because the regex is Python's, encoding is handled on the Python side
     (unlike the lexer-based
-    [stream_on_token][antlr_pyfacade.chunking.stream_on_token], which reads UTF-8 in
+    [stream_on_token][antlrope.chunking.stream_on_token], which reads UTF-8 in
     C++) — any encoding a text file supports works.
 
     A delimiter match is only committed once a character past it has been read (or
@@ -632,13 +632,13 @@ def stream_on_pattern(
             delimiters. Ignored for a plain `str` iterable, which is consumed as-is.
         encoding: Text encoding, used only when `source` is a path. Any codec
             Python supports.
-        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
-            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during
+        sourcename: Source name recorded on each [Chunk][antlrope.Chunk] (and
+            surfaced as [sourcename][antlrope.FacadeListener.sourcename] during
             a walk). Defaults to the path when `source` is a path, else `None` — pass
             it for a stream or iterable that has no path.
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
+        One [Chunk][antlrope.Chunk] per region between matches, trimmed of
         surrounding whitespace and carrying its source position; whitespace-only
         regions are skipped. Equivalent to `split_on_pattern` over the source's
         decoded text.
@@ -680,7 +680,7 @@ def chunk_by_pattern(
     Here the pattern matches a whole record (rather than a delimiter), so each
     match *is* a chunk and the text between matches is dropped. No lexer is
     involved — fast, but not token-aware; see
-    [split_on_pattern][antlr_pyfacade.chunking.split_on_pattern] and the "Chunking:
+    [split_on_pattern][antlrope.chunking.split_on_pattern] and the "Chunking:
     lexer vs regex" notes in `docs/performance.md` for the speed/correctness
     trade-off.
 
@@ -690,11 +690,11 @@ def chunk_by_pattern(
             pattern).
         flags: `re` flags, used only when `pattern` is a `str`.
         sourcename: Optional source name (e.g. a filename) recorded on each
-            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
-            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
+            [Chunk][antlrope.Chunk], surfaced during a walk as
+            [sourcename][antlrope.FacadeListener.sourcename].
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per match, trimmed of surrounding
+        One [Chunk][antlrope.Chunk] per match, trimmed of surrounding
         whitespace; empty matches are skipped.
     """
     rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
@@ -749,13 +749,13 @@ def chunk_by_rule(
             a matched rule nested inside another match is skipped. `False` emits
             every occurrence (which would overlap).
         cached: Reuse the cached specs (see
-            [load_specs][antlr_pyfacade.load_specs]).
+            [load_specs][antlrope.load_specs]).
         sourcename: Optional source name (e.g. a filename) recorded on each
-            [Chunk][antlr_pyfacade.Chunk], surfaced during a walk as
-            [sourcename][antlr_pyfacade.FacadeListener.sourcename].
+            [Chunk][antlrope.Chunk], surfaced during a walk as
+            [sourcename][antlrope.FacadeListener.sourcename].
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per matched rule occurrence, in source
+        One [Chunk][antlrope.Chunk] per matched rule occurrence, in source
         order, trimmed of surrounding whitespace and carrying its position. An
         empty occurrence (a rule that consumed no token) is skipped.
     """
@@ -792,13 +792,13 @@ def stream_by_rule(
 ) -> Iterator[Chunk]:
     """Stream chunks from a file that is a sequence of a grammar `rule`.
 
-    The streaming counterpart of [chunk_by_rule][antlr_pyfacade.chunking.chunk_by_rule],
+    The streaming counterpart of [chunk_by_rule][antlrope.chunking.chunk_by_rule],
     for input that is a top-level **sequence of records** — each record an occurrence
     of `rule` (or one of several rules). It parses one record at a time over a
     bounded-memory pipeline (the native layer opens the file and runs lexer → parser
-    over a sliding window), yielding each as a positioned [Chunk][antlr_pyfacade.Chunk]
+    over a sliding window), yielding each as a positioned [Chunk][antlrope.Chunk]
     without holding the whole token stream or parse tree. The chunks feed
-    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel] like any other.
+    [walk_parallel][antlrope.FacadeListener.walk_parallel] like any other.
 
     Unlike `chunk_by_rule` — which parses the whole input and finds the rule *anywhere*
     in the tree — this is the bounded-memory "file of records" form. Records must be
@@ -807,7 +807,7 @@ def stream_by_rule(
     (via each rule's start-token set), so the candidates should have **disjoint leading
     tokens** (e.g. `class` vs `def`); on overlap the first listed wins. An on-channel
     separator between records (e.g. a comma) is not supported — use `chunk_by_rule` or
-    [stream_on_token][antlr_pyfacade.chunking.stream_on_token] there.
+    [stream_on_token][antlrope.chunking.stream_on_token] there.
 
     Args:
         path: Filesystem path to the source (opened by the native layer as UTF-8).
@@ -815,16 +815,16 @@ def stream_by_rule(
         parser_cls: The stock ANTLR-generated `<Grammar>Parser` class.
         rule: The record rule — a rule name or index, or several of them (a set of
             top-level record types, e.g. `{"classdef", "funcdef"}`).
-        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
-            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during a
+        sourcename: Source name recorded on each [Chunk][antlrope.Chunk] (and
+            surfaced as [sourcename][antlrope.FacadeListener.sourcename] during a
             walk). Defaults to `str(path)`.
         encoding: The source encoding. Only UTF-8 is supported today (Python codec
             aliases are accepted); the keyword is reserved for future encodings.
         batch: How many records to pull from C++ per call — a throughput knob.
-        cached: Reuse the cached specs (see [load_specs][antlr_pyfacade.load_specs]).
+        cached: Reuse the cached specs (see [load_specs][antlrope.load_specs]).
 
     Yields:
-        One [Chunk][antlr_pyfacade.Chunk] per record, in source order, carrying its
+        One [Chunk][antlrope.Chunk] per record, in source order, carrying its
         position. The stream stops at end of input, or at the first token that begins
         no candidate rule (or a record that fails to parse) — best-effort, like the
         other chunkers.

@@ -14,10 +14,10 @@
 
 """Build native lexer/parser specs from stock-generated ANTLR Python classes.
 
-`antlr-pyfacade` consumes the output of the ordinary ANTLR tool run with
+`antlrope` consumes the output of the ordinary ANTLR tool run with
 `-Dlanguage=Python3`: it reads the serialized ATN and the name/vocabulary metadata
 straight off the generated `<Grammar>Lexer` / `<Grammar>Parser` classes and hands
-them to the C++ runtime. [load_specs][antlr_pyfacade.load_specs] is the bridge
+them to the C++ runtime. [load_specs][antlrope.load_specs] is the bridge
 that makes the runtime grammar-agnostic — no codegen step of our own, no annotated
 grammar, just the modules the user already generated.
 """
@@ -39,9 +39,9 @@ _LEXER_CACHE: dict[type, _native.LexerSpec] = {}
 def load_lexer_spec(lexer_cls: type, *, cached: bool = True) -> _native.LexerSpec:
     """Return the `lexer_spec` for a generated `<Grammar>Lexer` class.
 
-    The lexer-only counterpart of [load_specs][antlr_pyfacade.load_specs], for
+    The lexer-only counterpart of [load_specs][antlrope.load_specs], for
     code that lexes without parsing (e.g. the chunkers in
-    [antlr_pyfacade.chunking][]). Reads the serialized ATN + vocabulary off the
+    [antlrope.chunking][]). Reads the serialized ATN + vocabulary off the
     class and its module, and caches by class.
 
     Args:
@@ -85,7 +85,7 @@ def load_specs(
     A spec owns a mutable ATN. With the vendored runtime's per-DFA locks, sharing
     one spec across threads is both correct and scales, so most parallel code can
     just share a cached spec (or use
-    [FacadeListener.walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel]).
+    [FacadeListener.walk_parallel][antlrope.FacadeListener.walk_parallel]).
 
     Args:
         lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.

@@ -2840,7 +2840,7 @@ packages:
   size: 433413
   timestamp: 1764777166076
 - pypi: .
-  name: antlr-pyfacade
+  name: antlrope
   requires_dist:
   - antlr4-python3-runtime>=4.13
   requires_python: '>=3.10'

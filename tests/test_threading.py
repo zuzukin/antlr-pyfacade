@@ -48,7 +48,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
-from antlr_pyfacade import load_specs, parse_events
+from antlrope import load_specs, parse_events
 
 # Big enough that the native parse dominates per-call Python overhead.
 _N_OBJECTS = 20_000

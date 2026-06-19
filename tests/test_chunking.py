@@ -25,7 +25,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
-from antlr_pyfacade import (
+from antlrope import (
     Chunk,
     LexToken,
     SourceMap,
@@ -467,7 +467,7 @@ def test_stream_by_rule(tmp_path):
     path = tmp_path / "seq.json"
     path.write_text(text, encoding="utf-8")
 
-    expect = ['{"a": 1}', '{"b": 2}', '[1, 2, 3]']
+    expect = ['{"a": 1}', '{"b": 2}', "[1, 2, 3]"]
     # Parse one record at a time; identical across read-block sizes (the streaming
     # window straddles records/codepoints), and positions match the whole-text map.
     for block in (0, 1, 2, 3, 7):
@@ -487,7 +487,9 @@ def test_stream_by_rule(tmp_path):
     mb = '{"café": 1}\n{"emoji": "😀🚀"}'
     mbpath = tmp_path / "mb.json"
     mbpath.write_text(mb, encoding="utf-8")
-    mbchunks = list(stream_by_rule(mbpath, JSONLexer, JSONParser, "value", _block_bytes=2))
+    mbchunks = list(
+        stream_by_rule(mbpath, JSONLexer, JSONParser, "value", _block_bytes=2)
+    )
     assert [c.text for c in mbchunks] == ['{"café": 1}', '{"emoji": "😀🚀"}']
     _positions_ok(mb, mbchunks)
 
@@ -519,9 +521,13 @@ def test_stream_by_rule_stop_and_errors(tmp_path):
     # sourcename defaults to the path and is overridable.
     seq = tmp_path / "s.json"
     seq.write_text('{"a": 1} {"b": 2}', encoding="utf-8")
-    assert next(stream_by_rule(seq, JSONLexer, JSONParser, "value")).sourcename == str(seq)
+    assert next(stream_by_rule(seq, JSONLexer, JSONParser, "value")).sourcename == str(
+        seq
+    )
     assert (
-        next(stream_by_rule(seq, JSONLexer, JSONParser, "value", sourcename="x")).sourcename
+        next(
+            stream_by_rule(seq, JSONLexer, JSONParser, "value", sourcename="x")
+        ).sourcename
         == "x"
     )
 

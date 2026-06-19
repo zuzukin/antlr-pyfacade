@@ -4,15 +4,15 @@ This walks you from a grammar to a working parser in three steps: **generate a
 parser** from your grammar, **generate a facade**, and **write a listener**. The
 whole thing is plain Python — no C/C++ to write or compile.
 
-First, [install `antlr-pyfacade` and the ANTLR tool](installation.md).
+First, [install `antlrope` and the ANTLR tool](installation.md).
 
 The examples below use a JSON grammar, which ships with the package under
-[`examples/json/`](https://github.com/analog-cbarber/antlr-pyfacade/tree/main/examples/json).
+[`examples/json/`](https://github.com/analog-cbarber/antlrope/tree/main/examples/json).
 Swap in your own `.g4` grammar and the steps are identical.
 
 !!! note "Before you start: will this work with your grammar?"
 
-    `antlr-pyfacade` parses grammars that describe *structure* — data formats,
+    `antlrope` parses grammars that describe *structure* — data formats,
     config languages, most DSLs and programming languages. It does **not** run
     **semantic predicates** (`{...}?`) or **embedded actions** (`{...}` code)
     that some grammars use, because those are target-language code this runtime
@@ -23,7 +23,7 @@ Swap in your own `.g4` grammar and the steps are identical.
 ## 1. Generate a parser from your grammar
 
 Run the stock ANTLR tool with the **Python3** target. Nothing here is specific to
-`antlr-pyfacade` — this is the ordinary ANTLR workflow:
+`antlrope` — this is the ordinary ANTLR workflow:
 
 ```sh
 antlr4 -Dlanguage=Python3 JSON.g4 -o generated
@@ -36,11 +36,11 @@ runtime.
 ## 2. Generate a facade
 
 The *facade* is a small Python base class with one named callback per grammar
-rule. Point `antlr-pyfacade` at your generated **parser module** (an importable
+rule. Point `antlrope` at your generated **parser module** (an importable
 dotted path) and give it a name prefix:
 
 ```sh
-antlr-pyfacade generated.JSONParser JSON -o json_listener.py
+antlrope generated.JSONParser JSON -o json_listener.py
 ```
 
 That emits `json_listener.py` containing a `JsonEventListener` class with:
@@ -87,7 +87,7 @@ That's the whole model:
 
 - **Rule callbacks take no arguments.** There are no node objects — you keep your
   own state. The common pattern is a small stack: push on `enter`, pop on `exit`.
-  See [`examples/json/to_python.py`](https://github.com/analog-cbarber/antlr-pyfacade/blob/main/examples/json/to_python.py),
+  See [`examples/json/to_python.py`](https://github.com/analog-cbarber/antlrope/blob/main/examples/json/to_python.py),
   which rebuilds a JSON document into Python objects using `enterObj`/`exitObj`,
   `enterArr`/`exitArr`, `enterPair`, and `visitTerminal`.
 - **`visitTerminal(token_type, text)`** gives you the token's type (compare against

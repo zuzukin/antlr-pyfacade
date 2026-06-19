@@ -44,7 +44,7 @@
 #include "misc/Interval.h"
 #include "support/Utf8.h"
 
-namespace antlr_pyfacade {
+namespace antlrope {
 
 class Utf8FileCharStream : public antlr4::CharStream {
 public:
@@ -250,4 +250,4 @@ private:
     bool _stream_eof = false;  // no more codepoints to decode
 };
 
-}  // namespace antlr_pyfacade
+}  // namespace antlrope

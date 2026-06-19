@@ -23,7 +23,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
-from antlr_pyfacade import SourceMap
+from antlrope import SourceMap
 
 MULTILINE = '{\n  "a": 1\n}'
 #            0 1 23 456789 10  (offsets; '\n' at 1 and 10)

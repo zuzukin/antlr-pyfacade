@@ -1,6 +1,6 @@
 # Acknowledgements
 
-`antlr-pyfacade` stands on excellent open-source work:
+`antlrope` stands on excellent open-source work:
 
 - **[ANTLR](https://www.antlr.org/)** (Terence Parr and contributors) — the parser
   generator, its serialized-ATN format, and the **ANTLR4 C++ runtime** this package
@@ -16,6 +16,6 @@
 
 ## Links
 
-- **Source:** [github.com/zuzukin/antlr-pyfacade](https://github.com/zuzukin/antlr-pyfacade)
-- **PyPI:** [pypi.org/project/antlr-pyfacade](https://pypi.org/project/antlr-pyfacade/)
+- **Source:** [github.com/zuzukin/antlrope](https://github.com/zuzukin/antlrope)
+- **PyPI:** [pypi.org/project/antlrope](https://pypi.org/project/antlrope/)
 - **ANTLR documentation:** [github.com/antlr/antlr4/blob/master/doc/index.md](https://github.com/antlr/antlr4/blob/master/doc/index.md)

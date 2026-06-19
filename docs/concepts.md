@@ -12,7 +12,7 @@ node.
 
 ## The bulk filtered event stream
 
-`antlr-pyfacade` removes the per-node crossing. After the C++ runtime finishes
+`antlrope` removes the per-node crossing. After the C++ runtime finishes
 parsing, a native iterative depth-first traversal (mirroring ANTLR's
 `IterativeParseTreeWalker`: pre-order rule-enter and terminals, post-order
 rule-exit) appends one fixed record per visited item into a single contiguous
@@ -65,4 +65,4 @@ There is no generated C++ parser and no compilation of your grammar. The C++
 runtime is driven entirely from the **serialized ATN** that the stock
 `-Dlanguage=Python3` ANTLR tool already emits, plus the rule/token name metadata
 read off the generated Python classes (see
-[`load_specs`](reference/api.md#antlr_pyfacade.load_specs)).
+[`load_specs`](reference/api.md#antlrope.load_specs)).

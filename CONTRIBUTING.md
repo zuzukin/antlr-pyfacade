@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in improving `antlr-pyfacade`. This page covers the
+Thanks for your interest in improving `antlrope`. This page covers the
 local development setup; for what the package does and how to use it, see the
 [README](README.md) and the [docs](docs/index.md).
 
@@ -31,7 +31,7 @@ pixi run docs-build     # build the static docs site into site/
 
 ## The native extension and its type stub
 
-The C++ engine is the nanobind module `antlr_pyfacade._native`, built from
+The C++ engine is the nanobind module `antlrope._native`, built from
 `cpp/binding.cpp` against the vendored runtime. The C++ rarely changes, so it is
 **not** rebuilt on import (`editable.rebuild = false`). After editing anything
 under `cpp/` or `vendor/antlr4-cpp/`, recompile explicitly:
@@ -47,7 +47,7 @@ the env prefix as a plain interpreter); no `cmake` on `PATH` is required.
 
 `_native` is a compiled module loaded through scikit-build-core's editable
 redirector, which IDEs and type checkers cannot follow. A checked-in stub,
-`src/antlr_pyfacade/_native.pyi`, gives them the interface (and the `py.typed`
+`src/antlrope/_native.pyi`, gives them the interface (and the `py.typed`
 marker advertises the package as typed). If you change the **public interface** of
 `cpp/binding.cpp` — add or rename a class, method, or function, or change a
 signature — rebuild, then regenerate the stub:
@@ -66,7 +66,7 @@ To change those edits, edit `scripts/stubgen.py`, not the `.pyi`.
 
 Docstrings are rendered into the API docs by mkdocstrings, which resolves
 cross-references written as `[title][path.to.symbol]` (e.g.
-`[walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel]`).
+`[walk_parallel][antlrope.FacadeListener.walk_parallel]`).
 
 **Do not wrap the cross-reference title in backticks.** Write `[title][ref]`, not
 `` [`title`][ref] ``. Backticks render the title as inline code, which visually
@@ -88,9 +88,9 @@ nav, search, or sitemap — so `pixi run docs-build` will **not** flag it as sta
 
 ## Version
 
-The version lives in one place: `src/antlr_pyfacade/VERSION`. The build reads it
+The version lives in one place: `src/antlrope/VERSION`. The build reads it
 (scikit-build-core's regex metadata provider) so the wheel and its
-`importlib.metadata` follow it, and `antlr_pyfacade.__version__` reads the same
+`importlib.metadata` follow it, and `antlrope.__version__` reads the same
 file via `importlib.resources`. The conda recipe is the exception: it tracks the
 *published* release it packages, not the dev version, so it pins its own value
 (bumped per release).

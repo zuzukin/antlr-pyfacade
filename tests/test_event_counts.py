@@ -26,7 +26,7 @@ import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
-import antlr_pyfacade as ap
+import antlrope as ap
 
 antlr4 = pytest.importorskip("antlr4")
 

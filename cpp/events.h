@@ -35,7 +35,7 @@
 #include "tree/ParseTree.h"
 #include "tree/TerminalNode.h"
 
-namespace antlr_pyfacade_events {
+namespace antlrope_events {
 
 enum EventKind : int32_t {
     EV_ENTER_RULE = 0,
@@ -190,4 +190,4 @@ inline void collect_rule_spans(antlr4::tree::ParseTree *root,
     }
 }
 
-}  // namespace antlr_pyfacade_events
+}  // namespace antlrope_events

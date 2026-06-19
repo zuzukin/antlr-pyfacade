@@ -36,7 +36,7 @@ from antlr4.error.ErrorListener import ErrorListener
 from PredLexer import PredLexer
 from PredParser import PredParser
 
-from antlr_pyfacade import load_specs, parse_events
+from antlrope import load_specs, parse_events
 
 ERROR_KIND = 3  # EV_ERROR in the int32 event stream
 

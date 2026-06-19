@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-antlr-pyfacade: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.
+antlrope: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.
 
 Generate your parser with the stock ANTLR tool (`-Dlanguage=Python3`), generate a
-facade with `antlr-pyfacade`, subclass the `<Grammar>EventListener` it emits, and
+facade with `antlrope`, subclass the `<Grammar>EventListener` it emits, and
 call `.walk(text, LexerCls, ParserCls)`. Parsing runs in the official ANTLR4 C++
 runtime; a single bulk, filtered event stream crosses into Python instead of a
 per-node parse-tree walk.
@@ -30,7 +30,7 @@ from importlib.resources import files as _files
 
 # The compiled extension stays internal: only the few names users actually need
 # are re-exported below. The low-level binding (the diagnostic functions and the
-# parse-tree node classes) remains reachable as `antlr_pyfacade._native` for
+# parse-tree node classes) remains reachable as `antlrope._native` for
 # power/diagnostic use, but is not part of the public top-level surface.
 from . import _native
 from ._native import (

@@ -20,7 +20,7 @@ from generated import JSONParser as parser_mod
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
-import antlr_pyfacade as ap
+import antlrope as ap
 
 
 def test_load_specs_returns_specs():

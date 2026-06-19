@@ -12,7 +12,7 @@ The usual escape hatch is to switch your whole toolchain to the C++ (or Java)
 target: generate a C++ parser, compile it, and write your application logic in C++.
 That's a large step, and it throws away the convenience of staying in Python.
 
-`antlr-pyfacade` takes a different path. It drives the **official ANTLR4 C++
+`antlrope` takes a different path. It drives the **official ANTLR4 C++
 runtime's ATN interpreter** directly from the *serialized ATN* that the stock
 `-Dlanguage=Python3` ANTLR tool already emits — so there is **no per-grammar C++
 codegen and nothing for you to compile**. The parse runs in C++, and instead of one
@@ -25,9 +25,16 @@ The goal is to make the fast path the *easy* path: if you can write an ANTLR
 grammar and a Python class, you shouldn't have to learn C++ or change your build to
 parse quickly.
 
+## The name
+
+*antl**rope*** is a pun on *antelope* that extends ANTLR's antler imagery — and
+**OPE** stands for **O**rdered **P**arse **E**vents: the distinctive thing this
+runtime does is hand Python the parse as one DFS-ordered stream of events
+(rule-enter, rule-exit, terminal, error) rather than a per-node parse-tree walk.
+
 ## When the official runtime is the right choice
 
-`antlr-pyfacade` does not replace `antlr4-python3-runtime` — it targets the
+`antlrope` does not replace `antlr4-python3-runtime` — it targets the
 throughput case. Prefer the official runtime when your grammar relies on **semantic
 predicates or embedded actions**, when you need the **retained parse tree** (random
 access, rewriting, re-walking) rather than a single streaming pass, or when the
