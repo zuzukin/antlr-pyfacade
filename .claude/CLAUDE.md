@@ -95,5 +95,10 @@ Grammars depending on them won't parse correctly. This is pinned by
   actually has (the official `antlr4-python3-runtime`). No internal research
   context, no testbed names.
 - Dev/build details live in `CONTRIBUTING.md`, not the README.
+- `docs/llms.txt` is a hand-written LLM summary published verbatim at the doc-site
+  root (`/llms.txt`) for coding agents. It is not generated and `docs-build` won't
+  flag it as stale, so keep it in sync when the public API (`__all__`), the
+  generate→facade→`walk` workflow, install steps, or the doc page set / `site_url`
+  change. (It lives in `docs/`, so updating it bumps the version.)
 - Never commit `.idea/`. Only commit when explicitly asked; never push without
   asking; never skip git hooks.

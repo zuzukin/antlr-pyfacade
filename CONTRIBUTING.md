@@ -75,6 +75,17 @@ readers can't tell it's a link. Plain `[title][ref]` renders as a normal styled
 link. Backticks are still correct for inline code that is *not* a cross-reference
 (a parameter or type name with no `][ref]` after it).
 
+## `llms.txt`
+
+`docs/llms.txt` is a hand-written, LLM-oriented summary of the library (install, the
+generate → facade → `walk` workflow, the listener model, the public API, and doc
+links), published verbatim at the doc-site root (`/llms.txt`) for coding agents — see
+[llmstxt.org](https://llmstxt.org/). It is **not generated**, so keep it in sync when
+any of these change: the public API (`__all__`), the workflow or listener model,
+install instructions, the supported Python/platform versions, or the doc page set and
+`site_url` (its doc links are absolute). It is excluded from the rendered docs — no
+nav, search, or sitemap — so `pixi run docs-build` will **not** flag it as stale.
+
 ## Version
 
 The version lives in one place: `src/antlr_pyfacade/VERSION`. The build reads it
@@ -105,3 +116,5 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 - If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` (it
   re-applies the hand edits automatically).
 - If you changed the docs, confirm `pixi run docs-build` succeeds.
+- If you changed the public API, the workflow, or the doc page set, update
+  `docs/llms.txt` to match (it's hand-maintained and not flagged by `docs-build`).
