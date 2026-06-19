@@ -78,7 +78,7 @@ Grammars depending on them won't parse correctly. This is pinned by
 
 ## Conventions
 
-- Default branch is `main`.
+- Default branch is `dev`.
 - Bump the patch in `src/antlr_pyfacade/VERSION` and add a `CHANGELOG.md` entry on
   every commit that changes runtime behavior or user-facing docs (`README`,
   `docs/`); build/test/tooling-only changes don't bump. See `CONTRIBUTING.md`.
