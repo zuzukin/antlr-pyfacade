@@ -6,6 +6,10 @@ A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for t
 > workloads that touch most nodes — and more when your listener subscribes to
 > only a subset of the grammar.
 
+[![Parsing and reading a 2.6 MB SystemRDL file: antlr-pyfacade is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](docs/benchmarks/systemrdl.svg)](docs/benchmarks/systemrdl.md)
+
+<sub>Parsing + reading a real 2.6 MB SystemRDL file — see the [full benchmark](docs/benchmarks/systemrdl.md) (vs the pure-Python runtime and the `speedy-antlr` accelerator).</sub>
+
 Generate your parser with the ordinary ANTLR tool targeting Python, install
 this package, generate a small *facade* class, and write a pure-Python event listener.
 Parsing itself runs inside the official ANTLR4 **C++** runtime, driven directly
@@ -87,11 +91,15 @@ Development setup, pixi environments, and the vendored-runtime workflow live in
 
 ## Documentation
 
-Full docs are in [`docs/`](docs/index.md): [getting started](docs/getting-started.md),
-[API reference](docs/api.md),
+Full documentation: **[zuzukin.github.io/antlr-pyfacade](https://zuzukin.github.io/antlr-pyfacade/)**.
+In the repo, see [`docs/`](docs/index.md): [getting started](docs/getting-started.md),
+[installation](docs/installation.md),
+[API reference](docs/reference/api.md),
+[chunking](docs/chunking.md),
 [migrating from antlr4-python3-runtime](docs/migrating.md),
-[performance & limitations](docs/performance.md), and
-[how it works](docs/concepts.md).
+[performance & limitations](docs/performance.md),
+[how it works](docs/concepts.md), and the
+[SystemRDL benchmark](docs/benchmarks/systemrdl.md).
 
 ## License
 

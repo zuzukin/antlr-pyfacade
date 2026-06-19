@@ -11,6 +11,8 @@ hardware register-description language whose grammar is a 461-line, action- and
 predicate-free combined grammar (exactly the target-agnostic case all three tools
 support).
 
+![antlr-pyfacade vs the pure-Python runtime and speedy-antlr: parse and read a 2.6 MB SystemRDL file, ~21x faster than pure-Python and ~8x faster than speedy-antlr at lower peak memory](systemrdl.svg)
+
 ## TL;DR
 
 Parsing a 2.6 MB input (≈86k lines, ~77k parse-tree nodes):
