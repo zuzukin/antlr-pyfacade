@@ -11,10 +11,11 @@ development notes and may be pruned before the first release.
 ### Added
 - A **SystemRDL benchmark** page (`docs/benchmarks/systemrdl.md`, linked from
   Performance) measuring `antlr-pyfacade` against the pure-Python runtime and the
-  `speedy-antlr` tree-translation accelerator on a real action-free grammar: ~21×
-  faster than pure-Python and ~8× faster than speedy-antlr on a 2.6 MB input, at
-  lower peak memory, with the event stream verified to reproduce the parse tree
-  exactly. Documentation only.
+  `speedy-antlr` tree-translation accelerator on a real action-free grammar. Both
+  parse-only and an end-to-end consumer task (collecting identifiers): ~21–23× faster
+  than pure-Python and ~8–9× faster than speedy-antlr on a 2.6 MB input, at lower peak
+  memory, with the event stream / consumer output verified identical to a pure-Python
+  tree walk. Documentation only.
 
 ## [0.1.21] - 2026-06-19
 

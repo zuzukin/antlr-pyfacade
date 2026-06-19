@@ -21,7 +21,9 @@ Parsing a 2.6 MB input (≈86k lines, ~77k parse-tree nodes):
 | speedy-antlr | 1427 ms | 1381 MB | 2.6× | 1.0× |
 | **antlr-pyfacade** | **179 ms** | **310 MB** | **20.8×** | **8.0×** |
 
-`antlr-pyfacade` is the fastest **and** uses the least peak memory of the three.
+`antlr-pyfacade` is the fastest **and** uses the least peak memory of the three. The
+gap holds [end to end](#end-to-end-parse-and-consume) once you also *consume* the
+result — and the consumer's output is identical to a pure-Python tree walk.
 
 ## What's measured
 
@@ -60,6 +62,35 @@ antlr-pyfacade 0.1.21.
 At the smallest size everything is dominated by interpreter/extension load (~20–30 MB
 base, sub-millisecond parse); the differences appear once the input is non-trivial.
 
+## End-to-end: parse *and* consume
+
+Parsing is only half the job — you have to consume the result. A representative
+consumer task: **collect every identifier (`ID` token) in the file**, implemented
+identically across all four (pure-Python and speedy-antlr walk the tree with a
+`ParseTreeListener`; `antlr-pyfacade` uses an event listener). All four produce the
+**identical** list of identifiers (verified by hash; 32,000 ids on the large input).
+
+| input | tool | end-to-end time | peak memory |
+| --- | --- | ---: | ---: |
+| medium (0.26 MB) | pure-Python | 306 ms | 99 MB |
+| | speedy-antlr | 102 ms | 189 MB |
+| | antlr-pyfacade (all terminals) | 20 ms | 63 MB |
+| | **antlr-pyfacade (native `ID` filter)** | **17 ms** | **56 MB** |
+| large (2.6 MB) | pure-Python | 3963 ms | 418 MB |
+| | speedy-antlr | 1618 ms | 1398 MB |
+| | antlr-pyfacade (all terminals) | 197 ms | 242 MB |
+| | **antlr-pyfacade (native `ID` filter)** | **174 ms** | **218 MB** |
+
+End-to-end, `antlr-pyfacade` is **~21–23× faster than the pure-Python runtime and
+~8–9× faster than speedy-antlr**, at the lowest peak memory.
+
+Two effects compound here. First, the tree-walking tools must traverse *every* node
+to reach the terminals; the facade only receives the events its listener subscribes
+to. Subscribing to **only the `ID` token** (`TERMINAL_TOKENS = [ID]`) makes the C++
+side emit just those terminals — no rule events, no other tokens cross into Python —
+shaving a further ~10% of time and memory over receiving all terminals. The
+tree-walk approaches have no equivalent; they pay for the whole tree regardless.
+
 ## Why antlr-pyfacade wins on both axes
 
 `antlr-pyfacade` **never materializes a Python parse tree**. It parses in C++, walks
@@ -86,19 +117,20 @@ rule-exit, 26,601 terminal, and 0 error events.
 
 ## What this does and does not show
 
-- **Parse-only.** These numbers cover producing the consumable structure, not the
-  application logic that consumes it. A consumer still has to *do* something with the
-  result; an end-to-end comparison (building a real model from the parse) is the next
-  step. Note that `antlr-pyfacade`'s consumption is also cheaper — a Python loop over
-  the buffer, with no per-node foreign-function call — so the end-to-end gap should
-  only widen.
 - **The trade-off is the programming model.** Speedy-antlr is a *drop-in*: your
-  existing listeners/visitors keep working against a real Python tree. `antlr-pyfacade`
-  requires expressing the consumer as an [event listener](../migrating.md) (no
-  context objects; reconstruct state from event order). That porting cost is real and
-  is the thing to weigh against the speed/memory win. Cases that genuinely need a
-  retained, randomly-accessible tree (XPath, rewriting) are not a fit — see
+  existing listeners/visitors keep working against a real Python parse tree.
+  `antlr-pyfacade` requires expressing the consumer as an
+  [event listener](../migrating.md) — no context objects; you reconstruct state from
+  event order. For the identifier task above that was actually *fewer* lines (no node
+  objects, no walker setup), but a task that leans on parse-tree context (parent/child
+  navigation, the text of a whole subtree, random access) needs restructuring to the
+  event-plus-explicit-stack model — that restructuring is the real porting cost to
+  weigh against the speed/memory win. A workload that genuinely needs a retained,
+  randomly-accessible tree (XPath, rewriting) is not a fit — see
   [Performance & limitations](../performance.md).
+- **One consumer task.** The end-to-end numbers are for a single representative task;
+  a different task changes the *consume* cost, but the parse cost — which dominates —
+  is fixed.
 - **Synthetic sizing.** The input is one real register block replicated; the
   structure is realistic SystemRDL, but exact ratios will vary on real corpora and
-  hardware. The ratios, not the absolute milliseconds, are the takeaway.
+  hardware. Read the ratios, not the absolute milliseconds.
