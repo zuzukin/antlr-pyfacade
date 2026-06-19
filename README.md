@@ -1,4 +1,9 @@
-# antlrope
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img alt="antlrope" src="docs/assets/logo.svg" width="420">
+  </picture>
+</p>
 
 A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
 

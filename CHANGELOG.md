@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.1] - 2026-06-19
+
+### Added
+- **Logo and favicon** (`docs/assets/`) — an antelope-head mark whose ridged horns
+  double as the ordered event stream, in warm tan/brown. The README shows a
+  light/dark logo lockup (`logo.svg` / `logo-dark.svg`) via `<picture>`, with the
+  `ope` (Ordered Parse Events) of the wordmark accented; the docs site uses the mark
+  as its favicon and header logo. Earlier green and side-profile explorations are
+  kept under `docs/assets/alternates/`.
+
 ## [0.2.0] - 2026-06-19
 
 ### Changed
