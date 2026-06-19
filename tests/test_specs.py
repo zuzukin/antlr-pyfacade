@@ -36,7 +36,7 @@ def test_load_specs_is_cached():
 
 
 def test_atn_shape_matches_generated_metadata():
-    shape = ap.atn_shape(parser_mod.serializedATN())
+    shape = ap._native.atn_shape(parser_mod.serializedATN())
     # JSON grammar has 5 rules: json, obj, pair, arr, value.
     assert shape.num_rules == len(JSONParser.ruleNames) == 5
     # maxTokenType corresponds to the last symbolic token (WS=12).

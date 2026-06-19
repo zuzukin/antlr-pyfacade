@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.10] - 2026-06-15
+
+### Changed
+- Renamed two internal modules for clarity: `facade_runtime` → `base` and
+  `gen_facade` → `generate`. Code imports from the top-level `antlr_pyfacade`
+  package and the `antlr-pyfacade` console script is unchanged, so this only
+  affects anything that imported those submodules directly.
+- Trimmed the public top-level namespace to the high-level API. The low-level
+  binding diagnostics (`parse_count`, `parse_walk`, `parse_stage_times`,
+  `atn_shape`) and the parse-tree node classes (`AtnShape`, `ParseTree`,
+  `RuleContext`, `ParserRuleContext`, `TerminalNode`, `ErrorNode`, `Token`,
+  `ParseTreeListener`) are no longer re-exported from `antlr_pyfacade` — reach
+  them via `antlr_pyfacade._native` if needed. The facade (`FacadeListener`,
+  `drive`), `load_specs` / `load_lexer_spec`, the chunkers, `SourceMap`, `Chunk`,
+  `ParseError`, `LexerSpec` / `ParserSpec`, and the raw `parse_events` remain.
+
 ## [0.1.9] - 2026-06-15
 
 ### Added

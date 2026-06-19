@@ -84,7 +84,7 @@ def test_events_match_pure_python_walker(json_text):
 def test_events_match_native_count(json_text):
     pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
     tally = _event_tallies(json_text)
-    cnt = ap.parse_count(pspec, lspec, json_text, RULE_JSON)
+    cnt = ap._native.parse_count(pspec, lspec, json_text, RULE_JSON)
     assert tally[EV_ENTER] == cnt["enters"]
     assert tally[EV_EXIT] == cnt["exits"]
     assert tally[EV_TERMINAL] == cnt["terminals"]

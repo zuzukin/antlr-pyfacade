@@ -340,23 +340,25 @@ Kind constants: `ENTER_RULE=0`, `EXIT_RULE=1`, `TERMINAL=2`, `ERROR=3`.
 
 ## Diagnostics (secondary)
 
-These are retained for benchmarking and debugging; the facade is the recommended
-path.
+These live on the internal extension as `antlr_pyfacade._native.<name>` — they are
+**not** part of the public top-level API (nor the parse-tree node classes they use:
+`ParseTreeListener`, `ParserRuleContext`, `TerminalNode`, `ErrorNode`, …), just kept
+for benchmarking and debugging. The facade is the recommended path.
 
-- `parse_walk(parser_spec, lexer_spec, text, start_rule, listener)` — the classic
+- `_native.parse_walk(parser_spec, lexer_spec, text, start_rule, listener)` — the classic
   per-node path: walks the tree dispatching into a Python `ParseTreeListener`
   subclass (`visitTerminal` / `visitErrorNode` / `enterEveryRule` /
   `exitEveryRule`, with node arguments). This is the **slow escape hatch** — it
   pays the per-node FFI crossing the event stream exists to avoid. Use it only
   when you genuinely need node objects.
-- `parse_count(parser_spec, lexer_spec, text, start_rule)` — parse + walk with a
+- `_native.parse_count(parser_spec, lexer_spec, text, start_rule)` — parse + walk with a
   native counting listener (no Python crossing); returns a dict of
   `terminals / errors / enters / exits / num_tokens`. Useful as a correctness
   reference for event tallies.
-- `parse_stage_times(parser_spec, lexer_spec, text, start_rule)` — dict of
+- `_native.parse_stage_times(parser_spec, lexer_spec, text, start_rule)` — dict of
   per-stage seconds (`input_decode`, `lex_fill`, `parse_tree`, `walk`) plus
   token / event / codepoint counts, for decomposing where time goes.
-- `atn_shape(serialized)` — deserialize a serialized ATN int list and report its
+- `_native.atn_shape(serialized)` — deserialize a serialized ATN int list and report its
   shape (`grammar_type`, `num_states`, `num_decisions`, `num_rules`,
   `max_token_type`).
 
