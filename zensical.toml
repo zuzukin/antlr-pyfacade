@@ -23,6 +23,7 @@ nav = [
     { "Migrating" = "migrating.md" },
     { "How it works" = "concepts.md" },
     { "Performance & limitations" = "performance.md" },
+    { "Benchmark: SystemRDL" = "benchmarks/systemrdl.md" },
   ] },
   { "Installation" = "installation.md" },
   { "Reference" = [

@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.22] - 2026-06-19
+
+### Added
+- A **SystemRDL benchmark** page (`docs/benchmarks/systemrdl.md`, linked from
+  Performance) measuring `antlr-pyfacade` against the pure-Python runtime and the
+  `speedy-antlr` tree-translation accelerator on a real action-free grammar: ~21×
+  faster than pure-Python and ~8× faster than speedy-antlr on a 2.6 MB input, at
+  lower peak memory, with the event stream verified to reproduce the parse tree
+  exactly. Documentation only.
+
 ## [0.1.21] - 2026-06-19
 
 ### Added

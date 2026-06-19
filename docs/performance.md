@@ -35,6 +35,11 @@ worst case for this design, because Python still iterates every kept event:
   is a **pure-C++ walk that never enters Python**. The facade closes most of the
   gap to it; you can only go further by *receiving fewer events*.
 
+For a measured comparison on a real grammar — parsing SystemRDL, against both the
+pure-Python runtime and the `speedy-antlr` tree-translation accelerator — see the
+[SystemRDL benchmark](benchmarks/systemrdl.md) (~21× faster than pure-Python and
+~8× faster than speedy-antlr, at lower peak memory).
+
 ### Underlying C++ runtime
 
 This package bundles the ANTLR4 C++ runtime with a lock-free DFA-edge patch on
