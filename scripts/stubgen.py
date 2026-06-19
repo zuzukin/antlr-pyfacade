@@ -40,7 +40,8 @@ RETURN_TYPES = {
     "parse_events": "tuple[bytes, list[ParseError]]",
     "lex": "tuple[bytes, list[ParseError]]",
     "rule_spans": "tuple[bytes, list[ParseError]]",
-    # StreamChunker.next_batch — a method; the regex below is indentation-agnostic.
+    # next_batch — a method on both StreamChunker and StreamRuleChunker (so it
+    # matches more than once); the regex below is indentation-agnostic.
     "next_batch": "tuple[list[tuple[int, int, int, str]], bool]",
 }
 
@@ -95,9 +96,9 @@ def main() -> int:
             rf"\1 -> {ret}:",
             text,
         )
-        if n != 1:
+        if n < 1:
             raise SystemExit(
-                f"stubgen post-process: expected exactly one '{name}(...) -> object', "
+                f"stubgen post-process: expected at least one '{name}(...) -> object', "
                 f"found {n}. nanobind output changed — update scripts/stubgen.py."
             )
 

@@ -28,6 +28,7 @@ from to_python import JsonValueBuilder
 from antlr_pyfacade import (
     Chunk,
     LexToken,
+    SourceMap,
     _native,
     chunk_by_pattern,
     chunk_by_rule,
@@ -36,6 +37,7 @@ from antlr_pyfacade import (
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_by_rule,
     stream_on_pattern,
     stream_on_token,
 )
@@ -447,3 +449,84 @@ def test_chunk_by_rule():
 
     with pytest.raises(ValueError, match="unknown rule"):
         list(chunk_by_rule(text, JSONLexer, JSONParser, "nonesuch"))
+
+
+def _positions_ok(text, chunks):
+    """Each chunk's text sits at its offset, and (line, column) matches a SourceMap
+    over the whole text — an authoritative position oracle."""
+    sm = SourceMap(text)
+    for c in chunks:
+        assert text[c.offset : c.offset + len(c.text)] == c.text
+        assert (c.line, c.column) == sm.line_col(c.offset)
+
+
+def test_stream_by_rule(tmp_path):
+    # The JSON lexer `-> skip`s whitespace, so a file of whitespace-separated values
+    # is a valid sequence of `value` records.
+    text = '{"a": 1}\n{"b": 2}\n[1, 2, 3]'
+    path = tmp_path / "seq.json"
+    path.write_text(text, encoding="utf-8")
+
+    expect = ['{"a": 1}', '{"b": 2}', '[1, 2, 3]']
+    # Parse one record at a time; identical across read-block sizes (the streaming
+    # window straddles records/codepoints), and positions match the whole-text map.
+    for block in (0, 1, 2, 3, 7):
+        chunks = list(
+            stream_by_rule(path, JSONLexer, JSONParser, "value", _block_bytes=block)
+        )
+        assert [c.text for c in chunks] == expect, block
+        _positions_ok(text, chunks)
+
+    # A set of candidate rules: the next token picks which to parse ('{' -> obj,
+    # '[' -> arr), so disjoint leading tokens dispatch unambiguously.
+    objarr = list(stream_by_rule(path, JSONLexer, JSONParser, ["obj", "arr"]))
+    assert [c.text for c in objarr] == expect
+    _positions_ok(text, objarr)
+
+    # Multibyte records: offsets are codepoints, positions stay exact.
+    mb = '{"café": 1}\n{"emoji": "😀🚀"}'
+    mbpath = tmp_path / "mb.json"
+    mbpath.write_text(mb, encoding="utf-8")
+    mbchunks = list(stream_by_rule(mbpath, JSONLexer, JSONParser, "value", _block_bytes=2))
+    assert [c.text for c in mbchunks] == ['{"café": 1}', '{"emoji": "😀🚀"}']
+    _positions_ok(mb, mbchunks)
+
+    # The records drop straight into walk_parallel and reconstruct each value.
+    results = [
+        b.result
+        for b in JsonValueBuilder.walk_parallel(
+            stream_by_rule(path, JSONLexer, JSONParser, "value"),
+            JSONLexer,
+            JSONParser,
+            start_rule="value",
+        )
+    ]
+    assert results == [{"a": 1}, {"b": 2}, [1, 2, 3]]
+
+    with pytest.raises(ValueError, match="unknown rule"):
+        list(stream_by_rule(path, JSONLexer, JSONParser, "nonesuch"))
+
+
+def test_stream_by_rule_stop_and_errors(tmp_path):
+    # The stream stops at the first token that begins no candidate rule: here a bare
+    # STRING is neither obj nor arr, so only the leading object is yielded.
+    path = tmp_path / "loose.json"
+    path.write_text('{"a": 1} "loose" {"b": 2}', encoding="utf-8")
+    assert [
+        c.text for c in stream_by_rule(path, JSONLexer, JSONParser, ["obj", "arr"])
+    ] == ['{"a": 1}']
+
+    # sourcename defaults to the path and is overridable.
+    seq = tmp_path / "s.json"
+    seq.write_text('{"a": 1} {"b": 2}', encoding="utf-8")
+    assert next(stream_by_rule(seq, JSONLexer, JSONParser, "value")).sourcename == str(seq)
+    assert (
+        next(stream_by_rule(seq, JSONLexer, JSONParser, "value", sourcename="x")).sourcename
+        == "x"
+    )
+
+    # A missing file surfaces as an error from the native layer; non-UTF-8 rejected.
+    with pytest.raises(RuntimeError):
+        list(stream_by_rule(tmp_path / "nope.json", JSONLexer, JSONParser, "value"))
+    with pytest.raises(ValueError, match="UTF-8"):
+        list(stream_by_rule(seq, JSONLexer, JSONParser, "value", encoding="latin-1"))

@@ -97,6 +97,14 @@ class StreamChunker:
         Pull up to n chunk records from the streaming token chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples (whitespace trimmed, whitespace-only regions skipped) and more is False once the final region at EOF has been emitted.
         """
 
+class StreamRuleChunker:
+    def __init__(self, parser_spec: ParserSpec, lexer_spec: LexerSpec, path: str, rule_indices: Sequence[int], lenient: bool, block: int = 0) -> None: ...
+
+    def next_batch(self, n: int) -> tuple[list[tuple[int, int, int, str]], bool]:
+        """
+        Pull up to n parsed-rule chunk records from the streaming rule chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples and more is False once EOF (or a token that begins no candidate rule) is reached.
+        """
+
 class Token:
     def getType(self) -> int: ...
 

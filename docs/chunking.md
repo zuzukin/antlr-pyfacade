@@ -75,6 +75,15 @@ the pipeline stays bounded.
 - [`stream_on_pattern`](reference/api.md#antlr_pyfacade.stream_on_pattern) — the
   streaming form of `split_on_pattern`. The regex runs Python-side, so it reads any
   text source (a path, an open file, or an iterable of `str`) in **any** encoding.
+- [`stream_by_rule`](reference/api.md#antlr_pyfacade.stream_by_rule) — the streaming
+  form of `chunk_by_rule`, for input that is a top-level **sequence of records**, each
+  an occurrence of a grammar `rule` (or one of several). It parses one record at a time
+  over a bounded-memory lexer→parser pipeline. Records must be **directly adjacent**
+  (only lexer-skipped whitespace/comments between them); with several candidate rules
+  the next token chooses which to parse, so they should have disjoint leading tokens
+  (e.g. `class` vs `def`). Unlike `chunk_by_rule` it does not find a rule *anywhere* in
+  a full parse — for arbitrary nesting or comma-separated records, use `chunk_by_rule`
+  or `stream_on_token`.
 
 ## Source positions and names
 

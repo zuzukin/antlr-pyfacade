@@ -776,3 +776,85 @@ def chunk_by_rule(
         chunk = _emit(text, sm, start, stop + 1, sourcename)
         if chunk is not None:
             yield chunk
+
+
+def stream_by_rule(
+    path: str | os.PathLike[str],
+    lexer_cls: type,
+    parser_cls: type,
+    rule: RuleTypes,
+    *,
+    sourcename: str | None = None,
+    encoding: str = "utf-8",
+    batch: int = 256,
+    cached: bool = True,
+    _block_bytes: int = 0,
+) -> Iterator[Chunk]:
+    """Stream chunks from a file that is a sequence of a grammar `rule`.
+
+    The streaming counterpart of [chunk_by_rule][antlr_pyfacade.chunking.chunk_by_rule],
+    for input that is a top-level **sequence of records** — each record an occurrence
+    of `rule` (or one of several rules). It parses one record at a time over a
+    bounded-memory pipeline (the native layer opens the file and runs lexer → parser
+    over a sliding window), yielding each as a positioned [Chunk][antlr_pyfacade.Chunk]
+    without holding the whole token stream or parse tree. The chunks feed
+    [walk_parallel][antlr_pyfacade.FacadeListener.walk_parallel] like any other.
+
+    Unlike `chunk_by_rule` — which parses the whole input and finds the rule *anywhere*
+    in the tree — this is the bounded-memory "file of records" form. Records must be
+    **directly adjacent**: only lexer-skipped tokens (whitespace, comments) may sit
+    between them. With several candidate `rule`s, the next token chooses which to parse
+    (via each rule's start-token set), so the candidates should have **disjoint leading
+    tokens** (e.g. `class` vs `def`); on overlap the first listed wins. An on-channel
+    separator between records (e.g. a comma) is not supported — use `chunk_by_rule` or
+    [stream_on_token][antlr_pyfacade.chunking.stream_on_token] there.
+
+    Args:
+        path: Filesystem path to the source (opened by the native layer as UTF-8).
+        lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
+        parser_cls: The stock ANTLR-generated `<Grammar>Parser` class.
+        rule: The record rule — a rule name or index, or several of them (a set of
+            top-level record types, e.g. `{"classdef", "funcdef"}`).
+        sourcename: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
+            surfaced as [sourcename][antlr_pyfacade.FacadeListener.sourcename] during a
+            walk). Defaults to `str(path)`.
+        encoding: The source encoding. Only UTF-8 is supported today (Python codec
+            aliases are accepted); the keyword is reserved for future encodings.
+        batch: How many records to pull from C++ per call — a throughput knob.
+        cached: Reuse the cached specs (see [load_specs][antlr_pyfacade.load_specs]).
+
+    Yields:
+        One [Chunk][antlr_pyfacade.Chunk] per record, in source order, carrying its
+        position. The stream stops at end of input, or at the first token that begins
+        no candidate rule (or a record that fails to parse) — best-effort, like the
+        other chunkers.
+
+    Raises:
+        ValueError: If `encoding` is not UTF-8, or a rule name is unknown.
+    """
+    if codecs.lookup(encoding).name != "utf-8":
+        raise ValueError(
+            f"stream_by_rule currently supports only UTF-8, got {encoding!r}; "
+            f"decode in Python and use chunk_by_rule for other encodings"
+        )
+    if isinstance(rule, (int, str)):
+        rule_indices = [_rule_index(parser_cls, rule)]
+    else:
+        rule_indices = [_rule_index(parser_cls, r) for r in rule]
+    src_path = os.fspath(path)
+    if sourcename is None:
+        sourcename = src_path
+    parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls, cached=cached)
+    chunker = _native.StreamRuleChunker(
+        parser_spec,
+        lexer_spec,
+        src_path,
+        rule_indices,
+        True,  # lenient: substitute U+FFFD for malformed bytes
+        _block_bytes,
+    )
+    more = True
+    while more:
+        rows, more = chunker.next_batch(batch)
+        for offset, line, column, body in rows:
+            yield Chunk(body, offset, line, column, sourcename)

@@ -48,6 +48,7 @@ from .chunking import (
     split_between_tokens,
     split_on_pattern,
     split_on_token,
+    stream_by_rule,
     stream_on_pattern,
     stream_on_token,
 )
@@ -74,6 +75,7 @@ __all__ = [
     "split_between_tokens",
     "split_on_pattern",
     "split_on_token",
+    "stream_by_rule",
     "stream_on_pattern",
     "stream_on_token",
 ]

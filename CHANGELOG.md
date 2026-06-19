@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.21] - 2026-06-19
+
+### Added
+- `stream_by_rule(path, LexerCls, ParserCls, rule, *, sourcename=..., encoding=...)`
+  — the streaming counterpart of `chunk_by_rule`, completing the streaming chunker
+  family. For input that is a top-level **sequence of records** (each an occurrence of
+  a grammar `rule`, or one of several), it parses one record at a time over a
+  bounded-memory pipeline (native `Utf8FileCharStream` → `LexerInterpreter` →
+  `UnbufferedTokenStream` → `ParserInterpreter`), yielding positioned `Chunk`s without
+  holding the whole token stream or parse tree. With several candidate rules the next
+  token chooses which to parse (by each rule's start-token set), so they should have
+  disjoint leading tokens (e.g. `class` vs `def`). Records must be directly adjacent
+  (only lexer-skipped whitespace/comments between them); unlike `chunk_by_rule` it
+  doesn't find a rule anywhere in a full parse — for nesting/comma-separated records,
+  use `chunk_by_rule` or `stream_on_token`.
+
 ## [0.1.20] - 2026-06-19
 
 ### Added

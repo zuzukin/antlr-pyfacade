@@ -21,6 +21,7 @@ task-oriented guidance see the [User Guide](../getting-started.md); the
         - chunk_by_rule
         - stream_on_token
         - stream_on_pattern
+        - stream_by_rule
         - load_specs
         - load_lexer_spec
         - parse_events

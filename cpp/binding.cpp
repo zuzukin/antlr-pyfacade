@@ -28,8 +28,11 @@
 #include "ANTLRInputStream.h"
 #include "BaseErrorListener.h"
 #include "CommonTokenStream.h"
+#include "UnbufferedTokenStream.h"
 #include "ParserInterpreter.h"
 #include "LexerInterpreter.h"
+#include "misc/IntervalSet.h"
+#include "atn/RuleStartState.h"
 #include "ParserRuleContext.h"
 #include "Recognizer.h"
 #include "RuleContext.h"
@@ -610,6 +613,148 @@ struct StreamChunker {
     }
 };
 
+// ---------------------------------------------------------------------------
+// Streaming rule chunker: the streaming counterpart of chunk_by_rule. Treats the
+// input as a sequence of top-level occurrences of one or more parser rules and
+// yields each, one at a time, over a bounded-memory pipeline (Utf8FileCharStream
+// -> LexerInterpreter -> UnbufferedTokenStream -> ParserInterpreter). At each
+// position it dispatches on the next token — via each candidate rule's FIRST set —
+// to choose which rule to parse, parses exactly that one record, captures its
+// span, then frees the record's tokens (token-stream mark/release), parse tree
+// (tree-tracker reset) and characters (char-window dropThrough). Unlike
+// chunk_by_rule it does NOT find a rule anywhere in a full parse: records must be
+// a directly-adjacent top-level sequence (lexer-skipped whitespace/comments
+// between them are fine). next_batch(n) pulls up to n positioned records.
+// ---------------------------------------------------------------------------
+struct StreamRuleChunker {
+    CollectingErrorListener err;
+    std::unique_ptr<antlr_pyfacade::Utf8FileCharStream> stream;
+    std::unique_ptr<LexerInterpreter> lexer;
+    std::unique_ptr<UnbufferedTokenStream> tokens;
+    std::unique_ptr<ParserInterpreter> parser;
+    // (rule index, FIRST set) candidates, tried in the given order so the first
+    // whose FIRST set contains the next token is chosen.
+    std::vector<std::pair<size_t, antlr4::misc::IntervalSet>> candidates;
+
+    size_t origin_idx = 0;   // absolute index for which (origin_line/col) hold
+    size_t origin_line = 1;  // 1-based, like SourceMap
+    size_t origin_col = 0;   // 0-based
+    bool done = false;
+
+    StreamRuleChunker(ParserSpec &pspec, LexerSpec &lspec,
+                      const std::string &path, std::vector<int32_t> rule_indices,
+                      bool lenient, size_t block) {
+        stream = std::make_unique<antlr_pyfacade::Utf8FileCharStream>(path, lenient,
+                                                                      block);
+        // The interpreters hold references into the specs (ATN + name lists), so
+        // both specs must outlive this object — see keep_alive on the binding.
+        lexer = std::make_unique<LexerInterpreter>(
+            lspec.grammar_file_name, lspec.vocabulary, lspec.rule_names,
+            lspec.channel_names, lspec.mode_names, *lspec.atn, stream.get());
+        tokens = std::make_unique<UnbufferedTokenStream>(lexer.get());
+        parser = std::make_unique<ParserInterpreter>(
+            pspec.grammar_file_name, pspec.vocabulary, pspec.rule_names, *pspec.atn,
+            tokens.get());
+        lexer->removeErrorListeners();
+        lexer->addErrorListener(&err);
+        parser->removeErrorListeners();
+        parser->addErrorListener(&err);
+        for (int32_t ridx : rule_indices) {
+            atn::RuleStartState *rs =
+                pspec.atn->ruleToStartState[static_cast<size_t>(ridx)];
+            candidates.emplace_back(static_cast<size_t>(ridx),
+                                    pspec.atn->nextTokens(rs));
+        }
+    }
+
+    // Advance (origin_line, origin_col) to absolute index `to` over the retained
+    // window (same incremental SourceMap accounting as StreamChunker).
+    void advance_origin(size_t to) {
+        const std::u32string &buf = stream->buffer();
+        size_t bs = stream->bufStart();
+        for (size_t i = origin_idx - bs, end = to - bs; i < end; ++i) {
+            if (buf[i] == U'\n') {
+                origin_line++;
+                origin_col = 0;
+            } else {
+                origin_col++;
+            }
+        }
+        origin_idx = to;
+    }
+
+    // Parse up to `n` records or until EOF / a token that starts no candidate rule.
+    bool run_batch(size_t n, std::vector<ChunkRec> &out) {
+        if (done) {
+            return false;
+        }
+        while (out.size() < n) {
+            Token *la = tokens->LT(1);
+            if (la->getType() == Token::EOF) {
+                done = true;
+                return false;
+            }
+            ssize_t ttype = static_cast<ssize_t>(la->getType());
+            ssize_t chosen = -1;
+            for (auto &cand : candidates) {
+                if (cand.second.contains(ttype)) {
+                    chosen = static_cast<ssize_t>(cand.first);
+                    break;
+                }
+            }
+            if (chosen < 0) {  // nothing here can begin a record
+                done = true;
+                return false;
+            }
+            size_t before = tokens->index();
+            // Hold a mark across the parse so UnbufferedTokenStream keeps this
+            // record's tokens alive — root->getStart()/getStop() read below would
+            // otherwise dangle. Released immediately after, freeing them.
+            ssize_t mark = tokens->mark();
+            ParserRuleContext *root = parser->parse(static_cast<size_t>(chosen));
+            int32_t start, stop;
+            rule_span(root, start, stop);  // ints, captured while tokens are marked
+            tokens->release(mark);
+            parser->getTreeTracker().reset();  // free this record's parse tree
+            if (tokens->index() == before || start < 0 || stop < start) {
+                done = true;  // no progress / no span — stop the stream
+                return false;
+            }
+            size_t s = static_cast<size_t>(start);
+            size_t e = static_cast<size_t>(stop);
+            advance_origin(s);  // skip the inter-record gap (whitespace/comments)
+            ChunkRec rec;
+            rec.offset = s;
+            rec.line = origin_line;
+            rec.column = origin_col;
+            rec.text = stream->getText(
+                antlr4::misc::Interval(static_cast<ssize_t>(s),
+                                       static_cast<ssize_t>(e)));
+            out.push_back(std::move(rec));
+            advance_origin(e + 1);
+            stream->dropThrough(e + 1);  // free this record's characters
+        }
+        return true;
+    }
+
+    nb::object next_batch(size_t n) {
+        std::vector<ChunkRec> recs;
+        bool more;
+        {
+            // Pure C++ (file IO + decode + lex + parse + getText): release the GIL
+            // for the whole batch; only building the result list below needs it.
+            nb::gil_scoped_release release;
+            more = run_batch(n, recs);
+        }
+        nb::list rows;
+        for (ChunkRec &r : recs) {
+            rows.append(nb::make_tuple(r.offset, r.line, r.column,
+                                       nb::str(r.text.data(), r.text.size())));
+        }
+        return nb::make_tuple(std::move(rows), more);
+    }
+};
+
 // Trampoline so a Python subclass can override the 4 ParseTreeListener virtuals.
 struct PyListener : public tree::ParseTreeListener {
     NB_TRAMPOLINE(tree::ParseTreeListener, 4);
@@ -715,6 +860,18 @@ NB_MODULE(_native, m) {
              "(rows, more): rows is a list of (offset, line, column, text) tuples "
              "(whitespace trimmed, whitespace-only regions skipped) and more is "
              "False once the final region at EOF has been emitted.");
+
+    nb::class_<StreamRuleChunker>(m, "StreamRuleChunker")
+        .def(nb::init<ParserSpec &, LexerSpec &, const std::string &,
+                      std::vector<int32_t>, bool, size_t>(),
+             nb::arg("parser_spec"), nb::arg("lexer_spec"), nb::arg("path"),
+             nb::arg("rule_indices"), nb::arg("lenient"), nb::arg("block") = 0,
+             nb::keep_alive<1, 2>(), nb::keep_alive<1, 3>())
+        .def("next_batch", &StreamRuleChunker::next_batch, nb::arg("n"),
+             "Pull up to n parsed-rule chunk records from the streaming rule "
+             "chunker. Returns (rows, more): rows is a list of (offset, line, "
+             "column, text) tuples and more is False once EOF (or a token that "
+             "begins no candidate rule) is reached.");
 
     // Minimal node/token surface the listener callbacks need.
     nb::class_<Token>(m, "Token")
