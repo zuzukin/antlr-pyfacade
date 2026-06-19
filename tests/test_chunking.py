@@ -26,6 +26,7 @@ from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
 from antlr_pyfacade import (
+    Chunk,
     LexToken,
     _native,
     chunk_by_pattern,
@@ -281,6 +282,37 @@ def test_stream_on_pattern_encoding(tmp_path):
             )
         ]
         assert got == want, enc
+
+
+def test_stream_source_name(tmp_path):
+    # The streaming chunkers record a source name on each Chunk: the path by
+    # default, an explicit `name` when given (required for a nameless stream).
+    path = tmp_path / "data.json"
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    text = path.read_text(encoding="utf-8")
+
+    assert next(stream_on_pattern(path, r"\{")).name == str(path)
+    assert next(stream_on_pattern(io.StringIO(text), r"\{")).name is None
+    assert next(stream_on_pattern(io.StringIO(text), r"\{", name="mem")).name == "mem"
+    assert next(stream_on_pattern(path, r"\{", name="alias")).name == "alias"
+    assert next(stream_on_token(path, JSONLexer, LBRACE)).name == str(path)
+    assert next(stream_on_token(path, JSONLexer, LBRACE, name="alias")).name == "alias"
+
+    # A bare str chunk inherits the name of the chunk it follows.
+    assert Chunk("x", 0, 1, 0, "src").after("yy").name == "src"
+
+    # The name surfaces as FacadeListener.source_name() during the walk, for
+    # reporting positions as name:line:column.
+    listeners = list(
+        JsonValueBuilder.walk_parallel(
+            stream_on_pattern(io.StringIO(text), r"\{", name="mem.json"),
+            JSONLexer,
+            JSONParser,
+            start_rule="value",
+        )
+    )
+    assert [b.result for b in listeners] == [{"a": 1}, {"b": 2}]
+    assert [b.source_name() for b in listeners] == ["mem.json", "mem.json"]
 
 
 def test_split_between_tokens():

@@ -236,6 +236,7 @@ def stream_on_token(
     where: str = "before",
     encoding: str = "utf-8",
     channel: int | None = DEFAULT_CHANNEL,
+    name: str | None = None,
     batch: int = 256,
     cached: bool = True,
     _block_bytes: int = 0,
@@ -264,6 +265,9 @@ def stream_on_token(
             [split_on_token][antlr_pyfacade.chunking.split_on_token].
         channel: Only tokens on this channel are split on (default: the default
             channel). Pass `None` to consider all channels.
+        name: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
+            surfaced as [source_name][antlr_pyfacade.FacadeListener.source_name]
+            during a walk). Defaults to `str(path)`.
         batch: How many chunk records to pull from C++ per call — a throughput knob,
             not observable in the output.
         cached: Reuse the cached lexer spec (see
@@ -287,10 +291,12 @@ def stream_on_token(
             f"stream_on_token currently supports only UTF-8, got {encoding!r}; "
             f"decode in Python and use split_on_token for other encodings"
         )
+    src_path = os.fspath(path)
+    src_name = name if name is not None else src_path
     spec = load_lexer_spec(lexer_cls, cached=cached)
     chunker = _native.StreamChunker(
         spec,
-        os.fspath(path),
+        src_path,
         list(_as_set(token_types)),
         0 if where == "before" else 1,
         channel,
@@ -301,7 +307,7 @@ def stream_on_token(
     while more:
         rows, more = chunker.next_batch(batch)
         for offset, line, column, body in rows:
-            yield Chunk(body, offset, line, column)
+            yield Chunk(body, offset, line, column, src_name)
 
 
 def split_between_tokens(
@@ -489,7 +495,7 @@ def _read_increments(
 
 
 def _split_stream(
-    increments: Iterator[str], rx: re.Pattern[str], where: str
+    increments: Iterator[str], rx: re.Pattern[str], where: str, name: str | None
 ) -> Iterator[Chunk]:
     """Split the concatenation of `increments` at each `rx` match, streaming.
 
@@ -534,7 +540,7 @@ def _split_stream(
         advance_origin(offset)
         line, column = oline, ocol
         advance_origin(b)
-        return Chunk(body, offset, line, column)
+        return Chunk(body, offset, line, column, name)
 
     while True:
         match = rx.search(buf, resume - base)
@@ -574,6 +580,7 @@ def stream_on_pattern(
     window_chars: int | None = 65536,
     window_lines: int | None = None,
     encoding: str = "utf-8",
+    name: str | None = None,
 ) -> Iterator[Chunk]:
     """Stream chunks from a text source at each delimiter regex match.
 
@@ -608,6 +615,10 @@ def stream_on_pattern(
             delimiters. Ignored for a plain `str` iterable, which is consumed as-is.
         encoding: Text encoding, used only when `source` is a path. Any codec
             Python supports.
+        name: Source name recorded on each [Chunk][antlr_pyfacade.Chunk] (and
+            surfaced as [source_name][antlr_pyfacade.FacadeListener.source_name]
+            during a walk). Defaults to the path when `source` is a path, else
+            `None` — pass it for a stream or iterable that has no path.
 
     Yields:
         One [Chunk][antlr_pyfacade.Chunk] per region between matches, trimmed of
@@ -623,15 +634,19 @@ def stream_on_pattern(
     rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
 
     opened = None
+    src_name = name
     if isinstance(source, (str, os.PathLike)):
-        opened = open(os.fspath(source), encoding=encoding)  # noqa: SIM115
+        fspath = os.fspath(source)
+        if src_name is None:
+            src_name = fspath
+        opened = open(fspath, encoding=encoding)  # noqa: SIM115
         increments = _read_increments(opened, window_chars, window_lines)
     elif hasattr(source, "read"):
         increments = _read_increments(source, window_chars, window_lines)
     else:
         increments = iter(source)
     try:
-        yield from _split_stream(increments, rx, where)
+        yield from _split_stream(increments, rx, where, src_name)
     finally:
         if opened is not None:
             opened.close()

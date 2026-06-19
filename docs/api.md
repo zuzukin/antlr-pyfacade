@@ -84,7 +84,8 @@ def visitError(self, token_type: int, text: str) -> None:
     pos = self.line_col()        # (line, column) of the offending token, or None
     if pos is not None:
         line, col = pos
-        print(f"{line}:{col}: unexpected {text!r}")
+        where = self.source_name() or "<input>"
+        print(f"{where}:{line}:{col}: unexpected {text!r}")
 ```
 
 - `self.line_col()` → `(line, column)` of the current event's start (line
@@ -92,6 +93,10 @@ def visitError(self, token_type: int, text: str) -> None:
   or `None` when the event has no source span (e.g. an inserted/missing token,
   or an empty rule).
 - `self.span()` → the raw `(start, stop)` character offsets of the current event.
+- `self.source_name()` → the name of the source being parsed (e.g. a filename), or
+  `None`. Set from the [`Chunk`](#walk_parallel)'s `name` — the streaming chunkers
+  fill it from their file path or an explicit `name=` — for reporting a position as
+  `name:line:column`.
 
 These are valid for every callback — `enter<Rule>`/`exit<Rule>` report the rule's
 extent, terminals and errors report the token. The underlying
@@ -262,13 +267,20 @@ chunks = stream_on_pattern("big.log", r"^\d{4}-\d\d-\d\d", where="before")
 ```
 
 - `stream_on_pattern(source, pattern, *, where="before"|"after", flags=0,
-  window_chars=65536, window_lines=None, encoding="utf-8")` — same delimiter
-  semantics and output as `split_on_pattern`, streamed. `source` is a filesystem
-  path (opened with `encoding`), an already-open text file, or an iterable of `str`
-  pieces (for an in-memory string, use `split_on_pattern`). `window_chars` /
-  `window_lines` set the read/search increment — a delimiter is committed only once
-  a character past it is read, so it is never split across a read boundary as long
-  as it fits within the window. A region with no delimiter is buffered in full.
+  window_chars=65536, window_lines=None, encoding="utf-8", name=None)` — same
+  delimiter semantics and output as `split_on_pattern`, streamed. `source` is a
+  filesystem path (opened with `encoding`), an already-open text file, or an
+  iterable of `str` pieces (for an in-memory string, use `split_on_pattern`).
+  `window_chars` / `window_lines` set the read/search increment — a delimiter is
+  committed only once a character past it is read, so it is never split across a
+  read boundary as long as it fits within the window. A region with no delimiter is
+  buffered in full.
+
+Both streamers record a **source name** on every chunk for diagnostics — the file
+path by default, or an explicit `name=` (the only way to name a path-less stream or
+iterable). It surfaces during the parse as
+[`source_name()`](#source-location-in-a-callback), so a callback can report a
+position as `name:line:column`.
 
 For records defined by grammar structure rather than a delimiter, chunk by rule:
 

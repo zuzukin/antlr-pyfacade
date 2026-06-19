@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.1.15] - 2026-06-19
+
+### Added
+- Chunks can carry a **source name** for diagnostics. `Chunk` gains an optional
+  `name` field (a bare `str` chunk inherits the name of the chunk it follows), and
+  `stream_on_token` / `stream_on_pattern` take a `name=` keyword — defaulting to the
+  file path, and the way to name a path-less stream or iterable passed to
+  `stream_on_pattern`. The name surfaces during a walk as the new
+  `FacadeListener.source_name()` (and `drive(..., source_name=...)`), so a callback
+  can report a position as `name:line:column`.
+
 ## [0.1.14] - 2026-06-19
 
 ### Added
