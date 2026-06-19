@@ -1,17 +1,16 @@
 # antlr-pyfacade
 
-A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python — with
-**no per-grammar C/C++ compilation by the user**.
+A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
 
 > **10–20× faster** than the official pure-Python `antlr4-python3-runtime` on
 > workloads that touch most nodes — and more when your listener subscribes to
 > only a subset of the grammar.
 
-You generate your parser with the ordinary ANTLR tool targeting Python, install
-this package, generate a small *facade*, and write a pure-Python event listener.
+Generate your parser with the ordinary ANTLR tool targeting Python, install
+this package, generate a small *facade* class, and write a pure-Python event listener.
 Parsing itself runs inside the official ANTLR4 **C++** runtime, driven directly
-from the serialized ATN the stock Python target already emits. Instead of a
-per-node parse-tree walk (one foreign-function crossing per tree node), the C++
+from the serialized ATN (Augmented Transition Network) the stock Python target already emits.
+Instead of a per-node parse-tree walk (one foreign-function crossing per tree node), the C++
 side collects a **single bulk, filtered event stream** and hands it to Python in
 one transfer — and it drops the rules/tokens your listener doesn't subscribe to
 *before* they ever reach Python.
@@ -75,6 +74,7 @@ other rule/token — the fewer node kinds you subscribe to, the faster the walk.
 
 ## Limitations
 
+This can only be used for target-language-agnostic grammars.
 This runtime executes the **interpreted ATN**; it cannot run target-language
 **semantic predicates or embedded grammar actions**. Grammars that depend on
 them will not parse correctly here. See `docs/` for the full discussion and the

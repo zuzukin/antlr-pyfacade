@@ -52,7 +52,7 @@ import struct
 from typing import TYPE_CHECKING, NamedTuple
 
 from . import _native
-from .facade_runtime import Chunk
+from .base import Chunk
 from .location import SourceMap
 from .specs import load_lexer_spec, load_specs
 
