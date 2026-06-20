@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.7] - 2026-06-20
+
+### Added
+- conda-forge install instructions alongside PyPI (`conda install -c conda-forge
+  antlrope`) in the README and the installation docs.
+- A **Glossary** page defining the non-obvious terms used throughout the docs (ATN,
+  DFA, GIL, FFI, semantic predicate, embedded action, parse tree, facade, …), with
+  reference-style links to it from the pages where those terms appear.
+
 ## [0.2.6] - 2026-06-20
 
 ### Changed

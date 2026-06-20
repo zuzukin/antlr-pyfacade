@@ -10,10 +10,10 @@ Parse text **fast** from Python using an [ANTLR](https://www.antlr.org/) grammar
 without writing or compiling any C or C++ yourself.
 
 *antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — the parse is handed to you
-as one ordered stream of events, not a per-node parse-tree walk.
+as one ordered stream of events, not a per-node [parse-tree][parse tree] walk.
 
 You bring an ANTLR grammar (`.g4`). You generate a parser with the ordinary ANTLR
-tool, `pip install antlrope`, generate a small *facade* from that parser,
+tool, `pip install antlrope`, generate a small *[facade]* from that parser,
 and write a plain-Python class with named callbacks like `enterFunction` /
 `visitTerminal`. The parsing itself runs in the official ANTLR4 **C++** runtime
 and the results stream into your callbacks in a single batch — typically
@@ -49,8 +49,8 @@ skipped before it ever reaches Python.
 languages, query languages, most DSLs and programming languages — work out of the
 box.
 
-**It won't work** if your grammar depends on **semantic predicates** (`{...}?`) or
-**embedded actions** (`{...}` code blocks) to parse correctly. Those are
+**It won't work** if your grammar depends on **[semantic predicates][semantic predicate]** (`{...}?`) or
+**[embedded actions][embedded action]** (`{...}` code blocks) to parse correctly. Those are
 target-language code snippets that this runtime does not execute. If your grammar
 needs them, use the official `antlr4-python3-runtime` instead. See
 [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions)
@@ -70,3 +70,8 @@ for the details and how to tell.
 - [How it works](concepts.md) — optional background on *why* it's fast.
 - [Performance & limitations](performance.md) — the speed ceiling and the
   predicate/action boundary, in full.
+
+[parse tree]: glossary.md#parse-tree
+[facade]: glossary.md#facade
+[semantic predicate]: glossary.md#semantic-predicate
+[embedded action]: glossary.md#embedded-action

@@ -34,7 +34,7 @@ Two properties make this a good fit for structural chunking:
   `stream_by_rule` cut on precisely.
 
 The keywords and punctuation get named lexer rules (`MESSAGE`, `LBRACE`, …), so the
-facade exposes readable constants (`self.MESSAGE`, `self.ID`) instead of positional
+[facade] exposes readable constants (`self.MESSAGE`, `self.ID`) instead of positional
 `T__n`.
 
 ## The listener
@@ -103,7 +103,7 @@ def index_parallel(text: str) -> list[TypeDef]:
 top-level `messageDef` / `enumDef` span; passing a **set** of rules indexes both
 kinds. [`walk_parallel`](../parallel-parsing.md) then re-parses each span as a
 `definition` on a worker pool, yielding one listener per definition. The native
-parses release the GIL and overlap across cores.
+parses release the [GIL] and overlap across cores.
 
 ### 3. Stream by rule — bounded memory
 
@@ -152,3 +152,6 @@ You'll find the **single whole-file walk wins** here — and that's the honest l
 
 See [Performance & limitations](../performance.md) for the measured trade-offs and
 the rule of thumb on when each pays off.
+
+[facade]: ../glossary.md#facade
+[GIL]: ../glossary.md#gil

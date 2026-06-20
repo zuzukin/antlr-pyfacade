@@ -6,7 +6,7 @@ and parse them in parallel with
 [`walk_parallel`](parallel-parsing.md). The generated `<Grammar>EventListener`
 provides chunking **classmethods** that produce those chunks, each carrying its
 exact source position so callbacks still report positions against the whole source.
-The token- and rule-based ones use the facade's baked-in lexer/parser and its
+The token- and rule-based ones use the [facade]'s baked-in lexer/parser and its
 token-type constants, so you call them on the class and pass no lexer/parser.
 
 There are four families, trading correctness against speed. Pick by constraint,
@@ -97,3 +97,5 @@ takes a `sourcename=` (a filename for diagnostics) recorded on every chunk — t
 streaming chunkers default it to their file path. During the parse it surfaces as
 [`FacadeListener.sourcename()`](reference/api.md#antlrope.FacadeListener.sourcename),
 so a callback can report a position as `sourcename:line:column`.
+
+[facade]: glossary.md#facade

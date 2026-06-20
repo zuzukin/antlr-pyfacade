@@ -31,9 +31,20 @@ generated parser, a faster way to consume it.
 
 ## Install
 
+From PyPI:
+
 ```sh
 pip install antlrope
 ```
+
+Or from conda-forge (with conda, mamba, or pixi):
+
+```sh
+conda install -c conda-forge antlrope
+```
+
+Either way you get a pre-compiled binary — nothing to build — and the official
+`antlr4-python3-runtime` is pulled in automatically.
 
 ## Quickstart
 

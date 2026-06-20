@@ -4,7 +4,7 @@
 
 Two costs dominate consuming a large parse from Python:
 
-1. **Per-node FFI crossings.** A Python `ParseTreeListener` over a C++ parse is
+1. **Per-node [FFI] crossings.** A Python `ParseTreeListener` over a C++ parse is
    called once per tree node. The bulk event stream removes this entirely: one
    transfer instead of millions of calls.
 2. **Python's per-item iteration.** Even with zero call overhead, Python must
@@ -23,7 +23,7 @@ The comparison that matters for a Python user is the official
 generated parser. Consider a workload that touches most nodes — close to the
 worst case for this design, because Python still iterates every kept event:
 
-- The **bulk event-stream facade** runs roughly **10–20× faster** than the
+- The **bulk event-stream [facade]** runs roughly **10–20× faster** than the
   official pure-Python runtime — and that is the *worst* case for this design.
   Workloads that subscribe to only a subset of rules/tokens go higher still,
   because native filtering drops the rest before Python ever iterates them.
@@ -42,7 +42,7 @@ pure-Python runtime and the `speedy-antlr` tree-translation accelerator — see 
 
 ### Underlying C++ runtime
 
-This package bundles the ANTLR4 C++ runtime with a lock-free DFA-edge patch on
+This package bundles the ANTLR4 C++ runtime with a lock-free [DFA]-edge patch on
 the per-character lexer read path (the vendored snapshot; see
 `vendor/antlr4-cpp/UPDATING.md`). Versus the stock C++ runtime, that patch alone
 measured roughly **1.7–1.8× lexer** and **1.3–1.4× total-parse** throughput,
@@ -52,12 +52,12 @@ single-threaded, and more under concurrency.
 
 This is the most important correctness boundary, so it is called out loudly.
 
-The runtime executes the **interpreted ATN** (`ParserInterpreter` /
+The runtime executes the **interpreted [ATN]** ([`ParserInterpreter`][ATN interpreter] /
 `LexerInterpreter`). It does **not** compile or run target-language code embedded
 in your grammar:
 
-- **Semantic predicates** — `{...}?` gating an alternative.
-- **Embedded actions** — `{...}` code blocks.
+- **[Semantic predicates][semantic predicate]** — `{...}?` gating an alternative.
+- **[Embedded actions][embedded action]** — `{...}` code blocks.
 
 A generated, compiled ANTLR parser runs these as native code. The ATN
 interpreter cannot, so any grammar whose parse **depends** on a predicate to
@@ -78,7 +78,7 @@ are unaffected.
 - **Single streaming pass.** You get one ordered traversal, not a retained tree.
   If you need random access, re-walking, XPath, or rewriting, keep the parse
   tree from the official runtime.
-- **GIL.** The native parse **releases the GIL**, so other Python threads keep
+- **[GIL].** The native parse **releases the GIL**, so other Python threads keep
   running during a parse and `asyncio.to_thread(listener.walk, ...)` won't block
   the event loop.
 
@@ -164,7 +164,7 @@ Pick by constraint, not just speed:
   literal or comment will still match and mis-split. Use it when the delimiter
   cannot appear in disguise (or you've confirmed it can't).
 - **Token-based** never splits inside a string/comment token, and handles
-  whitespace/channels the way the grammar does.
+  whitespace/[channels][token channel] the way the grammar does.
 - **Rule-based** cuts on real grammar structure (no delimiter heuristic at all),
   at the cost of a parse — but only the spans cross into Python. Reach for it when
   the per-chunk `walk_parallel` callback work dominates this first parse, or when
@@ -184,3 +184,13 @@ token-based row above; what changes is the memory profile, not the speed.
 `stream_on_pattern` is the same idea for the regex splitter — it reads the source
 incrementally (Python-side, so any text encoding), committing a delimiter once a
 character past it is read; throughput tracks the regex row, memory stays flat.
+
+[FFI]: glossary.md#ffi
+[facade]: glossary.md#facade
+[DFA]: glossary.md#dfa
+[ATN]: glossary.md#atn
+[ATN interpreter]: glossary.md#atn-interpreter
+[semantic predicate]: glossary.md#semantic-predicate
+[embedded action]: glossary.md#embedded-action
+[GIL]: glossary.md#gil
+[token channel]: glossary.md#token-channel

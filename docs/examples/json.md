@@ -11,7 +11,7 @@ it's the worked-out version of the `StringCollector` from
 
 A standard, target-agnostic JSON grammar
 ([`examples/json/JSON.g4`](https://github.com/zuzukin/antlrope/blob/dev/examples/json/JSON.g4)) —
-no embedded actions or semantic predicates, so the interpreted ATN parses it
+no [embedded actions][embedded action] or [semantic predicates][semantic predicate], so the interpreted [ATN] parses it
 faithfully. The rules that matter to the consumer are `obj`, `arr`, `pair`, and
 `value`:
 
@@ -22,7 +22,7 @@ arr   : '[' value (',' value)* ']' | '[' ']' ;
 value : STRING | NUMBER | obj | arr | 'true' | 'false' | 'null' ;
 ```
 
-Generate the parser and the facade (already checked in):
+Generate the parser and the [facade] (already checked in):
 
 ```sh
 antlr4 -Dlanguage=Python3 JSON.g4 -o generated
@@ -79,7 +79,7 @@ Two things worth noting:
   the C++ side never sends `enterValue`, `enterJson`, etc. The fewer node kinds you
   subscribe to, the less work crosses the boundary.
 - **Token text is recovered by slicing.** `visitTerminal` receives the token's type
-  and its exact source text; no node objects or per-node foreign-function calls are
+  and its exact source text; no node objects or per-node [foreign-function][FFI] calls are
   involved.
 
 `_attach` puts a finished value where it belongs — into the open list, under the
@@ -99,3 +99,9 @@ The whole parse runs in C++; one bulk, filtered event stream drives the callback
 above. For a single document this is the everyday path — `Collector().walk(text)`.
 When you have *many* independent documents or a very large one, the next example
 shows how to chunk and parse them in parallel.
+
+[embedded action]: ../glossary.md#embedded-action
+[semantic predicate]: ../glossary.md#semantic-predicate
+[ATN]: ../glossary.md#atn
+[facade]: ../glossary.md#facade
+[FFI]: ../glossary.md#ffi

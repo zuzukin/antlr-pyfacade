@@ -3,7 +3,7 @@
 When your input is many independent pieces that each parse on their own — records,
 log entries, top-level definitions —
 [`walk_parallel`](reference/api.md#antlrope.FacadeListener.walk_parallel)
-parses them across a thread pool. The native parse releases the GIL, so the parses
+parses them across a thread pool. The native parse releases the [GIL], so the parses
 overlap across cores; one listener is produced per chunk, **in input order**.
 
 ```python
@@ -54,3 +54,5 @@ The per-event Python dispatch still holds the GIL, so the parallel speedup scale
 with how parse-heavy the work is relative to per-callback Python work. See the
 [Parallel parsing](performance.md#parallel-parsing) section of Performance &
 limitations for the scaling details and measured numbers.
+
+[GIL]: glossary.md#gil

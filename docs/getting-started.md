@@ -1,7 +1,7 @@
 # Getting started
 
 This walks you from a grammar to a working parser in three steps: **generate a
-parser** from your grammar, **generate a facade**, and **write a listener**. The
+parser** from your grammar, **generate a [facade]**, and **write a listener**. The
 whole thing is plain Python — no C/C++ to write or compile.
 
 First, [install `antlrope` and the ANTLR tool](installation.md).
@@ -15,7 +15,7 @@ grammar and the steps are identical.
 
     `antlrope` parses grammars that describe *structure* — data formats,
     config languages, most DSLs and programming languages. It does **not** run
-    **semantic predicates** (`{...}?`) or **embedded actions** (`{...}` code)
+    **[semantic predicates][semantic predicate]** (`{...}?`) or **[embedded actions][embedded action]** (`{...}` code)
     that some grammars use, because those are target-language code this runtime
     doesn't execute. If your grammar depends on them, use the official
     `antlr4-python3-runtime`. See
@@ -130,3 +130,7 @@ parse.
   helpers, and the raw event buffer for power users.
 - [How it works](concepts.md) — optional background on why batching the events
   makes it fast.
+
+[facade]: glossary.md#facade
+[semantic predicate]: glossary.md#semantic-predicate
+[embedded action]: glossary.md#embedded-action

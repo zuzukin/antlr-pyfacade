@@ -2,10 +2,10 @@
 
 ## The problem with a per-node listener
 
-The classic ANTLR consumption model builds a parse tree and walks it, calling
+The classic ANTLR consumption model builds a [parse tree] and walks it, calling
 `enterEveryRule` / `exitEveryRule` / `visitTerminal` once per node. With a
 Python listener over a C++ parse, **every one of those calls is a
-foreign-function crossing**. For a document that produces tens of millions of
+[foreign-function crossing][FFI]**. For a document that produces tens of millions of
 tree nodes, the per-node crossing — not the parse itself — dominates the
 runtime. Moving the parse to C++ barely helps if Python is still poked once per
 node.
@@ -44,7 +44,7 @@ subset of rules and tokens. `parse_events` accepts a `rule_mask` and a
 *before* they are appended to the buffer. This cuts the number of records Python
 must iterate, not merely the per-call cost.
 
-The generated facade wires this up automatically. `drive` (the engine behind the
+The generated [facade] wires this up automatically. `drive` (the engine behind the
 facade's `walk`) inspects **which callbacks your subclass actually overrides** —
 comparing each `enter<Rule>` / `exit<Rule>` / `visitTerminal` against the
 generated base class's no-op stub — and builds the masks from exactly those.
@@ -56,7 +56,7 @@ which is useful for diagnostics and for the correctness tests.
 
 ## What runs where
 
-- **C++**: ATN deserialization, `LexerInterpreter` + `ParserInterpreter`, the
+- **C++**: [ATN] deserialization, `LexerInterpreter` + `ParserInterpreter`, the
   full parse to a tree, and the masked DFS that builds the event buffer.
 - **Python**: one loop over the buffer (`struct.iter_unpack("<4i", raw)`),
   dispatching your overridden callbacks and slicing token text as needed.
@@ -67,3 +67,8 @@ runtime is driven entirely from the **serialized ATN** that the stock
 read off the generated Python classes (see
 [`parser_spec`](reference/api.md#antlrope.FacadeListener.parser_spec) /
 [`lexer_spec`](reference/api.md#antlrope.FacadeListener.lexer_spec)).
+
+[parse tree]: glossary.md#parse-tree
+[FFI]: glossary.md#ffi
+[facade]: glossary.md#facade
+[ATN]: glossary.md#atn

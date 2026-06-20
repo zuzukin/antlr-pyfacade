@@ -34,6 +34,7 @@ nav = [
   { "Reference" = [
     { "API" = "reference/api.md" },
     { "Command line" = "reference/cli.md" },
+    { "Glossary" = "glossary.md" },
   ] },
   { "About" = [
     { "Release notes" = "about/changelog.md" },

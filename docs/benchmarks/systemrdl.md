@@ -15,7 +15,7 @@ support).
 
 ## TL;DR
 
-Parsing a 2.6 MB input (≈86k lines, ~77k parse-tree nodes):
+Parsing a 2.6 MB input (≈86k lines, ~77k [parse-tree][parse tree] nodes):
 
 | | parse time | peak memory | vs pure-Python | vs speedy-antlr |
 | --- | ---: | ---: | ---: | ---: |
@@ -87,7 +87,7 @@ End-to-end, `antlrope` is **~21–23× faster than the pure-Python runtime and
 ~8–9× faster than speedy-antlr**, at the lowest peak memory.
 
 Two effects compound here. First, the tree-walking tools must traverse *every* node
-to reach the terminals; the facade only receives the events its listener subscribes
+to reach the terminals; the [facade] only receives the events its listener subscribes
 to. Subscribing to **only the `ID` token** (`TERMINAL_TOKENS = [ID]`) makes the C++
 side emit just those terminals — no rule events, no other tokens cross into Python —
 shaving a further ~10% of time and memory over receiving all terminals. The
@@ -136,3 +136,6 @@ rule-exit, 26,601 terminal, and 0 error events.
 - **Synthetic sizing.** The input is one real register block replicated; the
   structure is realistic SystemRDL, but exact ratios will vary on real corpora and
   hardware. Read the ratios, not the absolute milliseconds.
+
+[parse tree]: ../glossary.md#parse-tree
+[facade]: ../glossary.md#facade

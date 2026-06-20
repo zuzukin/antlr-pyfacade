@@ -3,7 +3,7 @@
 `antlrope` does not replace the official runtime — you still generate your
 parser with the stock tool, and the generated modules still import
 `antlr4-python3-runtime`. What changes is **how you consume the parse**. This
-page maps the official `ParseTreeListener` model onto the facade.
+page maps the official `ParseTreeListener` model onto the [facade].
 
 ## Callback shape
 
@@ -15,7 +15,7 @@ page maps the official `ParseTreeListener` model onto the facade.
 | `visitErrorNode(node)` | `visitError(self, token_type, text)` |
 
 The big difference: **there are no node/context objects**. Callbacks carry no
-parse-tree handles, because no Python parse tree is built. You reconstruct
+parse-tree handles, because no Python [parse tree] is built. You reconstruct
 whatever state you need from the *order* of enter/exit/terminal events — almost
 always with an explicit stack.
 
@@ -90,12 +90,19 @@ tree-walking listener into the event-stream model.
 
 Prefer the official `antlr4-python3-runtime` (not this package) when:
 
-- Your grammar uses **semantic predicates or embedded target-language actions** —
-  the interpreted ATN cannot execute them (see
+- Your grammar uses **[semantic predicates][semantic predicate] or [embedded target-language actions][embedded action]** —
+  the interpreted [ATN] cannot execute them (see
   [Performance & limitations](performance.md)).
 - You need the **retained parse tree** itself (random access, XPath, rewriting,
   re-walking) rather than a single streaming pass.
 - You need rich per-node context (`Token` objects, parent/child navigation)
   during the walk and can't reconstruct it from event order.
-- The input is small enough that per-node FFI cost is irrelevant — the facade's
+- The input is small enough that per-node [FFI] cost is irrelevant — the facade's
   advantage is throughput on large inputs.
+
+[facade]: glossary.md#facade
+[parse tree]: glossary.md#parse-tree
+[semantic predicate]: glossary.md#semantic-predicate
+[embedded action]: glossary.md#embedded-action
+[ATN]: glossary.md#atn
+[FFI]: glossary.md#ffi
