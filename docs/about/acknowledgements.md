@@ -14,6 +14,10 @@
   and site generator, with API pages rendered by
   [mkdocstrings](https://mkdocstrings.github.io/).
 
+Much of `antlrope`'s implementation, tests, and documentation was written in
+close collaboration with **[Claude](https://www.anthropic.com/claude)** (Anthropic),
+via [Claude Code](https://www.anthropic.com/claude-code).
+
 ## Links
 
 - **Source:** [github.com/zuzukin/antlrope](https://github.com/zuzukin/antlrope)
