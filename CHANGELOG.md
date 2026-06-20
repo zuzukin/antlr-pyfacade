@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.6] - 2026-06-20
+
+### Changed
+- `FacadeListener.sourcename()` now returns `str` (an empty string when no source
+  name was set) rather than `str | None`, matching `Chunk.sourcename` and the
+  chunkers' `sourcename=""` default. A never-walked listener returns `""` instead of
+  `None`.
+
 ## [0.2.5] - 2026-06-20
 
 ### Added

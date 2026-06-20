@@ -376,9 +376,9 @@ class FacadeListener:
     # defaults — offset 0, line 1, column 0 — leave a plain `walk` unchanged.
     _pyfacade_base_offset: int = 0
     _pyfacade_base_linecol = LineCol()
-    # Name of the source being parsed (e.g. a filename), for diagnostics. None
+    # Name of the source being parsed (e.g. a filename), for diagnostics. Empty
     # unless a Chunk carried a sourcename or `drive` was given one.
-    _pyfacade_sourcename: str | None = None
+    _pyfacade_sourcename: str = ""
 
     # Reassigned to a fresh list by `drive` on every walk (never mutated in
     # place), so the shared class-level default is safe — hence the RUF012 waiver.
@@ -425,8 +425,8 @@ class FacadeListener:
         # with the chunk's start, so only it picks up the start column.
         return self._pyfacade_base_linecol.add(linecol)
 
-    def sourcename(self) -> str | None:
-        """Return the name of the source being parsed, or `None`.
+    def sourcename(self) -> str:
+        """Return the name of the source being parsed (empty if none was set).
 
         This is the `sourcename` of the [Chunk][antlrope.Chunk] being parsed
         (the chunkers can set it; the streaming ones default it to their file path),
@@ -686,7 +686,7 @@ class FacadeListener:
         *,
         filtered: bool = True,
         origin: tuple[int, int, int] = (0, 1, 0),
-        sourcename: str | None = None,
+        sourcename: str = "",
     ) -> None:
         """Run the native parse and dispatch this listener's overridden callbacks.
 
@@ -1324,7 +1324,7 @@ class FacadeListener:
         path: str | os.PathLike[str],
         rule: RuleTypes,
         *,
-        sourcename: str | None = None,
+        sourcename: str = "",
         encoding: str = "utf-8",
         batch: int = 256,
         cached: bool = True,
