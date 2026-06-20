@@ -1,4 +1,10 @@
-# antlrope
+#
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img alt="antlrope" src="assets/logo.svg" width="420">
+  </picture>
+</p>
 
 Parse text **fast** from Python using an [ANTLR](https://www.antlr.org/) grammar —
 without writing or compiling any C or C++ yourself.
