@@ -11,13 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Turn source character offsets into `(line, column)` positions.
 
 The event stream reports `start`/`stop` as character (codepoint) offsets into the
 source string — the same indices that slice it directly. To report a position to a
-user (e.g. on a parse error) build one [SourceMap][antlrope.SourceMap] over
+user (e.g. for a parse error) build one [SourceMap][antlrope.SourceMap] over
 the source and call [SourceMap.line_col][antlrope.SourceMap.line_col]; the
 newline scan is done once and each lookup is an O(log n) bisect.
 """
@@ -25,13 +24,35 @@ newline scan is done once and each lookup is an O(log n) bisect.
 from __future__ import annotations
 
 import bisect
+from typing import NamedTuple
+
+__all__ = [
+    "LineCol",
+    "SourceMap",
+]
+
+class LineCol(NamedTuple):
+    line: int = 1
+    column: int = 0
+
+    def add(self, offset: LineCol) -> LineCol:
+        """
+        Adds other line/column offsets to this `LineCol`.
+
+        If offset line is 1, this simply adds the
+        column, otherwise it adds the line and sets the column
+        from offset.
+        """
+        if offset.line <= 1:
+            return LineCol(self.line, self.column + offset.column)
+        else:
+            return LineCol(self.line + offset.line -1, offset.column)
 
 
 class SourceMap:
     """Maps character offsets in a source string to `(line, column)`.
 
-    Line numbers are **1-based** and columns are **0-based**, matching ANTLR's
-    own `line:column` error reporting and `Token.getCharPositionInLine`.
+    Line numbers are numbered from 1 and columns numbered from 0.
     """
 
     __slots__ = ("_line_starts",)
@@ -45,7 +66,7 @@ class SourceMap:
             i = text.find("\n", i + 1)
         self._line_starts = starts
 
-    def line_col(self, offset: int) -> tuple[int, int]:
+    def line_col(self, offset: int) -> LineCol:
         """Return the `(line, column)` for a character `offset`.
 
         Args:
@@ -60,10 +81,10 @@ class SourceMap:
         if offset < 0:
             raise ValueError(f"offset must be non-negative, got {offset}")
         line_idx = bisect.bisect_right(self._line_starts, offset) - 1
-        return line_idx + 1, offset - self._line_starts[line_idx]
+        return LineCol(line_idx + 1, offset - self._line_starts[line_idx])
 
     def offset(self, line: int, column: int = 0) -> int:
-        """Return the character offset for a 1-based `line` and 0-based `column`.
+        """Return the character offset given line and column.
 
         The inverse of [line_col][antlrope.SourceMap.line_col]:
         `offset(*line_col(o)) == o` for any valid offset `o`.

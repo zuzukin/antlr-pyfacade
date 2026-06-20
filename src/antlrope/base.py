@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""Driver for generated grammar-specific event listeners.
+"""
+Driver for generated grammar-specific event listeners.
 
 A generated `<Grammar>EventListener` subclass declares named callbacks
 (`enter<Rule>` / `exit<Rule>` / `visitTerminal` / `visitError`) just like the
@@ -31,16 +31,18 @@ import os
 import struct
 import threading
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, NamedTuple
+from collections.abc import Callable, Iterable, Iterator
+from concurrent.futures import Future, ThreadPoolExecutor
+from typing import NamedTuple
 
 from . import _native
-from .location import SourceMap
+from .location import LineCol, SourceMap
 from .specs import load_specs
 
-if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Iterator
-    from concurrent.futures import Future
+__all__ = [
+    "Chunk",
+    "FacadeListener",
+]
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 _REC = "<4i"
@@ -67,34 +69,43 @@ def _specs_for_thread(
 
 
 class Chunk(NamedTuple):
-    """A piece of source plus where it begins, for `walk_parallel`.
+    """A contiguous chunk of source text plus location information.
 
-    Pass a bare `str` for a chunk that is contiguous with the previous one (its
-    position is computed); pass a `Chunk` to pin an explicit source position via
-    `offset` / `line` / `column` — e.g. for pieces that are not contiguous in the
-    original source. The position lets per-event
-    [span][antlrope.FacadeListener.span] /
-    [line_col][antlrope.FacadeListener.line_col] be reported against the
-    whole source rather than the chunk.
-
-    `sourcename` optionally identifies the source (e.g. a filename) for
-    diagnostics; it is surfaced during a `walk_parallel` parse as
-    [sourcename][antlrope.FacadeListener.sourcename]. The chunkers can set it
-    (the streaming ones default it to their file path); a bare `str` chunk inherits
-    the source name of the chunk it follows.
+    These are produced by various "chunker" functions, such as
+    [chunk_by_pattern][antlrope.chunking.chunk_by_pattern]
+    for consumption by [FacadeListener.walk_parallel][antlrope.FacadeListener.walk_parallel].
     """
 
     text: str
-    offset: int = 0  # 0-based character offset of the first character
-    line: int = 1  # 1-based line of the first character
-    column: int = 0  # 0-based column of the first character
-    sourcename: str | None = None  # source name (e.g. filename) for diagnostics
+    """
+    Text contents of the chunk.
+    """
+
+    offset: int = 0
+    """
+    Starting character offset of chunk.
+    """
+
+    line: int = 1
+    """
+    Starting line number of the chunk (indexed from 1).
+    """
+
+    column: int = 0
+    """
+    Starting column number of the chunk (index from 0).
+    """
+
+    sourcename: str = ""
+    """
+    Name of source (e.g. filename or path).
+    """
 
     def after(self, text: str) -> Chunk:
         """Return a `Chunk` for `text` positioned immediately after this one.
 
-        That is the next chunk when the two are contiguous in the source: it
-        begins where this chunk's text ends, and carries this chunk's `sourcename`.
+        Computes the starting location based on the contents and starting
+        position of the current chunk and copies the sourcename.
         """
         newlines = self.text.count("\n")
         offset = self.offset + len(self.text)
@@ -125,8 +136,7 @@ class FacadeListener:
     # reported against the whole source (see Chunk / walk_parallel). The
     # defaults — offset 0, line 1, column 0 — leave a plain `walk` unchanged.
     _pyfacade_base_offset: int = 0
-    _pyfacade_base_line: int = 1
-    _pyfacade_base_col: int = 0
+    _pyfacade_base_linecol = LineCol()
     # Name of the source being parsed (e.g. a filename), for diagnostics. None
     # unless a Chunk carried a sourcename or `drive` was given one.
     _pyfacade_sourcename: str | None = None
@@ -154,7 +164,7 @@ class FacadeListener:
         base = self._pyfacade_base_offset
         return start + base, stop + base
 
-    def line_col(self) -> tuple[int, int] | None:
+    def line_col(self) -> LineCol | None:
         """Return the `(line, column)` of the current event's start, or `None`.
 
         Returns:
@@ -171,12 +181,10 @@ class FacadeListener:
         sm = self._pyfacade_sourcemap
         if sm is None:
             sm = self._pyfacade_sourcemap = SourceMap(self._pyfacade_text)
-        line, col = sm.line_col(start)
+        linecol = sm.line_col(start)
         # Offset into the whole source. Only the chunk's first line shares a line
         # with the chunk's start, so only it picks up the start column.
-        if line == 1:
-            return self._pyfacade_base_line, self._pyfacade_base_col + col
-        return self._pyfacade_base_line + line - 1, col
+        return self._pyfacade_base_linecol.add(linecol)
 
     def sourcename(self) -> str | None:
         """Return the name of the source being parsed, or `None`.
@@ -412,11 +420,8 @@ class FacadeListener:
         self._pyfacade_text = text
         self._pyfacade_sourcemap = None
         self._pyfacade_sourcename = sourcename
-        (
-            self._pyfacade_base_offset,
-            self._pyfacade_base_line,
-            self._pyfacade_base_col,
-        ) = origin
+        self._pyfacade_base_offset = origin[0]
+        self._pyfacade_base_linecol = LineCol(origin[1], origin[2])
 
         for kind, payload, start, stop in struct.iter_unpack(_REC, raw):
             if kind == EV_TERMINAL:

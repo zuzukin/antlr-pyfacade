@@ -296,7 +296,7 @@ def test_sourcename(tmp_path):
     text = path.read_text(encoding="utf-8")
 
     assert next(stream_on_pattern(path, r"\{")).sourcename == str(path)
-    assert next(stream_on_pattern(io.StringIO(text), r"\{")).sourcename is None
+    assert not next(stream_on_pattern(io.StringIO(text), r"\{")).sourcename
     assert (
         next(stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")).sourcename
         == "m"
@@ -311,7 +311,7 @@ def test_sourcename(tmp_path):
     )
 
     # The in-memory chunkers take it too (None by default).
-    assert next(split_on_token(text, JSONLexer, LBRACE)).sourcename is None
+    assert not next(split_on_token(text, JSONLexer, LBRACE)).sourcename
     assert (
         next(split_on_token(text, JSONLexer, LBRACE, sourcename="s")).sourcename == "s"
     )

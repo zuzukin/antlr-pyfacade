@@ -128,7 +128,7 @@ def lex(
 
 
 def _emit(
-    text: str, sm: SourceMap, start: int, stop: int, sourcename: str | None = None
+    text: str, sm: SourceMap, start: int, stop: int, sourcename: str = ""
 ) -> Chunk | None:
     """Build a positioned `Chunk` for `text[start:stop]`, trimming surrounding
     whitespace; return `None` if the region is whitespace-only."""
@@ -169,7 +169,7 @@ def split_on_token(
     *,
     where: str = "before",
     channel: int | None = DEFAULT_CHANNEL,
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each delimiter token.
 
@@ -242,7 +242,7 @@ def stream_on_token(
     where: str = "before",
     encoding: str = "utf-8",
     channel: int | None = DEFAULT_CHANNEL,
-    sourcename: str | None = None,
+    sourcename: str = "",
     batch: int = 256,
     cached: bool = True,
     _block_bytes: int = 0,
@@ -298,7 +298,7 @@ def stream_on_token(
             f"decode in Python and use split_on_token for other encodings"
         )
     src_path = os.fspath(path)
-    if sourcename is None:
+    if not sourcename:
         sourcename = src_path
     spec = load_lexer_spec(lexer_cls, cached=cached)
     chunker = _native.StreamChunker(
@@ -324,7 +324,7 @@ def split_between_tokens(
     *,
     nested: bool = False,
     channel: int | None = DEFAULT_CHANNEL,
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Yield a chunk for each region bounded by an opener/closer pair.
 
@@ -420,7 +420,7 @@ def split_on_pattern(
     *,
     where: str = "before",
     flags: int | re.RegexFlag = 0,
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Split `text` into chunks at each match of a delimiter regex.
 
@@ -512,7 +512,7 @@ def _read_increments(
 
 
 def _split_stream(
-    increments: Iterator[str], rx: re.Pattern[str], where: str, sourcename: str | None
+    increments: Iterator[str], rx: re.Pattern[str], where: str, sourcename: str = ""
 ) -> Iterator[Chunk]:
     """Split the concatenation of `increments` at each `rx` match, streaming.
 
@@ -597,7 +597,7 @@ def stream_on_pattern(
     window_chars: int | None = 65536,
     window_lines: int | None = None,
     encoding: str = "utf-8",
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Stream chunks from a text source at each delimiter regex match.
 
@@ -653,7 +653,7 @@ def stream_on_pattern(
     opened = None
     if isinstance(source, (str, os.PathLike)):
         fspath = os.fspath(source)
-        if sourcename is None:
+        if not sourcename:
             sourcename = fspath
         opened = open(fspath, encoding=encoding)  # noqa: SIM115
         increments = _read_increments(opened, window_chars, window_lines)
@@ -673,7 +673,7 @@ def chunk_by_pattern(
     pattern: str | re.Pattern[str],
     *,
     flags: int | re.RegexFlag = 0,
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Yield one chunk per non-overlapping match of `pattern`.
 
@@ -725,7 +725,7 @@ def chunk_by_rule(
     start_rule: str | int | None = None,
     outermost: bool = True,
     cached: bool = True,
-    sourcename: str | None = None,
+    sourcename: str = "",
 ) -> Iterator[Chunk]:
     """Yield each occurrence of a grammar `rule` as a chunk.
 
@@ -842,7 +842,7 @@ def stream_by_rule(
     else:
         rule_indices = [_rule_index(parser_cls, r) for r in rule]
     src_path = os.fspath(path)
-    if sourcename is None:
+    if not sourcename:
         sourcename = src_path
     parser_spec, lexer_spec = load_specs(lexer_cls, parser_cls, cached=cached)
     chunker = _native.StreamRuleChunker(
