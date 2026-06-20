@@ -22,7 +22,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
 from antlrope import FacadeListener, __version__
-from antlrope.generate import generate, main
+from antlrope.generate import _derive_lexer, generate, main
 
 PARSER_MODULE = "generated.JSONParser"
 
@@ -32,14 +32,23 @@ def test_generate_facade_source():
 
     # The class is named <Grammar.capitalize()>EventListener and subclasses the base.
     assert "class JsonEventListener(FacadeListener):" in src
-    # One enter/exit stub per parser rule, plus the terminal/error/walk surface.
+    # One enter/exit stub per parser rule, plus the terminal/error stubs.
     for rule in JSONParser.ruleNames:
         cap = rule[0].upper() + rule[1:]
         assert f"def enter{cap}(self)" in src
         assert f"def exit{cap}(self)" in src
     assert "def visitTerminal(" in src
     assert "def visitError(" in src
-    assert "def walk(" in src
+    # walk is inherited from FacadeListener (Template Method), not generated, so the
+    # facade neither defines it nor needs load_specs.
+    assert "def walk(" not in src
+    assert "load_specs" not in src
+    # The facade imports the stock lexer/parser and bakes them in as LEXER/PARSER,
+    # so the inherited .walk() / .walk_parallel() need no class arguments.
+    assert "from generated.JSONLexer import JSONLexer" in src
+    assert "from generated.JSONParser import JSONParser" in src
+    assert "LEXER: ClassVar[type] = JSONLexer" in src
+    assert "PARSER: ClassVar[type] = JSONParser" in src
     # Token-type constants cover both branches: symbolic names (STRING/NUMBER) and
     # anonymous literals, which the facade emits with ANTLR's positional name
     # (T__0 is the first literal — token type 1 — not T__1).
@@ -48,12 +57,15 @@ def test_generate_facade_source():
     assert "T__0 = 1" in src
 
     # The emitted source is valid Python and defines a working FacadeListener
-    # subclass whose generated walk() actually drives a parse.
+    # subclass whose inherited walk() actually drives a parse.
     namespace: dict = {}
     exec(compile(src, "<generated>", "exec"), namespace)
     cls = namespace["JsonEventListener"]
     assert issubclass(cls, FacadeListener)
     assert list(cls.ruleNames) == list(JSONParser.ruleNames)
+    # The baked-in classes are the stock lexer/parser themselves.
+    assert cls.LEXER is JSONLexer
+    assert cls.PARSER is JSONParser
 
     # Every token constant matches the stock lexer the user has — both the
     # symbolic names and the positional T__n names for anonymous literals.
@@ -62,7 +74,8 @@ def test_generate_facade_source():
     for name in token_names:
         assert getattr(cls, name) == getattr(JSONLexer, name), name
 
-    listener = cls().walk('{"a": 1}', JSONLexer, JSONParser, start_rule="value")
+    # No lexer/parser arguments — the facade walks with its baked-in classes.
+    listener = cls().walk('{"a": 1}', start_rule="value")
     assert listener.syntax_errors == []
 
 
@@ -84,3 +97,27 @@ def test_cli_main(tmp_path, capsys):
         main(["--version"])
     assert exc.value.code == 0
     assert __version__ in capsys.readouterr().out
+
+
+def test_lexer_resolution_and_override(capsys):
+    # The lexer path is derived from the parser by ANTLR's <Grammar>Lexer /
+    # <Grammar>Parser convention; an explicit override naming the same lexer
+    # produces byte-identical source.
+    assert _derive_lexer("generated.JSONParser") == "generated.JSONLexer"
+    assert _derive_lexer("JSONParser") == "JSONLexer"
+    assert generate(PARSER_MODULE, "JSON") == generate(
+        PARSER_MODULE, "JSON", "generated.JSONLexer"
+    )
+
+    # The --lexer CLI flag takes the same override.
+    rc = main([PARSER_MODULE, "JSON", "--lexer", "generated.JSONLexer"])
+    assert rc == 0
+    assert "class JsonEventListener(FacadeListener):" in capsys.readouterr().out
+
+    # A parser name that doesn't end in 'Parser' can't be derived from — the error
+    # points at --lexer. A wrong lexer path fails at generation time, not later in
+    # the user's generated module.
+    with pytest.raises(ValueError, match="--lexer"):
+        _derive_lexer("generated.JSONGrammar")
+    with pytest.raises(ModuleNotFoundError):
+        generate(PARSER_MODULE, "JSON", "generated.NoSuchLexer")

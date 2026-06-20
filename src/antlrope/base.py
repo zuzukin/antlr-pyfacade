@@ -33,7 +33,7 @@ import threading
 from collections import deque
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple, TypeVar
 
 from . import _native
 from .location import LineCol, SourceMap
@@ -117,6 +117,11 @@ class Chunk(NamedTuple):
         return Chunk(text, offset, self.line + newlines, column, self.sourcename)
 
 
+# Bound to FacadeListener so `walk` returns the concrete subclass (Self-like on
+# Python < 3.11, which `requires-python = ">=3.10"` still supports).
+_F = TypeVar("_F", bound="FacadeListener")
+
+
 class FacadeListener:
     """Base for generated `<Grammar>EventListener` classes.
 
@@ -127,6 +132,12 @@ class FacadeListener:
     column of its start. [drive][antlrope.FacadeListener.drive] populates this state per
     dispatched callback; outside a callback it reflects the most recent one.
     """
+
+    # The stock ANTLR `<Grammar>Lexer` / `<Grammar>Parser` classes, baked into the
+    # generated `<Grammar>EventListener` so `walk` / `walk_parallel` need no class
+    # arguments. Declared here (no value) and set by every generated subclass.
+    LEXER: ClassVar[type]
+    PARSER: ClassVar[type]
 
     _pyfacade_text: str = ""
     _pyfacade_start: int = -1
@@ -237,19 +248,47 @@ class FacadeListener:
                 f"known rules: {list(base.ruleNames)}"
             ) from None
 
+    def walk(
+        self: _F,
+        text: str,
+        *,
+        start_rule: int | str | None = None,
+        filtered: bool = True,
+    ) -> _F:
+        """Parse `text` with this listener's baked-in lexer/parser and return `self`.
+
+        Runs the parse in C++ and dispatches the event stream to this listener's
+        callbacks. The lexer/parser come from the generated subclass's `LEXER` /
+        `PARSER`, so no class arguments are needed.
+
+        Args:
+            start_rule: The rule to parse as — a rule name, a rule index, or `None`
+                for the grammar's start rule.
+            filtered: When `True` (default), only overridden rules/tokens are
+                emitted by C++; `False` forces the full event stream.
+
+        Returns:
+            `self`, so calls chain (e.g. `result = Collector().walk(text).result`).
+
+        Raises:
+            TypeError: If called on a class that is not a generated
+                `<Grammar>EventListener` subclass.
+        """
+        parser_spec, lexer_spec = load_specs(self.LEXER, self.PARSER)
+        rule = self._resolve_start_rule(self._facade_base(), start_rule)
+        self.drive(parser_spec, lexer_spec, text, rule, filtered=filtered)
+        return self
+
     @classmethod
     def walk_parallel(
-        cls,
+        cls: type[_F],
         chunks: Iterable[str | Chunk],
-        # TODO - more precise base classes or Protocols for lexer/parser
-        lexer_cls: type,
-        parser_cls: type,
         *,
         start_rule: int | str | None = None,
         max_workers: int | None = None,
         filtered: bool = True,
-        factory: Callable[[], FacadeListener] | None = None,
-    ) -> Iterator[FacadeListener]:
+        factory: Callable[[], _F] | None = None,
+    ) -> Iterator[_F]:
         """Parse independent `chunks` across a thread pool, one listener each.
 
         The native parse releases the GIL, so the parses overlap across cores. Each
@@ -270,8 +309,6 @@ class FacadeListener:
                 [line_col][antlrope.FacadeListener.line_col] against the
                 whole source. Mix freely: a `Chunk` re-anchors the running position
                 for the contiguous `str` chunks that follow it.
-            lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.
-            parser_cls: The stock ANTLR-generated `<Grammar>Parser` class.
             start_rule: The rule each chunk parses as — a rule name, a rule index,
                 or `None` for the grammar's start rule.
             max_workers: The maximum number of parses in flight at once (also the
@@ -289,13 +326,19 @@ class FacadeListener:
             consume it incrementally (or `list(...)` it if you want them all). Each
             listener carries its accumulated state plus its
             [syntax_errors][antlrope.FacadeListener.syntax_errors].
+
+        Raises:
+            TypeError: If called on a class that is not a generated
+                `<Grammar>EventListener` subclass (no baked-in `LEXER` / `PARSER`).
         """
-        base = cls._facade_base()
+        base = cls._facade_base()  # raises if not a generated facade subclass
         rule = cls._resolve_start_rule(base, start_rule)  # validate eagerly
+        lexer_cls = cls.LEXER
+        parser_cls = cls.PARSER
         make = factory if factory is not None else cls
         workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
 
-        def run(chunk: Chunk) -> FacadeListener:
+        def run(chunk: Chunk) -> _F:
             parser_spec, lexer_spec = _specs_for_thread(lexer_cls, parser_cls)
             listener = make()
             listener.drive(
@@ -325,7 +368,7 @@ class FacadeListener:
                     )
                 yield chunk
 
-        def stream() -> Iterator[FacadeListener]:
+        def stream() -> Iterator[_F]:
             if workers <= 1:
                 for chunk in resolved():
                     yield run(chunk)
@@ -333,7 +376,7 @@ class FacadeListener:
             # Bounded-window parallelism: keep ~`workers` parses in flight and yield
             # in input order, so peak memory tracks the window, not the chunk count.
             with ThreadPoolExecutor(max_workers=workers) as pool:
-                pending: deque[Future[FacadeListener]] = deque()
+                pending: deque[Future[_F]] = deque()
                 for chunk in resolved():
                     pending.append(pool.submit(run, chunk))
                     if len(pending) > workers:

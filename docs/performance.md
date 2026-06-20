@@ -98,7 +98,7 @@ chunks = split_on_token(text, MyLexer, MyLexer.RECORD, where="before")
 records = [
     ln.to_model()                               # one result per chunk, in order
     for ln in RecordListener.walk_parallel(
-        chunks, MyLexer, MyParser, start_rule="record"
+        chunks, start_rule="record"
     )
 ]
 ```

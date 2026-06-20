@@ -49,7 +49,12 @@ That emits `json_listener.py` containing a `JsonEventListener` class with:
   callbacks for every rule in the grammar,
 - `visitTerminal(self, token_type, text)` and `visitError(self, token_type, text)`,
 - token-type constants like `STRING = 10`, `NUMBER = 11`, and
-- a `walk(text, LexerCls, ParserCls)` method that runs everything.
+- a `walk(text)` method that runs everything.
+
+The facade imports your lexer and parser and bakes them in, so `walk` needs no
+class arguments. It finds the lexer by ANTLR's `<Grammar>Lexer` / `<Grammar>Parser`
+naming (here `generated.JSONLexer` next to `generated.JSONParser`); pass `--lexer`
+to `antlrope` if your lexer module is named differently.
 
 You don't edit this file — you subclass it.
 
@@ -60,8 +65,6 @@ complete program that collects every string token in a JSON document:
 
 ```python
 from json_listener import JsonEventListener        # from step 3
-from generated.JSONLexer import JSONLexer           # from step 2
-from generated.JSONParser import JSONParser
 
 class StringCollector(JsonEventListener):
     def __init__(self):
@@ -72,7 +75,7 @@ class StringCollector(JsonEventListener):
             self.strings.append(text)
 
 c = StringCollector()
-c.walk('{"name": "ada", "tags": ["x", "y"]}', JSONLexer, JSONParser)
+c.walk('{"name": "ada", "tags": ["x", "y"]}')
 print(c.strings)
 ```
 
@@ -103,7 +106,7 @@ errors from that parse are on `self.syntax_errors`:
 
 ```python
 c = StringCollector()
-c.walk('{"a": 1 2}', JSONLexer, JSONParser)     # the stray 2 is a syntax error
+c.walk('{"a": 1 2}')     # the stray 2 is a syntax error
 for err in c.syntax_errors:
     print(f"{err.line}:{err.column}: {err.message}")
 ```

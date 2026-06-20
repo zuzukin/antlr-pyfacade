@@ -9,13 +9,12 @@ overlap across cores; one listener is produced per chunk, **in input order**.
 ```python
 from my_listener import MyGrammarEventListener
 from generated.MyGrammarLexer import MyGrammarLexer
-from generated.MyGrammarParser import MyGrammarParser
 from antlrope import split_on_token
 
 chunks = split_on_token(text, MyGrammarLexer, MyGrammarLexer.RECORD, where="before")
 
 for listener in MyGrammarEventListener.walk_parallel(
-    chunks, MyGrammarLexer, MyGrammarParser, start_rule="record"
+    chunks, start_rule="record"
 ):
     ...  # one fully-walked listener per chunk, in order
 ```

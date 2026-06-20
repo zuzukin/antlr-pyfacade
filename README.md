@@ -51,13 +51,15 @@ pip install antlrope
 
    This emits a `MyGrammarEventListener` base class with `enter<Rule>` /
    `exit<Rule>` / `visitTerminal` / `visitError` stubs and token-type constants.
+   The facade also imports and bakes in your lexer/parser, so you never pass them
+   at parse time. The lexer module is derived from the parser's by ANTLR's
+   `<Grammar>Lexer` / `<Grammar>Parser` convention; pass `--lexer` if yours is
+   named differently.
 
 3. **Subclass it** and override only the callbacks you care about:
 
    ```python
    from my_listener import MyGrammarEventListener
-   from generated.MyGrammarLexer import MyGrammarLexer
-   from generated.MyGrammarParser import MyGrammarParser
 
    class Collector(MyGrammarEventListener):
        def enterPair(self) -> None:
@@ -65,7 +67,7 @@ pip install antlrope
        def visitTerminal(self, token_type: int, text: str) -> None:
            ...
 
-   Collector().walk(source_text, MyGrammarLexer, MyGrammarParser)
+   Collector().walk(source_text)
    ```
 
 Only the callbacks you override drive native masks, so the C++ side skips every

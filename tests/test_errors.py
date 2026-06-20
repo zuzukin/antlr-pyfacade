@@ -54,7 +54,7 @@ def test_parse_events_no_errors_on_valid_input():
 
 def test_facade_collects_syntax_errors():
     listener = JsonEventListener()
-    listener.walk("[1 2]", JSONLexer, JSONParser)
+    listener.walk("[1 2]")
     assert len(listener.syntax_errors) == 1
     err = listener.syntax_errors[0]
     assert (err.line, err.column) == (1, 3)
@@ -63,13 +63,13 @@ def test_facade_collects_syntax_errors():
 
 def test_facade_syntax_errors_empty_on_valid_input():
     listener = JsonEventListener()
-    listener.walk('{"a": 1}', JSONLexer, JSONParser)
+    listener.walk('{"a": 1}')
     assert listener.syntax_errors == []
 
 
 def test_facade_syntax_errors_reset_between_walks():
     listener = JsonEventListener()
-    listener.walk("[1 2]", JSONLexer, JSONParser)
+    listener.walk("[1 2]")
     assert listener.syntax_errors
-    listener.walk('{"a": 1}', JSONLexer, JSONParser)
+    listener.walk('{"a": 1}')
     assert listener.syntax_errors == []

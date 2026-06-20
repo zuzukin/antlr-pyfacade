@@ -19,8 +19,6 @@ rule enter, and parse errors)."""
 from __future__ import annotations
 
 import pytest
-from generated.JSONLexer import JSONLexer
-from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
 from antlrope import SourceMap
@@ -93,7 +91,7 @@ class _Recorder(JsonEventListener):
 
 def _run(text: str) -> _Recorder:
     rec = _Recorder()
-    rec.walk(text, JSONLexer, JSONParser)
+    rec.walk(text)
     return rec
 
 

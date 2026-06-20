@@ -30,8 +30,6 @@ from __future__ import annotations
 import json
 import sys
 
-from generated.JSONLexer import JSONLexer
-from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
 # Scalar token types (see the generated facade's token-type constants). The
@@ -118,7 +116,7 @@ class JsonValueBuilder(JsonEventListener):
 
 def parse(text: str) -> object:
     builder = JsonValueBuilder()
-    builder.walk(text, JSONLexer, JSONParser)
+    builder.walk(text)
     return builder.result
 
 

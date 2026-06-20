@@ -21,14 +21,12 @@ from __future__ import annotations
 
 import json
 
-from generated.JSONLexer import JSONLexer
-from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
 
 def _parse(text: str, *, filtered: bool):
     builder = JsonValueBuilder()
-    builder.walk(text, JSONLexer, JSONParser, filtered=filtered)
+    builder.walk(text, filtered=filtered)
     return builder.result
 
 

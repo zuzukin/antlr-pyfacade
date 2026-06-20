@@ -67,7 +67,7 @@ _N_TASKS = 2 * _N_THREADS
 
 def _walk_once(_=None) -> int:
     builder = JsonValueBuilder()
-    builder.walk(_BIG, JSONLexer, JSONParser)
+    builder.walk(_BIG)
     return len(builder.result)
 
 
@@ -169,7 +169,7 @@ def test_shared_spec_concurrency_stress():
 
     def run(doc_index: int):
         builder = JsonValueBuilder()
-        builder.walk(_STRESS_DOCS[doc_index], JSONLexer, JSONParser)
+        builder.walk(_STRESS_DOCS[doc_index])
         return doc_index, builder.result
 
     with ThreadPoolExecutor(max_workers=threads) as pool:

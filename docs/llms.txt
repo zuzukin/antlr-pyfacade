@@ -17,13 +17,11 @@ When to use it: throughput on large or many-record inputs. When NOT to use it (u
    `antlr4 -Dlanguage=Python3 JSON.g4 -o generated`  → `generated/JSONLexer.py`, `generated/JSONParser.py`
 2. Generate a facade from the parser module (an importable dotted path) + a grammar-name prefix:
    `antlrope generated.JSONParser JSON -o json_listener.py`
-   → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(...)` method. You subclass it; you do not edit it.
+   → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes them in as `LEXER`/`PARSER`, so `walk`/`walk_parallel` need no class arguments. The lexer module is derived from the parser's (`<Grammar>Parser` → `<Grammar>Lexer`); pass `--lexer` to override. You subclass it; you do not edit it.
 3. Subclass the facade, override only the callbacks you need, and call `walk`:
 
 ```python
 from json_listener import JsonEventListener        # generated in step 2
-from generated.JSONLexer import JSONLexer           # generated in step 1
-from generated.JSONParser import JSONParser
 
 class StringCollector(JsonEventListener):
     def __init__(self):
@@ -33,7 +31,7 @@ class StringCollector(JsonEventListener):
             self.strings.append(text)
 
 c = StringCollector()
-c.walk('{"name": "ada", "tags": ["x", "y"]}', JSONLexer, JSONParser)   # optional: start_rule="value"
+c.walk('{"name": "ada", "tags": ["x", "y"]}')   # optional: start_rule="value"
 print(c.strings)
 ```
 
@@ -46,7 +44,7 @@ Key model facts for writing listeners:
 
 ## Public API (`from antlrope import ...`)
 
-- `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attribute `syntax_errors`. Methods `walk(text, LexerCls, ParserCls, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, LexerCls, ParserCls, *, start_rule=None, max_workers=None, filtered=True)` — parse independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
+- `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attributes `syntax_errors`, `LEXER` / `PARSER` (the baked-in stock lexer/parser classes). Methods `walk(text, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, *, start_rule=None, max_workers=None, filtered=True)` — both use the baked-in `LEXER`/`PARSER`; `walk_parallel` parses independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
 - Chunking (`antlrope.chunking`), all yielding positioned `Chunk`s for `walk_parallel`:
   - `split_on_token(text, LexerCls, token_types, *, where="before"|"after", channel=0, sourcename=None)` and `split_between_tokens(text, LexerCls, pairs, *, nested=False, ...)` — token-aware (a delimiter inside a string/comment never splits).
   - `split_on_pattern(text, pattern, *, where=..., flags=0, sourcename=None)` and `chunk_by_pattern(text, pattern, ...)` — regex; faster but not token-aware.

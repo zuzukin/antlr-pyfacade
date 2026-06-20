@@ -31,6 +31,7 @@ __all__ = [
     "SourceMap",
 ]
 
+
 class LineCol(NamedTuple):
     line: int = 1
     column: int = 0
@@ -46,7 +47,7 @@ class LineCol(NamedTuple):
         if offset.line <= 1:
             return LineCol(self.line, self.column + offset.column)
         else:
-            return LineCol(self.line + offset.line -1, offset.column)
+            return LineCol(self.line + offset.line - 1, offset.column)
 
 
 class SourceMap:

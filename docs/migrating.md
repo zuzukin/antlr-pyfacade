@@ -66,7 +66,7 @@ available as `self.syntax_errors` — a list of `ParseError` records carrying
 ANTLR's message plus `line`/`column`/`start`/`stop`:
 
 ```python
-listener.walk(source_text, MyLexer, MyParser)
+listener.walk(source_text)
 for err in listener.syntax_errors:
     print(f"{err.line}:{err.column}: {err.message}")
 ```

@@ -94,7 +94,7 @@ def test_split_on_token():
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
-            chunks, JSONLexer, JSONParser, start_rule="value"
+            chunks, start_rule="value"
         )
     ]
     assert results == [{"a": 1}, {"b": 22}, {"c": 3}]
@@ -169,7 +169,7 @@ def test_stream_on_token(tmp_path):
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
-            chunks, JSONLexer, JSONParser, start_rule="value"
+            chunks, start_rule="value"
         )
     ]
     assert results == [{"a": 1}, {"b": 2}]
@@ -256,8 +256,6 @@ def test_stream_on_pattern(tmp_path):
         b.result
         for b in JsonValueBuilder.walk_parallel(
             stream_on_pattern(path, r"\{", where="before"),
-            JSONLexer,
-            JSONParser,
             start_rule="value",
         )
     ]
@@ -338,8 +336,6 @@ def test_sourcename(tmp_path):
     listeners = list(
         JsonValueBuilder.walk_parallel(
             stream_on_pattern(io.StringIO(text), r"\{", sourcename="mem.json"),
-            JSONLexer,
-            JSONParser,
             start_rule="value",
         )
     )
@@ -424,7 +420,7 @@ def test_chunk_by_rule():
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
-            chunks, JSONLexer, JSONParser, start_rule="value"
+            chunks, start_rule="value"
         )
     ]
     assert results == [{"a": 1}, {"b": [2, 3]}, {"c": 4}]
@@ -498,8 +494,6 @@ def test_stream_by_rule(tmp_path):
         b.result
         for b in JsonValueBuilder.walk_parallel(
             stream_by_rule(path, JSONLexer, JSONParser, "value"),
-            JSONLexer,
-            JSONParser,
             start_rule="value",
         )
     ]
