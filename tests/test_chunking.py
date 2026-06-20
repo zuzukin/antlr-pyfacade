@@ -30,16 +30,7 @@ from antlrope import (
     LexToken,
     SourceMap,
     _native,
-    chunk_by_pattern,
-    chunk_by_rule,
-    lex,
     load_lexer_spec,
-    split_between_tokens,
-    split_on_pattern,
-    split_on_token,
-    stream_by_rule,
-    stream_on_pattern,
-    stream_on_token,
 )
 
 # Token types from the generated lexer's class constants (the reliable source —
@@ -55,7 +46,9 @@ NUMBER = JSONLexer.NUMBER
 
 def test_lex():
     text = '{"a": 1}\n[2]'
-    toks = list(lex(text, JSONLexer))  # lex is lazy; materialize to index/reiterate
+    toks = list(
+        JsonValueBuilder.lex(text)
+    )  # lex is lazy; materialize to index/reiterate
 
     # Tokens in source order, EOF omitted; whitespace is `-> skip` so absent.
     assert [t.type for t in toks] == [
@@ -75,14 +68,17 @@ def test_lex():
     assert all(t.channel == 0 for t in toks)
 
     # keep= filters to the requested types in C++ (only those cross into Python).
-    assert [t.type for t in lex(text, JSONLexer, keep=(NUMBER,))] == [NUMBER, NUMBER]
+    assert [t.type for t in JsonValueBuilder.lex(text, keep=(NUMBER,))] == [
+        NUMBER,
+        NUMBER,
+    ]
 
 
 def test_split_on_token():
     text = '{"a": 1}\n{"b": 22}\n{"c": 3}'
 
     # `before`: each '{' starts a chunk; positions track the whole source.
-    chunks = list(split_on_token(text, JSONLexer, LBRACE, where="before"))
+    chunks = list(JsonValueBuilder.split_on_token(text, LBRACE, where="before"))
     assert [c.text for c in chunks] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
     assert [(c.offset, c.line, c.column) for c in chunks] == [
         (0, 1, 0),
@@ -92,28 +88,27 @@ def test_split_on_token():
 
     # The chunks drop straight into walk_parallel and reconstruct each value.
     results = [
-        b.result
-        for b in JsonValueBuilder.walk_parallel(
-            chunks, start_rule="value"
-        )
+        b.result for b in JsonValueBuilder.walk_parallel(chunks, start_rule="value")
     ]
     assert results == [{"a": 1}, {"b": 22}, {"c": 3}]
 
     # `after`: each chunk ends with the delimiter (here the '}').
-    after = list(split_on_token(text, JSONLexer, RBRACE, where="after"))
+    after = list(JsonValueBuilder.split_on_token(text, RBRACE, where="after"))
     assert [c.text for c in after] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
 
     # Content before the first delimiter becomes a leading chunk (`before`).
-    lead = list(split_on_token('1 {"x": 2}', JSONLexer, LBRACE, where="before"))
+    lead = list(JsonValueBuilder.split_on_token('1 {"x": 2}', LBRACE, where="before"))
     assert [c.text for c in lead] == ["1", '{"x": 2}']
 
     # Multiple delimiter types: split before either '{' or '['.
     mixed = '{"a": 1} [2, 3] {"b": 4}'
-    multi = list(split_on_token(mixed, JSONLexer, [LBRACE, LBRACK], where="before"))
+    multi = list(
+        JsonValueBuilder.split_on_token(mixed, [LBRACE, LBRACK], where="before")
+    )
     assert [c.text for c in multi] == ['{"a": 1}', "[2, 3]", '{"b": 4}']
 
     with pytest.raises(ValueError, match="where"):
-        list(split_on_token(text, JSONLexer, LBRACE, where="sideways"))
+        list(JsonValueBuilder.split_on_token(text, LBRACE, where="sideways"))
 
 
 # (text, delimiter, where) cases exercising the streaming chunker against the
@@ -144,13 +139,13 @@ def test_stream_on_token(tmp_path):
         path.write_text(text, encoding="utf-8")
         want = [
             (c.text, c.offset, c.line, c.column)
-            for c in split_on_token(text, JSONLexer, delim, where=where)
+            for c in JsonValueBuilder.split_on_token(text, delim, where=where)
         ]
         for block in (0, 1, 2, 3, 4, 7):
             got = [
                 (c.text, c.offset, c.line, c.column)
-                for c in stream_on_token(
-                    path, JSONLexer, delim, where=where, _block_bytes=block
+                for c in JsonValueBuilder.stream_on_token(
+                    path, delim, where=where, _block_bytes=block
                 )
             ]
             assert got == want, (text, where, block)
@@ -159,23 +154,22 @@ def test_stream_on_token(tmp_path):
     path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
 
     # channel=None considers all channels (here all default-channel, so unchanged).
-    assert [c.text for c in stream_on_token(path, JSONLexer, LBRACE, channel=None)] == [
+    assert [
+        c.text for c in JsonValueBuilder.stream_on_token(path, LBRACE, channel=None)
+    ] == [
         '{"a": 1}',
         '{"b": 2}',
     ]
 
     # The streamed chunks drop straight into walk_parallel and reconstruct values.
-    chunks = list(stream_on_token(path, JSONLexer, LBRACE, where="before"))
+    chunks = list(JsonValueBuilder.stream_on_token(path, LBRACE, where="before"))
     results = [
-        b.result
-        for b in JsonValueBuilder.walk_parallel(
-            chunks, start_rule="value"
-        )
+        b.result for b in JsonValueBuilder.walk_parallel(chunks, start_rule="value")
     ]
     assert results == [{"a": 1}, {"b": 2}]
 
     with pytest.raises(ValueError, match="where"):
-        list(stream_on_token(path, JSONLexer, LBRACE, where="sideways"))
+        list(JsonValueBuilder.stream_on_token(path, LBRACE, where="sideways"))
 
 
 def test_stream_on_token_encoding_and_errors(tmp_path):
@@ -186,20 +180,22 @@ def test_stream_on_token_encoding_and_errors(tmp_path):
     # (decode in Python and use split_on_token for those).
     for enc in ("utf-8", "utf8", "UTF-8", "U8"):
         assert [
-            c.text for c in stream_on_token(path, JSONLexer, LBRACE, encoding=enc)
+            c.text for c in JsonValueBuilder.stream_on_token(path, LBRACE, encoding=enc)
         ] == ['{"a": 1}', '{"b": 2}']
     with pytest.raises(ValueError, match="UTF-8"):
-        list(stream_on_token(path, JSONLexer, LBRACE, encoding="latin-1"))
+        list(JsonValueBuilder.stream_on_token(path, LBRACE, encoding="latin-1"))
 
     # A missing file surfaces as an error from the native layer.
     with pytest.raises(RuntimeError):
-        list(stream_on_token(tmp_path / "nope.json", JSONLexer, LBRACE))
+        list(JsonValueBuilder.stream_on_token(tmp_path / "nope.json", LBRACE))
 
     # Invalid UTF-8: lenient (stream_on_token's default) substitutes U+FFFD and
     # keeps going; strict (via the native chunker directly) raises.
     bad = tmp_path / "bad.json"
     bad.write_bytes(b'{"a": "\xff\xfe"}\n{"b": 2}')
-    lenient = [c.text for c in stream_on_token(bad, JSONLexer, LBRACE, where="before")]
+    lenient = [
+        c.text for c in JsonValueBuilder.stream_on_token(bad, LBRACE, where="before")
+    ]
     assert "�" in lenient[0]
     assert lenient[1] == '{"b": 2}'
 
@@ -234,13 +230,17 @@ def test_stream_on_pattern(tmp_path):
         path.write_text(text, encoding="utf-8")
         want = [
             (c.text, c.offset, c.line, c.column)
-            for c in split_on_pattern(text, pat, where=where, flags=flags)
+            for c in JsonValueBuilder.split_on_pattern(
+                text, pat, where=where, flags=flags
+            )
         ]
 
-        def run(source, **kw):
+        def run(source, pat=pat, where=where, flags=flags, **kw):
             return [
                 (c.text, c.offset, c.line, c.column)
-                for c in stream_on_pattern(source, pat, where=where, flags=flags, **kw)  # noqa: B023
+                for c in JsonValueBuilder.stream_on_pattern(
+                    source, pat, where=where, flags=flags, **kw
+                )
             ]
 
         for wc in (1, 2, 3, 65536):
@@ -255,14 +255,16 @@ def test_stream_on_pattern(tmp_path):
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
-            stream_on_pattern(path, r"\{", where="before"),
+            JsonValueBuilder.stream_on_pattern(path, r"\{", where="before"),
             start_rule="value",
         )
     ]
     assert results == [{"a": 1}, {"b": 2}]
 
     with pytest.raises(ValueError, match="where"):
-        list(stream_on_pattern(io.StringIO("x"), r"a", where="sideways"))
+        list(
+            JsonValueBuilder.stream_on_pattern(io.StringIO("x"), r"a", where="sideways")
+        )
 
 
 def test_stream_on_pattern_encoding(tmp_path):
@@ -274,11 +276,11 @@ def test_stream_on_pattern_encoding(tmp_path):
         path.write_text(text, encoding=enc)
         want = [
             (c.text, c.offset, c.line, c.column)
-            for c in split_on_pattern(text, r"\{", where="before")
+            for c in JsonValueBuilder.split_on_pattern(text, r"\{", where="before")
         ]
         got = [
             (c.text, c.offset, c.line, c.column)
-            for c in stream_on_pattern(
+            for c in JsonValueBuilder.stream_on_pattern(
                 path, r"\{", where="before", encoding=enc, window_chars=3
             )
         ]
@@ -293,37 +295,57 @@ def test_sourcename(tmp_path):
     path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
     text = path.read_text(encoding="utf-8")
 
-    assert next(stream_on_pattern(path, r"\{")).sourcename == str(path)
-    assert not next(stream_on_pattern(io.StringIO(text), r"\{")).sourcename
+    assert next(JsonValueBuilder.stream_on_pattern(path, r"\{")).sourcename == str(path)
+    assert not next(
+        JsonValueBuilder.stream_on_pattern(io.StringIO(text), r"\{")
+    ).sourcename
     assert (
-        next(stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")).sourcename
+        next(
+            JsonValueBuilder.stream_on_pattern(io.StringIO(text), r"\{", sourcename="m")
+        ).sourcename
         == "m"
     )
     assert (
-        next(stream_on_pattern(path, r"\{", sourcename="alias")).sourcename == "alias"
+        next(
+            JsonValueBuilder.stream_on_pattern(path, r"\{", sourcename="alias")
+        ).sourcename
+        == "alias"
     )
-    assert next(stream_on_token(path, JSONLexer, LBRACE)).sourcename == str(path)
+    assert next(JsonValueBuilder.stream_on_token(path, LBRACE)).sourcename == str(path)
     assert (
-        next(stream_on_token(path, JSONLexer, LBRACE, sourcename="alias")).sourcename
+        next(
+            JsonValueBuilder.stream_on_token(path, LBRACE, sourcename="alias")
+        ).sourcename
         == "alias"
     )
 
     # The in-memory chunkers take it too (None by default).
-    assert not next(split_on_token(text, JSONLexer, LBRACE)).sourcename
+    assert not next(JsonValueBuilder.split_on_token(text, LBRACE)).sourcename
     assert (
-        next(split_on_token(text, JSONLexer, LBRACE, sourcename="s")).sourcename == "s"
+        next(JsonValueBuilder.split_on_token(text, LBRACE, sourcename="s")).sourcename
+        == "s"
     )
-    assert next(split_on_pattern(text, r"\{", sourcename="s")).sourcename == "s"
-    assert next(chunk_by_pattern(text, r"\{[^{}]*\}", sourcename="s")).sourcename == "s"
+    assert (
+        next(JsonValueBuilder.split_on_pattern(text, r"\{", sourcename="s")).sourcename
+        == "s"
+    )
     assert (
         next(
-            split_between_tokens(text, JSONLexer, (LBRACE, RBRACE), sourcename="s")
+            JsonValueBuilder.chunk_by_pattern(text, r"\{[^{}]*\}", sourcename="s")
         ).sourcename
         == "s"
     )
     assert (
         next(
-            chunk_by_rule('[{"a": 1}]', JSONLexer, JSONParser, "obj", sourcename="s")
+            JsonValueBuilder.split_between_tokens(
+                text, (LBRACE, RBRACE), sourcename="s"
+            )
+        ).sourcename
+        == "s"
+    )
+    assert (
+        next(
+            JsonValueBuilder.chunk_by_rule('[{"a": 1}]', "obj", sourcename="s")
         ).sourcename
         == "s"
     )
@@ -335,7 +357,9 @@ def test_sourcename(tmp_path):
     # reporting positions as sourcename:line:column.
     listeners = list(
         JsonValueBuilder.walk_parallel(
-            stream_on_pattern(io.StringIO(text), r"\{", sourcename="mem.json"),
+            JsonValueBuilder.stream_on_pattern(
+                io.StringIO(text), r"\{", sourcename="mem.json"
+            ),
             start_rule="value",
         )
     )
@@ -348,30 +372,36 @@ def test_split_between_tokens():
     # may also be a set of equivalent types).
     text = '{"a": 1} {"b": 2}'
     assert [
-        c.text for c in split_between_tokens(text, JSONLexer, (LBRACE, RBRACE))
+        c.text for c in JsonValueBuilder.split_between_tokens(text, (LBRACE, RBRACE))
     ] == [
         '{"a": 1}',
         '{"b": 2}',
     ]
     assert [
-        c.text for c in split_between_tokens(text, JSONLexer, ({LBRACE}, {RBRACE}))
+        c.text
+        for c in JsonValueBuilder.split_between_tokens(text, ({LBRACE}, {RBRACE}))
     ] == ['{"a": 1}', '{"b": 2}']
 
     # Nested vs non-nested: non-nested pairs each opener with the next closer;
     # nested matches balanced pairs and emits the outermost regions.
     src = "[1,[2,3]] [4,[5,[6]]]"
-    assert [c.text for c in split_between_tokens(src, JSONLexer, (LBRACK, RBRACK))] == [
+    assert [
+        c.text for c in JsonValueBuilder.split_between_tokens(src, (LBRACK, RBRACK))
+    ] == [
         "[1,[2,3]",
         "[4,[5,[6]",
     ]
     assert [
         c.text
-        for c in split_between_tokens(src, JSONLexer, (LBRACK, RBRACK), nested=True)
+        for c in JsonValueBuilder.split_between_tokens(
+            src, (LBRACK, RBRACK), nested=True
+        )
     ] == ["[1,[2,3]]", "[4,[5,[6]]]"]
 
     # An unmatched trailing opener yields nothing extra.
     assert [
-        c.text for c in split_between_tokens("[1] [2", JSONLexer, (LBRACK, RBRACK))
+        c.text
+        for c in JsonValueBuilder.split_between_tokens("[1] [2", (LBRACK, RBRACK))
     ] == ["[1]"]
 
     # Multiple distinct pairs: '{}' and '[]' each match only their own partner, so
@@ -379,7 +409,7 @@ def test_split_between_tokens():
     mixed = '{"a": [1, 2]} [3, {"b": 4}]'
     pairs = [(LBRACE, RBRACE), (LBRACK, RBRACK)]
     assert [
-        c.text for c in split_between_tokens(mixed, JSONLexer, pairs, nested=True)
+        c.text for c in JsonValueBuilder.split_between_tokens(mixed, pairs, nested=True)
     ] == ['{"a": [1, 2]}', '[3, {"b": 4}]']
 
 
@@ -389,62 +419,57 @@ def test_pattern_chunkers():
 
     # split_on_pattern mirrors split_on_token: split before each '{', positions
     # tracked against the whole source.
-    before = list(split_on_pattern(text, r"\{", where="before"))
+    before = list(JsonValueBuilder.split_on_pattern(text, r"\{", where="before"))
     assert [c.text for c in before] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
     assert [(c.offset, c.line, c.column) for c in before] == [
         (0, 1, 0),
         (9, 2, 0),
         (19, 3, 0),
     ]
-    after = list(split_on_pattern(text, r"\}", where="after"))
+    after = list(JsonValueBuilder.split_on_pattern(text, r"\}", where="after"))
     assert [c.text for c in after] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
 
     # chunk_by_pattern: each match is one chunk (the pattern matches a record).
-    objs = list(chunk_by_pattern(text, r"\{[^{}]*\}"))
+    objs = list(JsonValueBuilder.chunk_by_pattern(text, r"\{[^{}]*\}"))
     assert [c.text for c in objs] == ['{"a": 1}', '{"b": 22}', '{"c": 3}']
 
     with pytest.raises(ValueError, match="where"):
-        list(split_on_pattern(text, r"\{", where="sideways"))
+        list(JsonValueBuilder.split_on_pattern(text, r"\{", where="sideways"))
 
 
 def test_chunk_by_rule():
     text = '[{"a": 1},\n {"b": [2, 3]},\n {"c": 4}]'
 
     # Each top-level 'obj' rule occurrence is a chunk, positioned in the source.
-    chunks = list(chunk_by_rule(text, JSONLexer, JSONParser, "obj"))
+    chunks = list(JsonValueBuilder.chunk_by_rule(text, "obj"))
     assert [c.text for c in chunks] == ['{"a": 1}', '{"b": [2, 3]}', '{"c": 4}']
     assert all(text[c.offset : c.offset + len(c.text)] == c.text for c in chunks)
     assert chunks[1].line == 2  # the second object begins on line 2
 
     # The chunks drop straight into walk_parallel and reconstruct each value.
     results = [
-        b.result
-        for b in JsonValueBuilder.walk_parallel(
-            chunks, start_rule="value"
-        )
+        b.result for b in JsonValueBuilder.walk_parallel(chunks, start_rule="value")
     ]
     assert results == [{"a": 1}, {"b": [2, 3]}, {"c": 4}]
 
     # outermost (default) keeps only top-level matches; outermost=False includes
     # nested ones (which overlap).
     nested = '{"x": {"y": 1}}'
-    assert [c.text for c in chunk_by_rule(nested, JSONLexer, JSONParser, "obj")] == [
+    assert [c.text for c in JsonValueBuilder.chunk_by_rule(nested, "obj")] == [
         '{"x": {"y": 1}}'
     ]
     assert [
-        c.text
-        for c in chunk_by_rule(nested, JSONLexer, JSONParser, "obj", outermost=False)
+        c.text for c in JsonValueBuilder.chunk_by_rule(nested, "obj", outermost=False)
     ] == ['{"x": {"y": 1}}', '{"y": 1}']
 
     # A rule index and an explicit start_rule agree with the name form.
     obj_idx = list(JSONParser.ruleNames).index("obj")
     assert [
-        c.text
-        for c in chunk_by_rule(text, JSONLexer, JSONParser, obj_idx, start_rule="json")
+        c.text for c in JsonValueBuilder.chunk_by_rule(text, obj_idx, start_rule="json")
     ] == ['{"a": 1}', '{"b": [2, 3]}', '{"c": 4}']
 
     with pytest.raises(ValueError, match="unknown rule"):
-        list(chunk_by_rule(text, JSONLexer, JSONParser, "nonesuch"))
+        list(JsonValueBuilder.chunk_by_rule(text, "nonesuch"))
 
 
 def _positions_ok(text, chunks):
@@ -468,14 +493,14 @@ def test_stream_by_rule(tmp_path):
     # window straddles records/codepoints), and positions match the whole-text map.
     for block in (0, 1, 2, 3, 7):
         chunks = list(
-            stream_by_rule(path, JSONLexer, JSONParser, "value", _block_bytes=block)
+            JsonValueBuilder.stream_by_rule(path, "value", _block_bytes=block)
         )
         assert [c.text for c in chunks] == expect, block
         _positions_ok(text, chunks)
 
     # A set of candidate rules: the next token picks which to parse ('{' -> obj,
     # '[' -> arr), so disjoint leading tokens dispatch unambiguously.
-    objarr = list(stream_by_rule(path, JSONLexer, JSONParser, ["obj", "arr"]))
+    objarr = list(JsonValueBuilder.stream_by_rule(path, ["obj", "arr"]))
     assert [c.text for c in objarr] == expect
     _positions_ok(text, objarr)
 
@@ -483,9 +508,7 @@ def test_stream_by_rule(tmp_path):
     mb = '{"café": 1}\n{"emoji": "😀🚀"}'
     mbpath = tmp_path / "mb.json"
     mbpath.write_text(mb, encoding="utf-8")
-    mbchunks = list(
-        stream_by_rule(mbpath, JSONLexer, JSONParser, "value", _block_bytes=2)
-    )
+    mbchunks = list(JsonValueBuilder.stream_by_rule(mbpath, "value", _block_bytes=2))
     assert [c.text for c in mbchunks] == ['{"café": 1}', '{"emoji": "😀🚀"}']
     _positions_ok(mb, mbchunks)
 
@@ -493,14 +516,14 @@ def test_stream_by_rule(tmp_path):
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
-            stream_by_rule(path, JSONLexer, JSONParser, "value"),
+            JsonValueBuilder.stream_by_rule(path, "value"),
             start_rule="value",
         )
     ]
     assert results == [{"a": 1}, {"b": 2}, [1, 2, 3]]
 
     with pytest.raises(ValueError, match="unknown rule"):
-        list(stream_by_rule(path, JSONLexer, JSONParser, "nonesuch"))
+        list(JsonValueBuilder.stream_by_rule(path, "nonesuch"))
 
 
 def test_stream_by_rule_stop_and_errors(tmp_path):
@@ -508,25 +531,21 @@ def test_stream_by_rule_stop_and_errors(tmp_path):
     # STRING is neither obj nor arr, so only the leading object is yielded.
     path = tmp_path / "loose.json"
     path.write_text('{"a": 1} "loose" {"b": 2}', encoding="utf-8")
-    assert [
-        c.text for c in stream_by_rule(path, JSONLexer, JSONParser, ["obj", "arr"])
-    ] == ['{"a": 1}']
+    assert [c.text for c in JsonValueBuilder.stream_by_rule(path, ["obj", "arr"])] == [
+        '{"a": 1}'
+    ]
 
     # sourcename defaults to the path and is overridable.
     seq = tmp_path / "s.json"
     seq.write_text('{"a": 1} {"b": 2}', encoding="utf-8")
-    assert next(stream_by_rule(seq, JSONLexer, JSONParser, "value")).sourcename == str(
-        seq
-    )
+    assert next(JsonValueBuilder.stream_by_rule(seq, "value")).sourcename == str(seq)
     assert (
-        next(
-            stream_by_rule(seq, JSONLexer, JSONParser, "value", sourcename="x")
-        ).sourcename
+        next(JsonValueBuilder.stream_by_rule(seq, "value", sourcename="x")).sourcename
         == "x"
     )
 
     # A missing file surfaces as an error from the native layer; non-UTF-8 rejected.
     with pytest.raises(RuntimeError):
-        list(stream_by_rule(tmp_path / "nope.json", JSONLexer, JSONParser, "value"))
+        list(JsonValueBuilder.stream_by_rule(tmp_path / "nope.json", "value"))
     with pytest.raises(ValueError, match="UTF-8"):
-        list(stream_by_rule(seq, JSONLexer, JSONParser, "value", encoding="latin-1"))
+        list(JsonValueBuilder.stream_by_rule(seq, "value", encoding="latin-1"))

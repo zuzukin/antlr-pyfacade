@@ -45,12 +45,12 @@ Key model facts for writing listeners:
 ## Public API (`from antlrope import ...`)
 
 - `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attributes `syntax_errors`, `LEXER` / `PARSER` (the baked-in stock lexer/parser classes). Methods `walk(text, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, *, start_rule=None, max_workers=None, filtered=True)` — both use the baked-in `LEXER`/`PARSER`; `walk_parallel` parses independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
-- Chunking (`antlrope.chunking`), all yielding positioned `Chunk`s for `walk_parallel`:
-  - `split_on_token(text, LexerCls, token_types, *, where="before"|"after", channel=0, sourcename=None)` and `split_between_tokens(text, LexerCls, pairs, *, nested=False, ...)` — token-aware (a delimiter inside a string/comment never splits).
-  - `split_on_pattern(text, pattern, *, where=..., flags=0, sourcename=None)` and `chunk_by_pattern(text, pattern, ...)` — regex; faster but not token-aware.
-  - `chunk_by_rule(text, LexerCls, ParserCls, rule, *, start_rule=None, outermost=True, ...)` — split on grammar structure (parses in C++).
-  - `stream_on_token(path, LexerCls, token_types, *, where=..., encoding="utf-8", sourcename=None, ...)` and `stream_on_pattern(source, pattern, *, where=..., window_chars=65536, window_lines=None, encoding="utf-8", sourcename=None)` — streaming, bounded-memory (read a file/stream incrementally).
-  - `lex(text, LexerCls, *, keep=None)` — the parser-free token pass the splitters build on; yields `LexToken(type, channel, start, stop)`.
+- Chunking — `classmethod`s on the generated `<Grammar>EventListener` (call as `MyListener.split_on_token(...)`), all yielding positioned `Chunk`s for `walk_parallel`. Token/rule ones use the baked-in `LEXER`/`PARSER` and the class's token-type constants; no lexer/parser argument:
+  - `split_on_token(text, token_types, *, where="before"|"after", channel=0, sourcename="")` and `split_between_tokens(text, pairs, *, nested=False, ...)` — token-aware (a delimiter inside a string/comment never splits).
+  - `split_on_pattern(text, pattern, *, where=..., flags=0, sourcename="")` and `chunk_by_pattern(text, pattern, ...)` — regex; faster but not token-aware.
+  - `chunk_by_rule(text, rule, *, start_rule=None, outermost=True, ...)` — split on grammar structure (parses in C++).
+  - `stream_on_token(path, token_types, *, where=..., encoding="utf-8", sourcename="", ...)` and `stream_on_pattern(source, pattern, *, where=..., window_chars=65536, window_lines=None, encoding="utf-8", sourcename="")` — streaming, bounded-memory (read a file/stream incrementally).
+  - `lex(text, *, keep=None)` — the parser-free token pass the splitters build on; yields `LexToken(type, channel, start, stop)`.
 - `Chunk(text, offset=0, line=1, column=0, sourcename=None)` — a source piece plus its position and optional source name; a bare `str` may be passed to `walk_parallel` instead (positioned contiguously).
 - `SourceMap(text)` — `.line_col(offset)` / `.offset(line, column)` between char offsets and `(line, column)`.
 - `ParseError` — a parse diagnostic: `line`, `column`, `start`, `stop`, `message`.

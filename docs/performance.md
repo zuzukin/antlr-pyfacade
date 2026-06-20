@@ -92,9 +92,7 @@ lexer pass, or bring your own regex — and hand them to
 [walk_parallel](parallel-parsing.md):
 
 ```python
-from antlrope import split_on_token
-
-chunks = split_on_token(text, MyLexer, MyLexer.RECORD, where="before")
+chunks = RecordListener.split_on_token(text, RecordListener.RECORD, where="before")
 records = [
     ln.to_model()                               # one result per chunk, in order
     for ln in RecordListener.walk_parallel(

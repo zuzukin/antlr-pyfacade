@@ -31,21 +31,16 @@ import time
 from pathlib import Path
 from typing import Any
 
-from antlrope import (
-    _native,
-    chunk_by_pattern,
-    chunk_by_rule,
-    lex,
-    load_specs,
-    split_between_tokens,
-)
+from antlrope import _native, load_specs
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "examples" / "json"))
 _jl: Any = importlib.import_module("generated.JSONLexer")
 _jp: Any = importlib.import_module("generated.JSONParser")
+_jlist: Any = importlib.import_module("json_listener")
 JSONLexer = _jl.JSONLexer
 JSONParser = _jp.JSONParser
+JsonEventListener = _jlist.JsonEventListener
 LBRACE = JSONLexer.T__0  # '{'
 RBRACE = JSONLexer.T__2  # '}'
 OBJ = list(JSONParser.ruleNames).index("obj")
@@ -73,29 +68,39 @@ def bench_one(n: int) -> None:
     parser_spec, lexer_spec = load_specs(JSONLexer, JSONParser)
 
     # All three families must produce the same object chunks.
-    by_tok = [c.text for c in split_between_tokens(text, JSONLexer, (LBRACE, RBRACE))]
-    by_rx = [c.text for c in chunk_by_pattern(text, _RECORD)]
-    by_rule = [c.text for c in chunk_by_rule(text, JSONLexer, JSONParser, "obj")]
+    by_tok = [
+        c.text for c in JsonEventListener.split_between_tokens(text, (LBRACE, RBRACE))
+    ]
+    by_rx = [c.text for c in JsonEventListener.chunk_by_pattern(text, _RECORD)]
+    by_rule = [c.text for c in JsonEventListener.chunk_by_rule(text, "obj")]
     assert by_tok == by_rx == by_rule, "chunkers disagree"
 
     print(f"\n{n:,} objects, {mb:.1f} MB, {len(by_rule):,} chunks")
     rows: list[tuple[str, Any]] = [
         # underlying scan / parse stage
         ("regex finditer", lambda: list(re.finditer(_RECORD, text))),
-        ("lex (tokenize)", lambda: list(lex(text, JSONLexer, keep=[LBRACE, RBRACE]))),
+        (
+            "lex (tokenize)",
+            lambda: list(JsonEventListener.lex(text, keep=[LBRACE, RBRACE])),
+        ),
         (
             "rule_spans (parse)",
             lambda: _native.rule_spans(parser_spec, lexer_spec, text, 0, [OBJ], True),
         ),
         # full chunking
-        ("chunk_by_pattern", lambda: list(chunk_by_pattern(text, _RECORD))),
+        (
+            "chunk_by_pattern",
+            lambda: list(JsonEventListener.chunk_by_pattern(text, _RECORD)),
+        ),
         (
             "split_between_tokens",
-            lambda: list(split_between_tokens(text, JSONLexer, (LBRACE, RBRACE))),
+            lambda: list(
+                JsonEventListener.split_between_tokens(text, (LBRACE, RBRACE))
+            ),
         ),
         (
             "chunk_by_rule",
-            lambda: list(chunk_by_rule(text, JSONLexer, JSONParser, "obj")),
+            lambda: list(JsonEventListener.chunk_by_rule(text, "obj")),
         ),
     ]
     for label, fn in rows:

@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.3] - 2026-06-20
+
+### Changed
+- **Chunkers are now classmethods on `FacadeListener`.** `lex`, `split_on_token`,
+  `split_between_tokens`, `split_on_pattern`, `stream_on_pattern`,
+  `chunk_by_pattern`, `chunk_by_rule`, `stream_on_token`, and `stream_by_rule` moved
+  off the top-level `antlrope` namespace onto the generated `<Grammar>EventListener`,
+  sourcing the lexer/parser from the baked-in `LEXER` / `PARSER` — call them as
+  `MyListener.split_on_token(text, …)` / `MyListener.chunk_by_rule(text, "rule")` and
+  drop the `lexer_cls` / `parser_cls` arguments. **Breaking**; the `antlrope.chunking`
+  module is removed. `Chunk`, `LexToken`, `load_specs`, and `load_lexer_spec` remain
+  top-level exports.
+
 ## [0.2.2] - 2026-06-20
 
 ### Changed

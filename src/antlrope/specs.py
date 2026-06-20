@@ -40,9 +40,9 @@ def load_lexer_spec(lexer_cls: type, *, cached: bool = True) -> _native.LexerSpe
     """Return the `lexer_spec` for a generated `<Grammar>Lexer` class.
 
     The lexer-only counterpart of [load_specs][antlrope.load_specs], for
-    code that lexes without parsing (e.g. the chunkers in
-    [antlrope.chunking][]). Reads the serialized ATN + vocabulary off the
-    class and its module, and caches by class.
+    code that lexes without parsing (e.g. the token-based chunkers on
+    [FacadeListener][antlrope.FacadeListener]). Reads the serialized ATN +
+    vocabulary off the class and its module, and caches by class.
 
     Args:
         lexer_cls: The stock ANTLR-generated `<Grammar>Lexer` class.

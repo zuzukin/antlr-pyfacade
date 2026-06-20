@@ -11,17 +11,8 @@ task-oriented guidance see the [User Guide](../getting-started.md); the
       members:
         - FacadeListener
         - Chunk
-        - SourceMap
-        - lex
         - LexToken
-        - split_on_token
-        - split_between_tokens
-        - split_on_pattern
-        - chunk_by_pattern
-        - chunk_by_rule
-        - stream_on_token
-        - stream_on_pattern
-        - stream_by_rule
+        - SourceMap
         - load_specs
         - load_lexer_spec
         - parse_events

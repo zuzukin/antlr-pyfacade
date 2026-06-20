@@ -8,10 +8,10 @@ overlap across cores; one listener is produced per chunk, **in input order**.
 
 ```python
 from my_listener import MyGrammarEventListener
-from generated.MyGrammarLexer import MyGrammarLexer
-from antlrope import split_on_token
 
-chunks = split_on_token(text, MyGrammarLexer, MyGrammarLexer.RECORD, where="before")
+chunks = MyGrammarEventListener.split_on_token(
+    text, MyGrammarEventListener.RECORD, where="before"
+)
 
 for listener in MyGrammarEventListener.walk_parallel(
     chunks, start_rule="record"
@@ -42,8 +42,8 @@ The result is a **lazy iterator**: chunks are pulled and parsed on demand with a
 most `max_workers` parses in flight (also the ordering window), so neither the whole
 input nor all results need to be held in memory — consume it incrementally, or
 `list(...)` it if you want them all. Combined with a streaming chunker
-([`stream_on_token`](reference/api.md#antlrope.stream_on_token) /
-[`stream_on_pattern`](reference/api.md#antlrope.stream_on_pattern)), the whole
+([`stream_on_token`](reference/api.md#antlrope.FacadeListener.stream_on_token) /
+[`stream_on_pattern`](reference/api.md#antlrope.FacadeListener.stream_on_pattern)), the whole
 pipeline — read, chunk, parse — stays bounded in the input size.
 
 `max_workers` defaults to `os.cpu_count()`; pass `1` to run inline without a pool.

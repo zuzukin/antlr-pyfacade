@@ -17,9 +17,9 @@ antlrope: a fast, C++-accelerated ANTLR Python runtime for target-agnostic gramm
 
 Generate your parser with the stock ANTLR tool (`-Dlanguage=Python3`), generate a
 facade with `antlrope`, subclass the `<Grammar>EventListener` it emits, and
-call `.walk(text, LexerCls, ParserCls)`. Parsing runs in the official ANTLR4 C++
-runtime; a single bulk, filtered event stream crosses into Python instead of a
-per-node parse-tree walk.
+call `.walk(text)` (the lexer/parser are baked in). Parsing runs in the official
+ANTLR4 C++ runtime; a single bulk, filtered event stream crosses into Python instead
+of a per-node parse-tree walk.
 """
 
 from __future__ import annotations
@@ -39,19 +39,7 @@ from ._native import (
     ParserSpec,
     parse_events,
 )
-from .base import Chunk, FacadeListener
-from .chunking import (
-    LexToken,
-    chunk_by_pattern,
-    chunk_by_rule,
-    lex,
-    split_between_tokens,
-    split_on_pattern,
-    split_on_token,
-    stream_by_rule,
-    stream_on_pattern,
-    stream_on_token,
-)
+from .base import Chunk, FacadeListener, LexToken
 from .location import SourceMap
 from .specs import load_lexer_spec, load_specs
 
@@ -66,16 +54,7 @@ __all__ = [
     "ParserSpec",
     "SourceMap",
     "__version__",
-    "chunk_by_pattern",
-    "chunk_by_rule",
-    "lex",
     "load_lexer_spec",
     "load_specs",
     "parse_events",
-    "split_between_tokens",
-    "split_on_pattern",
-    "split_on_token",
-    "stream_by_rule",
-    "stream_on_pattern",
-    "stream_on_token",
 ]
