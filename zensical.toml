@@ -85,11 +85,19 @@ paths = ["src"]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "google"
+docstring_section_style = "list"
 inherited_members = true
 show_source = false
 show_root_heading = true
 show_if_no_docstring = false
-members_order = "source"
+members_order = "alphabetical"
+# TODO - get relative cross-references working (Zensical bug or configuration issue?)
+relative_crossrefs = true
+scoped_crossrefs = true
+signature_crossrefs = true
+show_signature_annotations = true
+show_signature_type_parameters = true
+show_bases = true
 
 # Recommended Markdown extension baseline (mirrors the Zensical default template).
 [project.markdown_extensions.abbr]
