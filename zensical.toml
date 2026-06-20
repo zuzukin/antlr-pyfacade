@@ -104,6 +104,13 @@ show_signature_annotations = true
 show_signature_type_parameters = true
 show_bases = true
 
+# griffe's google parser defaults to splitting a Returns/Yields section into one
+# item per line (for documenting tuple returns). Our return/yield descriptions are
+# single multi-line prose, so turn that off: one value, one (wrapped) description.
+[project.plugins.mkdocstrings.handlers.python.options.docstring_options]
+returns_multiple_items = false
+returns_named_value = false
+
 # Recommended Markdown extension baseline (mirrors the Zensical default template).
 [project.markdown_extensions.abbr]
 [project.markdown_extensions.admonition]
