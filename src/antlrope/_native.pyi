@@ -77,14 +77,14 @@ class ParseError:
 
 class LexerSpec:
     """
-    A deserialized lexer specification — the grammar's vocabulary, name lists, and ATN — that the native lex/parse entry points run on. Build one with [load_lexer_spec][antlrope.load_lexer_spec] (or [load_specs][antlrope.load_specs]) from a generated lexer class rather than constructing it directly.
+    A deserialized lexer specification — the grammar's vocabulary, name lists, and ATN — that the native lex/parse entry points run on. Build one with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated <Grammar>EventListener rather than constructing it directly.
     """
 
     def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], channel_names: Sequence[str], mode_names: Sequence[str], serialized: Sequence[int]) -> None: ...
 
 class ParserSpec:
     """
-    A deserialized parser specification — the grammar's vocabulary, rule names, and ATN — that the native parse entry points run on. Build one with [load_specs][antlrope.load_specs] from a generated parser class rather than constructing it directly.
+    A deserialized parser specification — the grammar's vocabulary, rule names, and ATN — that the native parse entry points run on. Build one with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated <Grammar>EventListener rather than constructing it directly.
     """
 
     def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], serialized: Sequence[int]) -> None: ...

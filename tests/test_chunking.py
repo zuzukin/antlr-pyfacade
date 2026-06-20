@@ -30,7 +30,6 @@ from antlrope import (
     LexToken,
     SourceMap,
     _native,
-    load_lexer_spec,
 )
 
 # Token types from the generated lexer's class constants (the reliable source —
@@ -199,7 +198,7 @@ def test_stream_on_token_encoding_and_errors(tmp_path):
     assert "�" in lenient[0]
     assert lenient[1] == '{"b": 2}'
 
-    spec = load_lexer_spec(JSONLexer)
+    spec = JsonValueBuilder.lexer_spec()
     strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, 0)
     with pytest.raises(RuntimeError):
         strict.next_batch(10)

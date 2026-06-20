@@ -19,7 +19,6 @@ instead of being written to stderr."""
 
 from __future__ import annotations
 
-from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
@@ -32,7 +31,7 @@ RULE_JSON = JSONParser.RULE_json
 
 
 def test_parse_events_returns_events_and_errors():
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     events, errors = ap.parse_events(pspec, lspec, "[1 2]", RULE_JSON)
     assert isinstance(events, bytes)
     assert len(errors) == 1
@@ -44,7 +43,7 @@ def test_parse_events_returns_events_and_errors():
 
 
 def test_parse_events_no_errors_on_valid_input():
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     _events, errors = ap.parse_events(pspec, lspec, '{"a": 1}', RULE_JSON)
     assert errors == []
 

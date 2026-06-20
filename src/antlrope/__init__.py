@@ -41,7 +41,6 @@ from ._native import (
 )
 from .base import Chunk, FacadeListener, LexToken
 from .location import SourceMap
-from .specs import load_lexer_spec, load_specs
 
 __version__ = _files(__name__).joinpath("VERSION").read_text(encoding="utf-8").strip()
 
@@ -54,7 +53,5 @@ __all__ = [
     "ParserSpec",
     "SourceMap",
     "__version__",
-    "load_lexer_spec",
-    "load_specs",
     "parse_events",
 ]

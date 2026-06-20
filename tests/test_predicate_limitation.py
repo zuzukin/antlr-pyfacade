@@ -36,13 +36,20 @@ from antlr4.error.ErrorListener import ErrorListener
 from PredLexer import PredLexer
 from PredParser import PredParser
 
-from antlrope import load_specs, parse_events
+from antlrope import FacadeListener, parse_events
 
 ERROR_KIND = 3  # EV_ERROR in the int32 event stream
 
 
+class _PredFacade(FacadeListener):
+    """Minimal facade so `parser_spec` / `lexer_spec` can build the Pred specs."""
+
+    LEXER = PredLexer
+    PARSER = PredParser
+
+
 def _interp_has_error(text: str) -> bool:
-    parser_spec, lexer_spec = load_specs(PredLexer, PredParser)
+    parser_spec, lexer_spec = _PredFacade.parser_spec(), _PredFacade.lexer_spec()
     raw, _ = parse_events(parser_spec, lexer_spec, text, 0)
     return any(rec[0] == ERROR_KIND for rec in struct.iter_unpack("<4i", raw))
 

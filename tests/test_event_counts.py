@@ -25,6 +25,7 @@ from __future__ import annotations
 import pytest
 from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+from json_listener import JsonEventListener
 
 import antlrope as ap
 
@@ -35,7 +36,7 @@ RULE_JSON = JSONParser.RULE_json
 
 
 def _event_tallies(text: str) -> dict[int, int]:
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     raw, _ = ap.parse_events(pspec, lspec, text, RULE_JSON)
     mv = memoryview(raw).cast("i")
     tally = {EV_ENTER: 0, EV_EXIT: 0, EV_TERMINAL: 0, EV_ERROR: 0}
@@ -82,7 +83,7 @@ def test_events_match_pure_python_walker(json_text):
 
 
 def test_events_match_native_count(json_text):
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     tally = _event_tallies(json_text)
     cnt = ap._native.parse_count(pspec, lspec, json_text, RULE_JSON)
     assert tally[EV_ENTER] == cnt["enters"]

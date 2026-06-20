@@ -13,8 +13,6 @@ task-oriented guidance see the [User Guide](../getting-started.md); the
         - Chunk
         - LexToken
         - SourceMap
-        - load_specs
-        - load_lexer_spec
         - parse_events
         - ParseError
         - LexerSpec

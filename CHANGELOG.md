@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.4] - 2026-06-20
+
+### Changed
+- **Spec building moved onto `FacadeListener`.** The top-level `load_specs` /
+  `load_lexer_spec` are replaced by the classmethods
+  `FacadeListener.parser_spec(*, cached=True)` and
+  `FacadeListener.lexer_spec(*, cached=True)`, which build the native specs from the
+  baked-in `PARSER` / `LEXER` — call `MyListener.parser_spec()` /
+  `MyListener.lexer_spec()` (e.g. to feed `drive(...)` directly). Parser and lexer
+  specs now cache independently. **Breaking**; the `antlrope.specs` module and the two
+  top-level functions are removed.
+
 ## [0.2.3] - 2026-06-20
 
 ### Changed

@@ -17,8 +17,8 @@ stream equals the unfiltered stream with non-kept rules/tokens removed."""
 
 from __future__ import annotations
 
-from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+from json_listener import JsonEventListener
 
 import antlrope as ap
 
@@ -34,7 +34,7 @@ def _rows(raw) -> list[tuple[int, int, int, int]]:
 
 
 def test_mask_keeps_only_subscribed(json_text):
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     rule_mask = [RULE_OBJ]
     token_mask = [STRING]
 
@@ -53,6 +53,6 @@ def test_mask_keeps_only_subscribed(json_text):
 
 
 def test_empty_mask_drops_everything(json_text):
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
+    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
     raw, _ = ap.parse_events(pspec, lspec, json_text, RULE_JSON, [], [])
     assert _rows(raw) == []

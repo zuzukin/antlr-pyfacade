@@ -12,27 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""load_specs and ATN-shape sanity."""
+"""FacadeListener.parser_spec / lexer_spec and ATN-shape sanity."""
 
 from __future__ import annotations
 
 from generated import JSONParser as parser_mod
-from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
+from json_listener import JsonEventListener
 
 import antlrope as ap
 
 
-def test_load_specs_returns_specs():
-    pspec, lspec = ap.load_specs(JSONLexer, JSONParser)
-    assert isinstance(pspec, ap.ParserSpec)
-    assert isinstance(lspec, ap.LexerSpec)
-
-
-def test_load_specs_is_cached():
-    a = ap.load_specs(JSONLexer, JSONParser)
-    b = ap.load_specs(JSONLexer, JSONParser)
-    assert a[0] is b[0] and a[1] is b[1]
+def test_specs_build_and_cache():
+    assert isinstance(JsonEventListener.parser_spec(), ap.ParserSpec)
+    assert isinstance(JsonEventListener.lexer_spec(), ap.LexerSpec)
+    # Cached by class: the same object on repeat calls; cached=False forces a fresh,
+    # independent spec (neither read from nor written to the cache).
+    assert JsonEventListener.parser_spec() is JsonEventListener.parser_spec()
+    assert JsonEventListener.lexer_spec() is JsonEventListener.lexer_spec()
+    assert (
+        JsonEventListener.parser_spec(cached=False)
+        is not JsonEventListener.parser_spec()
+    )
 
 
 def test_atn_shape_matches_generated_metadata():

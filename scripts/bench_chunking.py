@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from antlrope import _native, load_specs
+from antlrope import _native
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "examples" / "json"))
@@ -65,7 +65,10 @@ def best(fn: Any, repeat: int = 5) -> float:
 def bench_one(n: int) -> None:
     text = make_input(n)
     mb = len(text) / 1e6
-    parser_spec, lexer_spec = load_specs(JSONLexer, JSONParser)
+    parser_spec, lexer_spec = (
+        JsonEventListener.parser_spec(),
+        JsonEventListener.lexer_spec(),
+    )
 
     # All three families must produce the same object chunks.
     by_tok = [

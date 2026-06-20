@@ -30,9 +30,9 @@ Why per-thread specs for the timing check: the spec owns the deserialized ATN,
 whose parser-prediction state is shared mutable data. Concurrent parses that
 share one spec are *correct* but contend on it (the bundled lock-free patch only
 covers the lexer's DFA edge reads, not the parser prediction path), so they do
-not scale. `load_specs(..., cached=False)` gives each thread its own spec,
-removing the shared state so the parses run in parallel — which is what proves
-the GIL was released.
+not scale. `parser_spec(cached=False)` / `lexer_spec(cached=False)` give each thread
+its own spec, removing the shared state so the parses run in parallel — which is what
+proves the GIL was released.
 """
 
 from __future__ import annotations
@@ -44,11 +44,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-from generated.JSONLexer import JSONLexer
-from generated.JSONParser import JSONParser
 from to_python import JsonValueBuilder
 
-from antlrope import load_specs, parse_events
+from antlrope import parse_events
 
 # Big enough that the native parse dominates per-call Python overhead.
 _N_OBJECTS = 20_000
@@ -78,7 +76,10 @@ def _native_parse_own_specs(_=None) -> int:
     # cached=False gives this worker its own ATN; threading.local builds it once.
     specs = getattr(_thread_local, "specs", None)
     if specs is None:
-        specs = _thread_local.specs = load_specs(JSONLexer, JSONParser, cached=False)
+        specs = _thread_local.specs = (
+            JsonValueBuilder.parser_spec(cached=False),
+            JsonValueBuilder.lexer_spec(cached=False),
+        )
     parser_spec, lexer_spec = specs
     raw, errors = parse_events(parser_spec, lexer_spec, _BIG, 0, None, None)
     assert not errors
@@ -96,9 +97,10 @@ def _best_of(fn, trials: int = 3) -> float:
 
 def test_concurrent_walks_are_correct():
     """Parses run on a thread pool (sharing one cached spec) stay correct."""
-    # load_specs is cached, so every walk here shares one ATN — exercising the
+    # The specs are cached, so every walk here shares one ATN — exercising the
     # thread-safety of concurrent access to it.
-    load_specs(JSONLexer, JSONParser)
+    JsonValueBuilder.parser_spec()
+    JsonValueBuilder.lexer_spec()
     with ThreadPoolExecutor(max_workers=_N_THREADS) as pool:
         sizes = list(pool.map(_walk_once, range(_N_TASKS)))
     assert sizes == [_N_OBJECTS] * _N_TASKS
@@ -158,7 +160,8 @@ def test_shared_spec_concurrency_stress():
     every time. A data race would surface as a wrong/garbled rebuild or a crash.
     """
     # One shared, cached spec for all threads — the contended path.
-    load_specs(JSONLexer, JSONParser)
+    JsonValueBuilder.parser_spec()
+    JsonValueBuilder.lexer_spec()
     threads = max(8, (os.cpu_count() or 2))
     iterations = 40
     tasks = [

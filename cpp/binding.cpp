@@ -824,9 +824,8 @@ NB_MODULE(_native, m) {
         m, "LexerSpec",
         "A deserialized lexer specification — the grammar's vocabulary, name "
         "lists, and ATN — that the native lex/parse entry points run on. Build one "
-        "with [load_lexer_spec][antlrope.load_lexer_spec] (or "
-        "[load_specs][antlrope.load_specs]) from a generated lexer class "
-        "rather than constructing it directly.")
+        "with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated "
+        "<Grammar>EventListener rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -840,8 +839,8 @@ NB_MODULE(_native, m) {
         m, "ParserSpec",
         "A deserialized parser specification — the grammar's vocabulary, rule "
         "names, and ATN — that the native parse entry points run on. Build one "
-        "with [load_specs][antlrope.load_specs] from a generated parser "
-        "class rather than constructing it directly.")
+        "with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated "
+        "<Grammar>EventListener rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
                       const std::vector<int32_t> &>(),
