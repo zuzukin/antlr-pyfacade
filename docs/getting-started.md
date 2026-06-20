@@ -6,9 +6,10 @@ whole thing is plain Python — no C/C++ to write or compile.
 
 First, [install `antlrope` and the ANTLR tool](installation.md).
 
-The examples below use a JSON grammar, which ships with the package under
-[`examples/json/`](https://github.com/analog-cbarber/antlrope/tree/main/examples/json).
-Swap in your own `.g4` grammar and the steps are identical.
+The examples below use a JSON grammar, which lives in the repository under
+[`examples/json/`](https://github.com/zuzukin/antlrope/tree/dev/examples/json)
+(see [Examples](examples/index.md) for the full programs). Swap in your own `.g4`
+grammar and the steps are identical.
 
 !!! note "Before you start: will this work with your grammar?"
 
@@ -90,7 +91,7 @@ That's the whole model:
 
 - **Rule callbacks take no arguments.** There are no node objects — you keep your
   own state. The common pattern is a small stack: push on `enter`, pop on `exit`.
-  See [`examples/json/to_python.py`](https://github.com/analog-cbarber/antlrope/blob/main/examples/json/to_python.py),
+  See [`examples/json/to_python.py`](https://github.com/zuzukin/antlrope/blob/dev/examples/json/to_python.py),
   which rebuilds a JSON document into Python objects using `enterObj`/`exitObj`,
   `enterArr`/`exitArr`, `enterPair`, and `visitTerminal`.
 - **`visitTerminal(token_type, text)`** gives you the token's type (compare against

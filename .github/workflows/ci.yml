@@ -30,6 +30,12 @@ jobs:
       # Run the suite under coverage (only src/ is measured); the summary lands in
       # the job log and the HTML/JSON artifacts in .coverage/.
       - run: pixi run coverage
+      # Smoke-test the worked examples end to end (both OSes), so a runtime change
+      # that breaks them — or their checked-in generated parsers/facades — is caught.
+      - name: Examples
+        run: |
+          pixi run example
+          pixi run example-schema
 
   asan:
     name: addresssanitizer (linux)

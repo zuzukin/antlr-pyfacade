@@ -25,6 +25,11 @@ nav = [
     { "Performance & limitations" = "performance.md" },
     { "Benchmark: SystemRDL" = "benchmarks/systemrdl.md" },
   ] },
+  { "Examples" = [
+    { "Overview" = "examples/index.md" },
+    { "JSON: reconstruct a value" = "examples/json.md" },
+    { "Schema: parallel indexing" = "examples/schema.md" },
+  ] },
   { "Installation" = "installation.md" },
   { "Reference" = [
     { "API" = "reference/api.md" },

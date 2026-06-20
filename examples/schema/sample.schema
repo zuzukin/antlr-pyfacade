@@ -1,0 +1,33 @@
+// A small schema: a mix of message and enum definitions, the kind of file the
+// indexing example below walks. Real schemas (protobuf, Thrift, Cap'n Proto, an
+// IDL) look much like this, only far larger — thousands of definitions.
+
+enum Color {
+    RED,
+    GREEN,
+    BLUE
+}
+
+message Point {
+    int x;
+    int y;
+}
+
+message Pixel {
+    Point at;
+    Color color;
+    int alpha;
+}
+
+enum Shape {
+    CIRCLE,
+    SQUARE,
+    TRIANGLE
+}
+
+message Sprite {
+    string name;
+    Pixel origin;
+    Shape shape;
+    bool visible;
+}

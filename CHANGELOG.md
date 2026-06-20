@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.5] - 2026-06-20
+
+### Added
+- An **Examples** section in the docs, with two worked programs: the JSON value
+  reconstruction (`examples/json/to_python.py`) and a new **schema-indexing**
+  example (`examples/schema/`) — a small message/enum IDL parsed three ways
+  (whole-file walk, `chunk_by_rule` + `walk_parallel`, and bounded-memory
+  `stream_by_rule`), with guidance on when each pays off. Both examples are now
+  smoke-tested in CI (`pixi run example` / `example-schema`).
+
 ## [0.2.4] - 2026-06-20
 
 ### Changed
