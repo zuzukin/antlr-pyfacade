@@ -80,7 +80,7 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 # Lint/format the hand-written sources, tests, helper scripts, and examples. The
 # stock ANTLR-generated lexer/parser modules are excluded: they are tool output,
 # not our code, and follow ANTLR's own (non-PEP8) style.
-target-version = "py310"
+target-version = "py312"
 # Excluded: stock ANTLR-generated parsers, the vendored C++ runtime, build/site
 # output, and `*.pyi` (the _native stub is produced by `pixi run stubgen` and
 # hand-tweaked — formatting it here would just churn against stubgen output).

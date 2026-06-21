@@ -17,3 +17,5 @@ task-oriented guidance see the [User Guide](../getting-started.md); the
         - ParseError
         - LexerSpec
         - ParserSpec
+        - LexerProtocol
+        - ParserProtocol

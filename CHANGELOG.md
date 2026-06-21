@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.13] - 2026-06-21
+
+### Added
+- `ParserProtocol` and `LexerProtocol` — structural types describing the stock
+  ANTLR `<Grammar>Parser` / `<Grammar>Lexer` class surface antlrope reads
+  (`literalNames`, `symbolicNames`, `ruleNames`, plus the lexer's `channelNames` /
+  `modeNames`, and `grammarFileName`). `FacadeListener.LEXER` / `PARSER` are now
+  typed `ClassVar[type[LexerProtocol]]` / `ClassVar[type[ParserProtocol]]` instead
+  of a bare `type`, and the spec builders take them too. A generated class satisfies
+  these structurally — no nominal inheritance needed (and a Protocol cannot itself
+  subclass `Lexer` / `Parser`).
+
+### Changed
+- The internal `TextSource` / `TokenTypes` / `Pair` / `RuleTypes` type aliases use
+  PEP 695 `type` syntax and live at module scope (no `TYPE_CHECKING` guard) — they
+  are lazily evaluated, so they cost nothing at import while existing at runtime.
+- Ruff's `target-version` is now `py312` (was `py310`), matching `requires-python`
+  and the pyright floor.
+
 ## [0.2.12] - 2026-06-21
 
 ### Changed

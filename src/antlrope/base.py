@@ -41,23 +41,24 @@ import struct
 import sys
 import threading
 from collections import deque
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import TYPE_CHECKING, ClassVar, NamedTuple, Self
+from typing import ClassVar, NamedTuple, Protocol, Self
 
 from . import _native
 from .location import LineCol, SourceMap
 
-if TYPE_CHECKING:
-    # A streaming text source: a filesystem path, an open text file object, or any
-    # iterable of str pieces (a file object iterates as lines; a generator works).
-    TextSource = str | os.PathLike[str] | Iterable[str]
-    # One token type, or several treated as equivalent.
-    TokenTypes = int | Iterable[int]
-    # An (open, close) bracket pair; either side may be one or several types.
-    Pair = tuple[TokenTypes, TokenTypes]
-    # A grammar rule name or index, or several of them.
-    RuleTypes = str | int | Iterable[str | int]
+# Type aliases (PEP 695). `type X = ...` is lazily evaluated, so these cost nothing
+# at import despite living at module scope — no `TYPE_CHECKING` guard needed.
+# A streaming text source: a filesystem path, an open text file object, or any
+# iterable of str pieces (a file object iterates as lines; a generator works).
+type TextSource = str | os.PathLike[str] | Iterable[str]
+# One token type, or several treated as equivalent.
+type TokenTypes = int | Iterable[int]
+# An (open, close) bracket pair; either side may be one or several types.
+type Pair = tuple[TokenTypes, TokenTypes]
+# A grammar rule name or index, or several of them.
+type RuleTypes = str | int | Iterable[str | int]
 
 __all__ = [
     "Chunk",
@@ -75,15 +76,44 @@ _RULE = struct.Struct("<3i")
 #: The default token channel — what the lexer routes ordinary tokens to.
 DEFAULT_CHANNEL = 0
 
+# Structural types for the stock ANTLR `<Grammar>Parser` / `<Grammar>Lexer`
+# classes — just the grammar metadata antlrope reads off them. A generated class
+# satisfies these without nominal inheritance: a `Protocol` matches by structure,
+# so the ANTLR runtime `Parser` / `Lexer` subclass the tool emits qualifies as-is.
+# (A `Protocol` *cannot* itself subclass `Parser` / `Lexer` — protocols may only
+# derive from other protocols — but it doesn't need to.) antlrope never
+# instantiates these classes; it only reads this metadata and drives the parse from
+# the serialized ATN in C++. Note `serializedATN()` is a *module*-level function
+# (resolved via the class's `__module__`), not a class member, so it isn't here.
+class ParserProtocol(Protocol):
+    """The stock ANTLR `<Grammar>Parser` class surface that antlrope consumes."""
+
+    literalNames: ClassVar[Sequence[str]]
+    symbolicNames: ClassVar[Sequence[str]]
+    ruleNames: ClassVar[Sequence[str]]
+    grammarFileName: ClassVar[str]
+
+
+class LexerProtocol(Protocol):
+    """The stock ANTLR `<Grammar>Lexer` class surface that antlrope consumes."""
+
+    literalNames: ClassVar[Sequence[str]]
+    symbolicNames: ClassVar[Sequence[str]]
+    ruleNames: ClassVar[Sequence[str]]
+    channelNames: ClassVar[Sequence[str]]
+    modeNames: ClassVar[Sequence[str]]
+    grammarFileName: ClassVar[str]
+
+
 # Cache specs by class so repeated walks of a grammar pay the ATN deserialization
 # cost once. Parser and lexer specs cache independently — the lexer-only chunkers
 # need no parser spec. The Python3 ANTLR target emits a module-level
 # `serializedATN()` alongside each class, resolved here via the class's module.
-_PARSER_SPEC_CACHE: dict[type, _native.ParserSpec] = {}
-_LEXER_SPEC_CACHE: dict[type, _native.LexerSpec] = {}
+_PARSER_SPEC_CACHE: dict[type[ParserProtocol], _native.ParserSpec] = {}
+_LEXER_SPEC_CACHE: dict[type[LexerProtocol], _native.LexerSpec] = {}
 
 
-def _build_parser_spec(parser_cls: type) -> _native.ParserSpec:
+def _build_parser_spec(parser_cls: type[ParserProtocol]) -> _native.ParserSpec:
     mod = sys.modules[parser_cls.__module__]
     grammar_file = getattr(parser_cls, "grammarFileName", "<grammar>.g4")
     return _native.ParserSpec(
@@ -95,7 +125,7 @@ def _build_parser_spec(parser_cls: type) -> _native.ParserSpec:
     )
 
 
-def _build_lexer_spec(lexer_cls: type) -> _native.LexerSpec:
+def _build_lexer_spec(lexer_cls: type[LexerProtocol]) -> _native.LexerSpec:
     mod = sys.modules[lexer_cls.__module__]
     grammar_file = getattr(lexer_cls, "grammarFileName", "<grammar>.g4")
     return _native.LexerSpec(
@@ -357,8 +387,8 @@ class FacadeListener:
 
     # The stock ANTLR `<Grammar>Lexer` / `<Grammar>Parser` classes plus the grammar
     # metadata, all set by every generated subclass (declared here, no value).
-    LEXER: ClassVar[type]
-    PARSER: ClassVar[type]
+    LEXER: ClassVar[type[LexerProtocol]]
+    PARSER: ClassVar[type[ParserProtocol]]
     ruleNames: ClassVar[list[str]]
     START_RULE: ClassVar[int]
 
