@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.11] - 2026-06-21
+
+### Changed
+- The vendored-runtime patch branches now live on the **`zuzukin/antlr4`** fork
+  (moved from `analog-cbarber/antlr4`), consolidating them under the same org as
+  the project. Updated the references in **How it works** and
+  `vendor/antlr4-cpp/UPDATING.md`.
+
 ## [0.2.10] - 2026-06-21
 
 ### Changed

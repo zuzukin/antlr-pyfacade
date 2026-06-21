@@ -74,7 +74,7 @@ read off the generated Python classes (see
 (BSD-3-Clause, carried verbatim under `vendor/antlr4-cpp/src`) rather than the
 system runtime, so the wheel is self-contained. On top of that pristine copy it
 carries two performance patches, both written to be contributed back upstream as
-pull requests (tracked on the `analog-cbarber/antlr4` fork; see
+pull requests (tracked on the `zuzukin/antlr4` fork; see
 `vendor/antlr4-cpp/UPDATING.md` for the exact branches and commit):
 
 - **Lock-free DFA-edge reads.** The ATN simulator's hot path — looking up the next

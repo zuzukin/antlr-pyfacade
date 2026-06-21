@@ -9,7 +9,7 @@ no external checkout.
 ## Provenance
 
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
-- **Snapshot commit:** `ef36025ca` (fork `analog-cbarber/antlr4`, branch
+- **Snapshot commit:** `ef36025ca` (fork `zuzukin/antlr4`, branch
   `cpp-per-dfa-locks`, which stacks Patch 2 on Patch 1). Both patch branches are
   pushed to the fork and base off upstream `7d5770395`:
   - `cpp-lockfree-dfa-edges` (`020f86cd0`) — Patch 1 only.
