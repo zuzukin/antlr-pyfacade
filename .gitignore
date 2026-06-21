@@ -3,6 +3,8 @@
 # Standalone build dir for scripts/bench_runtime_patches.py (runtime-patch A/B/C)
 /build-bench/
 /dist/
+# rattler-build output (the recipe-build task)
+/output/
 # Coverage artifacts (pixi run coverage): data file, HTML site, JSON report
 /.coverage/
 # Zensical documentation site output

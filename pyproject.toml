@@ -129,7 +129,7 @@ platforms = ["osx-arm64", "linux-64"]
 # explicit `pixi run build` recompiles via cmake directly (see
 # scripts/build_native.py), so the whole rebuild path is reproducible here.
 [tool.pixi.dependencies]
-python = ">=3.10"
+python = ">=3.12"
 antlr4-python3-runtime = ">=4.13"
 
 [tool.pixi.pypi-dependencies]
@@ -150,6 +150,9 @@ cmake = ">=3.21"
 ninja = "*"
 nanobind = ">=2.0"
 scikit-build-core = ">=0.10"
+# pypa `build` frontend (conda-forge name `python-build`), so `pixi run build-wheel`
+# is a plain `python -m build` invocation.
+python-build = "*"
 # pytest drives the correctness suite. It is a dev tool only — no end user or
 # downstream consumer needs an `antlrope[test]` extra (the suite isn't
 # shipped in the wheel), so it lives in the dev environment, not as a published
@@ -171,7 +174,7 @@ antlr4-tools = "*"
 # generator). Isolated and default-feature-free so it pulls neither the JDK nor
 # the C++ build toolchain — building the docs never compiles the extension.
 [tool.pixi.feature.docs.dependencies]
-python = ">=3.10"
+python = ">=3.12"
 
 [tool.pixi.feature.docs.pypi-dependencies]
 zensical = "*"
@@ -186,11 +189,18 @@ mkdocstrings-python-xref = "*"
 [tool.pixi.feature.recipe.dependencies]
 rattler-build = "*"
 
+# Local conda packaging via whl2conda (convert a built wheel to a .conda). Layered
+# on top of `dev` (the `pack` env below = dev + this) so `build_conda.py` can both
+# build the wheel and convert it in one environment.
+[tool.pixi.feature.pack.pypi-dependencies]
+whl2conda = "*"
+
 [tool.pixi.environments]
 default = { features = ["dev"], solve-group = "default" }
 gen = { features = ["gen"], solve-group = "default" }
 docs = { features = ["docs"], no-default-feature = true }
 recipe = { features = ["recipe"], no-default-feature = true }
+pack = { features = ["dev", "pack"], solve-group = "default" }
 
 [tool.pixi.tasks]
 doc-build = [{ task = "docs-build" }]
@@ -234,10 +244,24 @@ cmd = "mkdir -p .coverage && pytest --cov --cov-report=term-missing --cov-report
 [tool.pixi.tasks.build]
 description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."
 cmd = "python scripts/build_native.py"
+inputs = ["cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeLists.txt", "scripts/build_native.py"]
+outputs = ["build/*/_native.cpython-*.so"]
+
+[tool.pixi.tasks.build-wheel]
+description = "Build a distributable abi3 wheel into dist/ (pypa build + scikit-build-core, no isolation)."
+cmd = "python -m build --wheel --no-isolation --outdir dist"
+inputs = ["src/antlrope/**/*", "cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeLists.txt", "pyproject.toml"]
+outputs = ["dist/*.whl"]
+
+[tool.pixi.tasks.clean]
+description = "Remove build/packaging artifacts (dist/, output/, the wheel build dirs, build-asan/, wheelhouse/, .coverage/, site/). Leaves the editable build/ intact; `pixi install` rebuilds it."
+cmd = "rm -rf dist output build-asan wheelhouse .coverage site build/*-abi3-*"
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlrope/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
 cmd = "python scripts/stubgen.py"
+inputs = ["build/*/_native.cpython-*.so", "scripts/stubgen.py"]
+outputs = ["src/antlrope/_native.pyi"]
 
 [tool.pixi.tasks.asan-test]
 description = "Build and run the AddressSanitizer C++ harness over the example grammars (macOS + Linux)."
@@ -252,34 +276,46 @@ description = "Regenerate the example's Python parser/lexer from the grammar (AN
 cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated"
 cwd = "examples/json"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
+inputs = ["examples/json/JSON.g4"]
+outputs = ["examples/json/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-facade]
 description = "Regenerate the event-listener facade from the generated parser module (run `pixi run format` afterward)."
 cmd = "antlrope generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }
+inputs = ["examples/json/generated/*.py"]
+outputs = ["examples/json/json_listener.py"]
 
 [tool.pixi.feature.gen.tasks.gen-pred]
 description = "Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py)."
 cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated"
 cwd = "examples/predicate"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
+inputs = ["examples/predicate/Pred.g4"]
+outputs = ["examples/predicate/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-schema]
 description = "Regenerate the schema example's Python parser/lexer from the grammar (ANTLR tool)."
 cmd = "antlr4 -Dlanguage=Python3 Schema.g4 -o generated"
 cwd = "examples/schema"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
+inputs = ["examples/schema/Schema.g4"]
+outputs = ["examples/schema/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-schema-facade]
 description = "Regenerate the schema example's event-listener facade (run `pixi run format` afterward)."
 cmd = "antlrope generated.SchemaParser Schema -o schema_listener.py"
 cwd = "examples/schema"
 env = { PYTHONPATH = "." }
+inputs = ["examples/schema/generated/*.py"]
+outputs = ["examples/schema/schema_listener.py"]
 
 [tool.pixi.feature.docs.tasks.docs-build]
 description = "Build the static documentation site into site/ (configured in zensical.toml)."
 cmd = "zensical build"
+inputs = ["docs/**/*", "zensical.toml", "src/antlrope/**/*.py", "README.md", "CHANGELOG.md", "LICENSE"]
+outputs = ["site/**/*"]
 
 [tool.pixi.feature.docs.tasks.docs-serve]
 description = "Serve the docs locally with live reload at http://localhost:8000."
@@ -289,9 +325,23 @@ cmd = "zensical serve"
 description = "Remove generated doc files"
 cmd = "rm -rf site"
 
-# TODO - try using whl2conda to build conda package directly from wheel
+# Two local conda-build paths (each in its own environment):
+#   pixi run -e pack conda-whl2conda  — fast: build the abi3 wheel, convert it
+#       directly to a .conda with whl2conda (no isolated build env). Good for a
+#       private channel / direct hand-off. See zuzukin/whl2conda#183 re: abi3 pins.
+#   pixi run -e recipe recipe-build   — full rattler-build from conda-recipe/, the
+#       path that mirrors conda-forge (builds in a sandboxed host env).
+[tool.pixi.feature.pack.tasks.conda-whl2conda]
+description = "Convert the built abi3 wheel in dist/ to a .conda with whl2conda (--allow-impure). See zuzukin/whl2conda#183 re: abi3 pins."
+depends-on = ["build-wheel"]
+cmd = "whl2conda convert dist/*.whl --allow-impure --out-dir dist --overwrite"
+inputs = ["dist/*.whl"]
+outputs = ["dist/*.conda"]
 
 # TODO - maybe rename conda-recipe to conda-forge-recipe?
 [tool.pixi.feature.recipe.tasks.recipe-build]
 description = "Build the conda package locally from conda-recipe/recipe.yaml (rattler-build)."
 cmd = "rattler-build build --recipe conda-recipe/recipe.yaml"
+# Builds from the PyPI sdist in the recipe, so the recipe is the only local input.
+inputs = ["conda-recipe/recipe.yaml"]
+outputs = ["output/**/*.conda"]
