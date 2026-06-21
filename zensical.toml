@@ -104,6 +104,11 @@ signature_crossrefs = true
 show_signature_annotations = true
 show_signature_type_parameters = true
 show_bases = true
+# Render each signature as its own formatted code block under the heading (not
+# inline in it), and wrap long ones one-argument-per-line. The wrapping is done by
+# Ruff (added to the docs env); mkdocstrings prefers Black if present, then Ruff.
+separate_signature = true
+line_length = 80
 
 # griffe's google parser defaults to splitting a Returns/Yields section into one
 # item per line (for documenting tuple returns). Our return/yield descriptions are

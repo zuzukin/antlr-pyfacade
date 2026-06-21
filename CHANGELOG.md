@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.12] - 2026-06-21
+
+### Changed
+- Reference-doc signatures now render as their own formatted code block, wrapped
+  one-argument-per-line for long signatures (mkdocstrings `separate_signature` +
+  `line_length = 80`, formatted by Ruff).
+- The documentation toolchain now comes from conda-forge — `mkdocstrings-python`,
+  `mkdocstrings-python-xref`, and `ruff` moved from PyPI to conda dependencies.
+  Zensical stays on PyPI because its conda-forge package is currently a py310-only
+  build, incompatible with the 3.12+ docs environment.
+- `clean` now also removes Zensical's `.zensical/` incremental cache (a stale cache
+  there can otherwise mask docs config changes).
+
 ## [0.2.11] - 2026-06-21
 
 ### Changed

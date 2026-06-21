@@ -170,18 +170,23 @@ openjdk = ">=11"
 [tool.pixi.feature.gen.pypi-dependencies]
 antlr4-tools = "*"
 
-# Documentation toolchain (Zensical, the Material-for-MkDocs-team static site
-# generator). Isolated and default-feature-free so it pulls neither the JDK nor
-# the C++ build toolchain — building the docs never compiles the extension.
+# Documentation toolchain. Isolated and default-feature-free so it pulls neither
+# the JDK nor the C++ build toolchain — building the docs never compiles the
+# extension. Everything is from conda-forge except Zensical (below).
 [tool.pixi.feature.docs.dependencies]
 python = ">=3.12"
-
-[tool.pixi.feature.docs.pypi-dependencies]
-zensical = "*"
-# API reference generated from docstrings (Python handler pulls in mkdocstrings +
-# griffe). Static analysis only — the docs env never builds the C++ extension.
+# API reference from docstrings (mkdocstrings + griffe). Ruff formats the rendered
+# signatures (separate_signature + line_length in zensical.toml); mkdocstrings
+# imports `ruff.__main__.find_ruff_bin`, which the conda-forge ruff package provides.
 mkdocstrings-python = "*"
 mkdocstrings-python-xref = "*"
+ruff = "*"
+
+[tool.pixi.feature.docs.pypi-dependencies]
+# Zensical's conda-forge package is currently a py310-only build, incompatible with
+# this >=3.12 docs env, so it stays on PyPI (pure-Python wheel) until conda-forge
+# ships a 3.12+ build. The Material-for-MkDocs-team static site generator.
+zensical = "*"
 
 # conda-forge recipe builder (rattler-build). Isolated with no default feature:
 # rattler-build creates its own sandboxed build/host environment from the recipe,
@@ -254,8 +259,8 @@ inputs = ["src/antlrope/**/*", "cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeL
 outputs = ["dist/*.whl"]
 
 [tool.pixi.tasks.clean]
-description = "Remove build/packaging artifacts (dist/, output/, the wheel build dirs, build-asan/, wheelhouse/, .coverage/, site/). Leaves the editable build/ intact; `pixi install` rebuilds it."
-cmd = "rm -rf dist output build-asan wheelhouse .coverage site build/*-abi3-*"
+description = "Remove build/packaging artifacts (dist/, output/, the wheel build dirs, build-asan/, wheelhouse/, .coverage/, site/, .zensical/). Leaves the editable build/ intact; `pixi install` rebuilds it."
+cmd = "rm -rf dist output build-asan wheelhouse .coverage site .zensical build/*-abi3-*"
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlrope/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
