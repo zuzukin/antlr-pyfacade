@@ -86,7 +86,14 @@ def main() -> int:
         return 0
 
     asan_so = _build_asan_extension()
-    installed = Path(sysconfig.get_paths()["purelib"]) / "antlrope" / asan_so.name
+    # The installed editable extension may be named differently from the ASan build:
+    # the abi3 editable install lands `_native.abi3.so`, while this throwaway ASan
+    # build (no Stable-ABI component) produces a version-tagged `_native.cpython-*.so`.
+    # Swap the ASan build over whatever `_native*.so` is actually installed, by name.
+    site_pkg = Path(sysconfig.get_paths()["purelib"]) / "antlrope"
+    installed = next(site_pkg.glob("_native*.so"), None)
+    if installed is None:
+        raise SystemExit(f"no installed _native*.so found in {site_pkg}")
     backup = installed.parent / (installed.name + ".orig")
     shutil.copy2(installed, backup)
     try:
