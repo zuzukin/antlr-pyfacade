@@ -190,18 +190,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "parser_module",
+        metavar="<parser-module>",
         help="Importable dotted path to the generated parser module "
         "(e.g. mypkg.generated.MyParser).",
     )
-    parser.add_argument("grammar", help="Grammar name prefix for the facade class.")
+    parser.add_argument("grammar", metavar="<name>", help="Grammar name prefix for the facade class.")
     parser.add_argument(
         "--lexer",
+        metavar="<lexer-module>",
         help="Importable dotted path to the generated lexer module. Defaults to the "
         "parser path with a trailing 'Parser' replaced by 'Lexer' "
         "(e.g. mypkg.generated.MyLexer); pass this when the lexer is named "
         "differently.",
     )
-    parser.add_argument("-o", "--output", help="Write to this file instead of stdout.")
+    parser.add_argument("-o", "--output", metavar="<file>", help="Write to this file instead of stdout.")
     args = parser.parse_args(argv)
 
     source = generate(args.parser_module, args.grammar, args.lexer)
