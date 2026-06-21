@@ -8,12 +8,15 @@ name = "antlrope"
 dynamic = ["version"]
 description = "Fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [{ name = "Christopher Barber" }]
 keywords = ["antlr", "antlr4", "parser", "parsing", "grammar", "python"]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: C++",
   "License :: OSI Approved :: Apache Software License",
   "Topic :: Software Development :: Compilers",
@@ -44,6 +47,11 @@ editable.rebuild = false
 editable.verbose = false
 # Python package lives under src/; the C++ extension sources are in cpp/.
 wheel.packages = ["src/antlrope"]
+# Build a single CPython Stable ABI (abi3) wheel per platform. The extension is
+# compiled with nanobind's STABLE_ABI (see CMakeLists.txt), which targets the
+# limited API from CPython 3.12 on, so one `cp312-abi3` wheel runs on 3.12, 3.13,
+# 3.14, and future CPythons without a rebuild. Requires `requires-python >= 3.12`.
+wheel.py-api = "cp312"
 
 # Project version is read from the VERSION file in the package (the single source
 # of truth). `dynamic = ["version"]` above defers to this provider.
@@ -53,10 +61,12 @@ input = "src/antlrope/VERSION"
 regex = '(?P<value>.+)'
 
 [tool.cibuildwheel]
-# CPython only; skip PyPy and the 32-bit / musllinux targets to keep the C++
-# build matrix sane. The vendored runtime needs a C++17 compiler (present on
-# all default cibuildwheel images).
-build = "cp310-* cp311-* cp312-* cp313-*"
+# One CPython Stable ABI (abi3) build per platform: `wheel.py-api = "cp312"` above
+# makes scikit-build-core emit a `cp312-abi3` wheel that works on 3.12+, so we
+# only need to build under cp312 (not once per CPython). Skip PyPy and the
+# 32-bit / musllinux targets to keep the C++ build matrix sane; the vendored
+# runtime needs a C++17 compiler (present on all default cibuildwheel images).
+build = "cp312-*"
 skip = "*-musllinux* *_i686 *-win32"
 build-frontend = "build"
 # Smoke-test each built wheel: import the extension and print its version. No
@@ -95,7 +105,7 @@ ignore = ["E501"]
 # static checker can't resolve, so they're out of scope here.
 include = ["src", "scripts"]
 exclude = ["**/__pycache__", "examples/*/generated", "vendor", "build", "build-asan", "site"]
-pythonVersion = "3.10"
+pythonVersion = "3.12"
 typeCheckingMode = "standard"
 # _native is a compiled nanobind extension: pyright resolves its hand-maintained
 # `_native.pyi` stub but (correctly) notes there's no Python source behind it.

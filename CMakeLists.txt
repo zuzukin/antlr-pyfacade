@@ -27,7 +27,14 @@ file(GLOB antlr4_runtime_SRC
   "${ANTLR4_CPP_SRC}/tree/xpath/*.cpp"
 )
 
-find_package(Python 3.10 REQUIRED COMPONENTS Interpreter Development.Module)
+# Request the Stable ABI (Limited API) component too, so nanobind's STABLE_ABI
+# can build an abi3 extension. scikit-build-core sets SKBUILD_SABI_COMPONENT to
+# "Development.SABIModule" when [tool.scikit-build] wheel.py-api is configured
+# (the wheel builds); it is empty for a plain local cmake build (pixi run build),
+# which then produces a normal version-specific extension. Without this component
+# nanobind silently falls back to a full-ABI build and the wheel is mis-tagged.
+find_package(Python 3.12 REQUIRED
+  COMPONENTS Interpreter Development.Module ${SKBUILD_SABI_COMPONENT})
 find_package(nanobind CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 

@@ -21,14 +21,15 @@ Either way pulls in the official `antlr4-python3-runtime` automatically — your
 generated parser modules import it.
 
 `antlrope` ships as a pre-compiled binary wheel (the C++ engine is built in),
-so there is **nothing to compile** on install. Wheels are published for **CPython
-3.10–3.13** on:
+so there is **nothing to compile** on install. A single CPython Stable ABI
+(`abi3`) wheel per platform covers **CPython 3.12 and newer** (3.12, 3.13, 3.14,
+…), published on:
 
-- Linux ([manylinux], x86-64)
+- Linux ([manylinux], x86-64 and aarch64)
 - macOS 11+ (Apple Silicon and Intel)
 - Windows (x86-64)
 
-The minimum supported Python is **3.10**.
+The minimum supported Python is **3.12**.
 
 ## Install the ANTLR tool (to generate parsers)
 

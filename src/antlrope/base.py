@@ -43,7 +43,7 @@ import threading
 from collections import deque
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import TYPE_CHECKING, ClassVar, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, ClassVar, NamedTuple, Self
 
 from . import _native
 from .location import LineCol, SourceMap
@@ -344,11 +344,6 @@ class Chunk(NamedTuple):
                 buf += piece
 
 
-# Bound to FacadeListener so `walk` returns the concrete subclass (Self-like on
-# Python < 3.11, which `requires-python = ">=3.10"` still supports).
-_F = TypeVar("_F", bound="FacadeListener")
-
-
 class FacadeListener:
     """Base for generated `<Grammar>EventListener` classes.
 
@@ -543,12 +538,12 @@ class FacadeListener:
         return spec
 
     def walk(
-        self: _F,
+        self,
         text: str,
         *,
         start_rule: int | str | None = None,
         filtered: bool = True,
-    ) -> _F:
+    ) -> Self:
         """Parse `text` with this listener's baked-in lexer/parser and return `self`.
 
         Runs the parse in C++ and dispatches the event stream to this listener's
@@ -574,14 +569,14 @@ class FacadeListener:
 
     @classmethod
     def walk_parallel(
-        cls: type[_F],
+        cls,
         chunks: Iterable[str | Chunk],
         *,
         start_rule: int | str | None = None,
         max_workers: int | None = None,
         filtered: bool = True,
-        factory: Callable[[], _F] | None = None,
-    ) -> Iterator[_F]:
+        factory: Callable[[], Self] | None = None,
+    ) -> Iterator[Self]:
         """Parse independent `chunks` across a thread pool, one listener each.
 
         The native parse releases the GIL, so the parses overlap across cores. Each
@@ -629,7 +624,7 @@ class FacadeListener:
         make = factory if factory is not None else cls
         workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
 
-        def run(chunk: Chunk) -> _F:
+        def run(chunk: Chunk) -> Self:
             parser_spec, lexer_spec = _specs_for_thread(cls)
             listener = make()
             listener.drive(
@@ -659,7 +654,7 @@ class FacadeListener:
                     )
                 yield chunk
 
-        def stream() -> Iterator[_F]:
+        def stream() -> Iterator[Self]:
             if workers <= 1:
                 for chunk in resolved():
                     yield run(chunk)
@@ -667,7 +662,7 @@ class FacadeListener:
             # Bounded-window parallelism: keep ~`workers` parses in flight and yield
             # in input order, so peak memory tracks the window, not the chunk count.
             with ThreadPoolExecutor(max_workers=workers) as pool:
-                pending: deque[Future[_F]] = deque()
+                pending: deque[Future[Self]] = deque()
                 for chunk in resolved():
                     pending.append(pool.submit(run, chunk))
                     if len(pending) > workers:

@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.10] - 2026-06-21
+
+### Changed
+- **Breaking: the minimum Python is now 3.12** (was 3.10). Dropping 3.10/3.11
+  (3.10 reaches end-of-life in October 2026) lets antlrope ship a single CPython
+  **Stable ABI (`abi3`)** wheel per platform instead of one per interpreter:
+  `[tool.scikit-build] wheel.py-api = "cp312"` plus nanobind's `STABLE_ABI` now
+  build one `cp312-abi3` wheel that runs on 3.12, 3.13, 3.14 and future CPythons
+  with no rebuild. `CMakeLists.txt` now also requests Python's SABI component
+  (`${SKBUILD_SABI_COMPONENT}`) so the limited-API build actually engages — without
+  it nanobind silently falls back to a full-ABI build and the wheel is mis-tagged.
+  Local `pixi run build` is unaffected (it still builds a normal version-specific
+  extension).
+- `FacadeListener.walk` / `walk_parallel` now use `typing.Self` for their return
+  types, replacing the `_F = TypeVar(...)` workaround that was needed while 3.10 was
+  supported.
+
+### Added
+- Binary wheels for **Linux aarch64** (native GitHub `ubuntu-24.04-arm` runner),
+  alongside the existing Linux x86_64, macOS arm64/x86_64, and Windows x86_64.
+
+### Fixed
+- conda recipe: corrected the stale `analog-cbarber` homepage/repository URLs to
+  `zuzukin`, and documented (for conda-forge reviewers) why the recipe vendors and
+  static-links the ANTLR4 C++ runtime instead of depending on `antlr-cpp-runtime`.
+
 ## [0.2.9] - 2026-06-21
 
 ### Added
