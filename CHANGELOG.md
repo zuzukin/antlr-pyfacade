@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.8] - 2026-06-21
+
+### Added
+- A "Reproduce it" link from the SystemRDL benchmark page to the
+  [`zuzukin/srdl-bench`](https://github.com/zuzukin/srdl-bench) harness.
+
 ## [0.2.7] - 2026-06-20
 
 ### Added

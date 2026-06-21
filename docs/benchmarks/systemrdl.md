@@ -27,6 +27,11 @@ Parsing a 2.6 MB input (≈86k lines, ~77k [parse-tree][parse tree] nodes):
 gap holds [end to end](#end-to-end-parse-and-consume) once you also *consume* the
 result — and the consumer's output is identical to a pure-Python tree walk.
 
+> **Reproduce it.** The full harness — grammar, generated parser, the `antlrope`
+> facade, the bench scripts, and the inputs — is at
+> [`zuzukin/srdl-bench`](https://github.com/zuzukin/srdl-bench). With
+> [pixi](https://pixi.sh): `pixi run consume`.
+
 ## What's measured
 
 Each tool **parses the input and produces the structure you would then consume** —
