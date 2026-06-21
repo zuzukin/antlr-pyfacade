@@ -27,10 +27,14 @@ source:
 build:
   number: 0
   script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-  # Compiled extension (not noarch). conda-forge builds per CPython regardless of
-  # the abi3 wheels we ship on PyPI. Floor matches requires-python (>=3.12).
-  skip:
-    - match(python, "<3.12")
+  # abi3 / CEP-20: one build (against the 3.12 floor) is installable on any CPython
+  # >=3.12. The extension is compiled with nanobind's STABLE_ABI (pyproject sets
+  # wheel.py-api = "cp312"), so it ships as `_native.abi3.so`. `python_version_
+  # independent` makes the package relocate that .so into the target env's
+  # site-packages at install time (it is marked noarch:python but keeps its
+  # platform subdir, since it is still compiled). No per-CPython build matrix.
+  python:
+    version_independent: true
 
 # NOTE FOR conda-forge REVIEWERS — why this recipe vendors the ANTLR4 C++ runtime
 # (carried in the sdist under vendor/antlr4-cpp/) instead of depending on the
@@ -52,12 +56,15 @@ requirements:
     - cmake >=3.21
     - ninja
   host:
-    - python
+    # Build against the 3.12 floor; python-abi3 sets up the Stable-ABI build and
+    # carries the run_exports that pin the runtime to `python >=3.12` + python-abi3.
+    - python 3.12.*
+    - python-abi3 3.12.*
     - pip
     - scikit-build-core >=0.10
     - nanobind >=2.0
   run:
-    - python
+    - python-abi3 3.12.*
     - antlr4-python3-runtime >=4.13
 
 tests:
