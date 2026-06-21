@@ -1,5 +1,7 @@
 # Build artifacts
 /build/
+# Standalone build dir for scripts/bench_runtime_patches.py (runtime-patch A/B/C)
+/build-bench/
 /dist/
 # Coverage artifacts (pixi run coverage): data file, HTML site, JSON report
 /.coverage/

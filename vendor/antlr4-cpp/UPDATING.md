@@ -9,8 +9,11 @@ no external checkout.
 ## Provenance
 
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
-- **Snapshot commit:** `8d3a921f2` (fork `analog-cbarber/antlr4`, branch
-  `cpp-lockfree-dfa-edges`)
+- **Snapshot commit:** `ef36025ca` (fork `analog-cbarber/antlr4`, branch
+  `cpp-per-dfa-locks`, which stacks Patch 2 on Patch 1). Both patch branches are
+  pushed to the fork and base off upstream `7d5770395`:
+  - `cpp-lockfree-dfa-edges` (`020f86cd0`) — Patch 1 only.
+  - `cpp-per-dfa-locks` (`ef36025ca`) — Patch 1 + Patch 2; this is what `src/` mirrors.
 - **Patch 1 (PR1) — lock-free DFA-edge reads.** `DFAState::edges` is a
   lazily-allocated array of `std::atomic<DFAState*>` with lock-free `getEdge`,
   replacing the `FlatHashMap` guarded by a mutex. This is the per-character
@@ -24,7 +27,7 @@ no external checkout.
     lookahead (e.g. a single-token input). `getExistingTargetState` now reads
     `getEdge(t + 1)`, `addDFAEdge` writes `setEdge(t + 1, maxTokenType + 2, …)`
     and guards `t < -1`. Verified clean under AddressSanitizer.
-- **Patch 2 (local) — per-DFA write locks.** The DFA state/edge write locks were
+- **Patch 2 (PR2) — per-DFA write locks.** The DFA state/edge write locks were
   moved off the ATN (`ATN::_stateMutex` / `ATN::_edgeMutex`, now removed) and onto
   the DFA itself (`dfa::DFA::stateMutex()` / `edgeMutex()`, heap-allocated so DFA
   stays movable). `ATN::_mutex` remains for the lazy `nextTokens` cache. The

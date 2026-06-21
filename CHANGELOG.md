@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.9] - 2026-06-21
+
+### Added
+- A "The vendored runtime and its patches" section in **How it works** documenting
+  the two performance patches `antlrope` carries on top of the vendored ANTLR4 C++
+  runtime (lock-free DFA-edge reads; per-DFA write locks for shared-spec parallel
+  scaling), both written for upstream PRs, **with a measured breakdown of each
+  patch's contribution** (lock-free reads ≈12% of single-thread parse; per-DFA locks
+  turn shared-spec parallel parsing from 0.5× to ~2× scaling). Both patch branches
+  are now pushed to the `analog-cbarber/antlr4` fork; `vendor/antlr4-cpp/UPDATING.md`
+  points the snapshot reference at them.
+- `scripts/bench_runtime_patches.py`, a harness that rebuilds against pristine /
+  patched runtimes to reproduce that breakdown.
+
 ## [0.2.8] - 2026-06-21
 
 ### Added

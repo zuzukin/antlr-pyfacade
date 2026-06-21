@@ -68,6 +68,59 @@ read off the generated Python classes (see
 [`parser_spec`](reference/api.md#antlrope.FacadeListener.parser_spec) /
 [`lexer_spec`](reference/api.md#antlrope.FacadeListener.lexer_spec)).
 
+## The vendored runtime and its patches
+
+`antlrope` builds against a **vendored copy of the official ANTLR4 C++ runtime**
+(BSD-3-Clause, carried verbatim under `vendor/antlr4-cpp/src`) rather than the
+system runtime, so the wheel is self-contained. On top of that pristine copy it
+carries two performance patches, both written to be contributed back upstream as
+pull requests (tracked on the `analog-cbarber/antlr4` fork; see
+`vendor/antlr4-cpp/UPDATING.md` for the exact branches and commit):
+
+- **Lock-free DFA-edge reads.** The ATN simulator's hot path — looking up the next
+  DFA edge per input character — is changed from a mutex-guarded hash map to a
+  lazily-allocated array of `std::atomic<DFAState*>`, so the per-character read
+  path takes no lock. This is a straight single-thread parse speedup.
+- **Per-DFA write locks.** The DFA state/edge *write* locks are moved off the
+  shared ATN and onto each DFA. The stock runtime guards DFA mutation with a lock
+  that lives on the ATN, which every interpreter sharing a spec also shares — so
+  concurrent parses of one grammar serialize on a single lock even though their
+  DFAs are independent. Moving the lock onto the DFA lets independent parses
+  proceed in parallel; this is what makes [parallel parsing](parallel-parsing.md)
+  with a shared spec actually scale across threads instead of running *slower*
+  than serial.
+
+Neither patch changes parse results — they are purely concurrency/throughput
+improvements — and both are kept as small, isolated diffs so the snapshot can drop
+them once (if) they land upstream.
+
+### How much do the patches contribute?
+
+Rebuilding `antlrope` against the **pristine** upstream runtime and against each
+patch in turn isolates their effect (parsing a 4.7 MB JSON document on an Apple
+M5 Max; `scripts/bench_runtime_patches.py`):
+
+| runtime | single-thread parse | shared-spec parse, 4 threads |
+| --- | ---: | ---: |
+| pristine upstream | 551 ms | **0.5×** (parallel *slower* than serial) |
+| + lock-free DFA reads | 486 ms | 0.6× |
+| + per-DFA write locks | ~480 ms | **~2.0×** |
+
+Two distinct takeaways:
+
+- **The single-thread win is mostly architecture, not the runtime.** The lock-free
+  read path shaves ~12% off the parse; the rest of `antlrope`'s ~20× margin over
+  the pure-Python runtime (see [the SystemRDL benchmark](benchmarks/systemrdl.md))
+  comes from the bulk event stream, not the patched C++. Even on the stock runtime
+  `antlrope` would be ~18× faster than pure-Python here. (JSON is lexer-heavy, which
+  flatters this patch — its win is in the lexer's per-character DFA hot path; a
+  parser-heavy grammar shows less.)
+- **The parallel win is entirely the runtime.** On the stock runtime, parsing a
+  *shared* spec across threads is **2× slower than serial** — the per-ATN write lock
+  serializes every thread. The per-DFA write locks turn that into a ~2× speedup
+  (≈4× better wall-clock than the stock runtime threaded). Without this patch,
+  [parallel parsing](parallel-parsing.md) over a shared spec is pointless.
+
 [parse tree]: glossary.md#parse-tree
 [FFI]: glossary.md#ffi
 [facade]: glossary.md#facade
