@@ -43,7 +43,7 @@ import threading
 from collections import deque
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import ClassVar, NamedTuple, Protocol, Self
+from typing import ClassVar, NamedTuple, Protocol, Self, cast
 
 from . import _native
 from .location import LineCol, SourceMap
@@ -146,7 +146,9 @@ def _build_lexer_spec(lexer_cls: type[LexerProtocol]) -> _native.LexerSpec:
 _thread_specs = threading.local()
 
 
-def _specs_for_thread(cls: type) -> tuple[_native.ParserSpec, _native.LexerSpec]:
+def _specs_for_thread(
+    cls: type[FacadeListener],
+) -> tuple[_native.ParserSpec, _native.LexerSpec]:
     cache = getattr(_thread_specs, "cache", None)
     if cache is None:
         cache = _thread_specs.cache = {}
@@ -468,7 +470,7 @@ class FacadeListener:
         """No-op error callback; override in a subclass to handle error nodes."""
 
     @classmethod
-    def _facade_base(cls) -> type:
+    def _facade_base(cls) -> type[FacadeListener]:
         """Return the generated `<Grammar>EventListener` in this class's ancestry.
 
         That base (the class that directly subclasses `FacadeListener`) holds the
@@ -481,13 +483,13 @@ class FacadeListener:
         """
         for klass in cls.__mro__:
             if FacadeListener in klass.__bases__:
-                return klass
+                return cast("type[FacadeListener]", klass)
         raise TypeError(f"{cls.__name__} is not a generated facade listener subclass")
 
-    # TODO - pick a more precise declared base type or create a Protocol that has the expected interface
-
     @classmethod
-    def _resolve_start_rule(cls, base: type, start_rule: int | str | None) -> int:
+    def _resolve_start_rule(
+        cls, base: type[FacadeListener], start_rule: int | str | None
+    ) -> int:
         """Turn a rule name, rule index, or `None` into a rule index for `base`."""
         if start_rule is None:
             return base.START_RULE
