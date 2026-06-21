@@ -187,6 +187,10 @@ ruff = "*"
 # this >=3.12 docs env, so it stays on PyPI (pure-Python wheel) until conda-forge
 # ships a 3.12+ build. The Material-for-MkDocs-team static site generator.
 zensical = "*"
+# Versioned-docs deploys to gh-pages (the docs-deploy / docs-set-default tasks).
+# Must be the zensical-compatible fork (it builds via zensical, not mkdocs); it is
+# not on PyPI.
+mike = { git = "https://github.com/squidfunk/mike.git" }
 
 # conda-forge recipe builder (rattler-build). Isolated with no default feature:
 # rattler-build creates its own sandboxed build/host environment from the recipe,
@@ -329,6 +333,22 @@ cmd = "zensical serve"
 [tool.pixi.feature.docs.tasks.doc-clean]
 description = "Remove generated doc files"
 cmd = "rm -rf site"
+
+# Versioned-docs publishing to the gh-pages branch via mike (the fork in this env
+# builds with zensical). Versions are keyed by major.minor, so re-deploying a patch
+# overwrites its x.y in place — minor doc edits don't pile up versions. A later
+# CI/release-driven flow can call the same `mike deploy` instead.
+[tool.pixi.feature.docs.tasks.docs-deploy]
+description = "Build + deploy the current docs to gh-pages under their major.minor (aliased `latest`) and push."
+cmd = "mike deploy --push --update-aliases $(python -c \"print('.'.join(open('src/antlrope/VERSION').read().split('.')[:2]))\") latest"
+
+[tool.pixi.feature.docs.tasks.docs-set-default]
+description = "Point the gh-pages site root at the `latest` alias and push (run once, after the first deploy)."
+cmd = "mike set-default --push latest"
+
+[tool.pixi.feature.docs.tasks.docs-versions]
+description = "List the doc versions currently deployed on gh-pages (mike list)."
+cmd = "mike list"
 
 # Two local conda-build paths (each in its own environment):
 #   pixi run -e pack conda-whl2conda  — fast: build the abi3 wheel, convert it

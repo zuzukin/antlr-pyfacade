@@ -79,6 +79,14 @@ toggle.name = "Switch to light mode"
 icon = "fontawesome/brands/github"
 link = "https://github.com/zuzukin/antlrope"
 
+# Versioned docs via mike (the squidfunk/mike fork in the docs env). Versions are
+# organized by major.minor — the `docs-deploy` task deploys the current x.y, so
+# patch releases overwrite their minor in place rather than piling up. `alias = true`
+# surfaces the `latest` alias in the version selector.
+[project.extra.version]
+provider = "mike"
+alias = true
+
 [project.plugins.offline]
 enabled = false
 
