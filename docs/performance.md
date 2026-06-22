@@ -81,6 +81,14 @@ are unaffected.
 - **[GIL].** The native parse **releases the GIL**, so other Python threads keep
   running during a parse and `asyncio.to_thread(listener.walk, ...)` won't block
   the event loop.
+- **A full per-record listener costs about its parse again.** Walking a record with
+  every rule/token subscribed pays one Python loop iteration per kept event, so a
+  fully-subscribed listener roughly doubles the per-record cost over the native parse
+  alone (the "Python's per-item iteration" cost above). Claw it back by subscribing to
+  fewer rules/tokens — the facade emits only those from C++ — or by aggregating inside
+  a rule so fewer events cross into Python at all. The
+  [streaming-records recipe](streaming-records.md#cost-of-a-full-per-record-listener)
+  ties this to a record pipeline.
 
 ## Parallel parsing
 

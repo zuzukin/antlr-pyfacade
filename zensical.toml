@@ -20,6 +20,7 @@ nav = [
     { "Getting started" = "getting-started.md" },
     { "Chunking" = "chunking.md" },
     { "Parallel parsing" = "parallel-parsing.md" },
+    { "Recipe: streaming records" = "streaming-records.md" },
     { "Migrating" = "migrating.md" },
     { "How it works" = "concepts.md" },
     { "Performance & limitations" = "performance.md" },

@@ -48,6 +48,11 @@ pipeline — read, chunk, parse — stays bounded in the input size.
 
 `max_workers` defaults to `os.cpu_count()`; pass `1` to run inline without a pool.
 
+For an end-to-end pipeline over a file too large to hold in memory — streaming
+chunker into `walk_parallel`, plus preamble handling, terminator preservation, and
+recovering off-channel metadata — see the
+[streaming-records recipe](streaming-records.md).
+
 ## How much speedup?
 
 The per-event Python dispatch still holds the GIL, so the parallel speedup scales

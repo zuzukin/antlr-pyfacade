@@ -85,17 +85,34 @@ the pipeline stays bounded.
   record at a time over a bounded-memory lexer→parser pipeline. Records must be
   **directly adjacent** (only lexer-skipped whitespace/comments between them); with
   several candidate rules the next token chooses which to parse, so they should have
-  disjoint leading tokens (e.g. `class` vs `def`). Unlike `chunk_by_rule` it does not
-  find a rule *anywhere* in a full parse — for arbitrary nesting or comma-separated
-  records, use `chunk_by_rule` or `stream_on_token`.
+  disjoint leading tokens (e.g. `class` vs `def`). If an on-channel token begins no
+  candidate rule (an unsupported header or separator), it **raises** a clear error
+  naming the token and candidates rather than silently truncating. Unlike
+  `chunk_by_rule` it does not find a rule *anywhere* in a full parse — for arbitrary
+  nesting or comma-separated records, use `chunk_by_rule` or `stream_on_token`.
 
 ## Source positions and names
 
-Every chunk is trimmed of surrounding whitespace and carries its start
-`(offset, line, column)`; whitespace-only regions are skipped. Each chunker also
-takes a `sourcename=` (a filename for diagnostics) recorded on every chunk — the
+Every chunk carries its start `(offset, line, column)` against the whole source, so
+callbacks still report positions against the original after splitting. Each chunker
+also takes a `sourcename=` (a filename for diagnostics) recorded on every chunk — the
 streaming chunkers default it to their file path. During the parse it surfaces as
 [`FacadeListener.sourcename()`](reference/api.md#antlrope.FacadeListener.sourcename),
 so a callback can report a position as `sourcename:line:column`.
+
+By default each chunk is **trimmed** of surrounding whitespace and whitespace-only
+regions are dropped. Pass `trim=False` (on the delimiter chunkers) to keep every
+region verbatim — preserving a leading or trailing whitespace terminator such as a
+record's mandatory newline — dropping only truly empty, zero-length regions.
+
+## Leading and trailing regions (the preamble)
+
+With `where="before"`, content *before the first delimiter* becomes its own leading
+chunk — often a file's header or preamble; with `where="after"`, content *after the
+last delimiter* is a trailing chunk. Neither is special — each is just the first or
+last chunk — so skip or handle it explicitly. The
+[streaming-records recipe](streaming-records.md) walks through preamble handling,
+`trim=False` terminators, absolute positions, and recovering off-channel metadata end
+to end.
 
 [facade]: glossary.md#facade

@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.19] - 2026-06-22
+
+### Added
+- A **"streaming records" recipe** page — an end-to-end "file of records" pipeline: a
+  streaming chunker into `walk_parallel`, handling the preamble, preserving a
+  whitespace terminator with `trim=False`, absolute positions, and recovering
+  off-channel metadata via `lex`. Linked from the chunking, parallel-parsing, and
+  performance pages.
+
+### Changed
+- Docs: the chunking page documents `trim=` and the leading/trailing preamble region;
+  "How it works" explains that the walk is channel-blind (off-channel tokens are not in
+  the event stream) and how to recover them via `lex`; the performance page notes the
+  cost of a full per-record listener and its two levers (subscribe to fewer
+  rules/tokens, or aggregate in a rule).
+
 ## [0.2.18] - 2026-06-22
 
 ### Changed

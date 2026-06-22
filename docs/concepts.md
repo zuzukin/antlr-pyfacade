@@ -54,6 +54,22 @@ events. Override nothing extra and you pay for nothing extra.
 You can force a faithful, unfiltered stream with `walk(..., filtered=False)`,
 which is useful for diagnostics and for the correctness tests.
 
+## Off-channel tokens are not in the stream
+
+The event stream is built from the **parse tree**, which holds only the tokens the
+parser consumed — the default [token channel]. Tokens the lexer routed to a hidden
+channel (comments, directives, alignment metadata) are not in the tree, so they never
+appear as `TERMINAL` events and never reach `visitTerminal`. The walk is channel-blind
+by construction; even `filtered=False` only adds back the *on-channel* events the masks
+dropped.
+
+To recover off-channel tokens, lex the source separately:
+[`lex`](reference/api.md#antlrope.FacadeListener.lex) returns *every* token with its
+`channel` and `(start, stop)` span, so you can filter to the off-channel ones and
+correlate them with the parse by offset. The
+[streaming-records recipe](streaming-records.md#recover-off-channel-metadata) shows
+this against per-record chunks.
+
 ## What runs where
 
 - **C++**: [ATN] deserialization, `LexerInterpreter` + `ParserInterpreter`, the
@@ -125,3 +141,4 @@ Two distinct takeaways:
 [FFI]: glossary.md#ffi
 [facade]: glossary.md#facade
 [ATN]: glossary.md#atn
+[token channel]: glossary.md#token-channel
