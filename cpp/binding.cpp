@@ -639,15 +639,25 @@ struct StreamRuleChunker {
     // (rule index, FIRST set) candidates, tried in the given order so the first
     // whose FIRST set contains the next token is chosen.
     std::vector<std::pair<size_t, antlr4::misc::IntervalSet>> candidates;
+    // Borrowed from the parser spec (kept alive via keep_alive) for diagnostics —
+    // token display names and candidate rule names in the loud-failure messages.
+    const dfa::Vocabulary *vocab = nullptr;
+    const std::vector<std::string> *prule_names = nullptr;
 
     size_t origin_idx = 0;   // absolute index for which (origin_line/col) hold
     size_t origin_line = 1;  // 1-based, like SourceMap
     size_t origin_col = 0;   // 0-based
     bool done = false;
+    // When a malformed record is hit mid-batch we flush the records gathered so far
+    // (none lost) and stash the diagnostic here; the next call throws it without
+    // re-parsing (re-parsing could skip past a record the failed parse consumed).
+    std::string pending_error;
 
     StreamRuleChunker(ParserSpec &pspec, LexerSpec &lspec,
                       const std::string &path, std::vector<int32_t> rule_indices,
                       bool lenient, size_t block) {
+        vocab = &pspec.vocabulary;
+        prule_names = &pspec.rule_names;
         stream = std::make_unique<antlrope::Utf8FileCharStream>(path, lenient,
                                                                       block);
         // The interpreters hold references into the specs (ATN + name lists), so
@@ -687,8 +697,81 @@ struct StreamRuleChunker {
         origin_idx = to;
     }
 
-    // Parse up to `n` records or until EOF / a token that starts no candidate rule.
+    // Comma-separated candidate rule names, for diagnostics.
+    std::string candidate_names() const {
+        std::string s;
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            if (i) {
+                s += ", ";
+            }
+            size_t r = candidates[i].first;
+            s += (prule_names && r < prule_names->size()) ? (*prule_names)[r]
+                                                          : std::to_string(r);
+        }
+        return s;
+    }
+
+    // "<NAME> \"<text>\" at line L:C" for the offending token. The text is read from
+    // the retained window via our own char stream — NOT Token::getText(), which calls
+    // CharStream::size() to bounds-check and so throws on an unbuffered source. It is
+    // capped at a UTF-8 codepoint boundary to stay valid UTF-8, and omitted if the
+    // token's characters are no longer buffered.
+    std::string token_desc(Token *la, ssize_t ttype) const {
+        std::string name = vocab ? vocab->getDisplayName(static_cast<size_t>(ttype))
+                                 : std::to_string(ttype);
+        std::string text;
+        try {
+            text = stream->getText(
+                antlr4::misc::Interval(static_cast<ssize_t>(la->getStartIndex()),
+                                       static_cast<ssize_t>(la->getStopIndex())));
+        } catch (const std::exception &) {
+            text.clear();  // characters already dropped from the window
+        }
+        if (text.size() > 48) {
+            size_t cut = 48;
+            while (cut > 0 &&
+                   (static_cast<unsigned char>(text[cut]) & 0xC0) == 0x80) {
+                cut--;
+            }
+            text = text.substr(0, cut) + "...";
+        }
+        std::string where = " at line " + std::to_string(la->getLine()) + ":" +
+                            std::to_string(la->getCharPositionInLine());
+        return text.empty() ? name + where : name + " '" + text + "'" + where;
+    }
+
+    std::string no_candidate_message(Token *la, ssize_t ttype) const {
+        return "stream_by_rule: token " + token_desc(la, ttype) +
+               " begins no candidate record rule (candidates: " + candidate_names() +
+               "). The input must be a directly-adjacent sequence of those rules, "
+               "separated only by lexer-skipped whitespace/comments; an on-channel "
+               "header or separator is not supported. Use chunk_by_rule for a "
+               "whole-input parse, or stream_on_token / stream_on_pattern to split on "
+               "a delimiter.";
+    }
+
+    std::string no_progress_message(ssize_t chosen, Token *la) const {
+        size_t r = static_cast<size_t>(chosen);
+        std::string rname = (prule_names && r < prule_names->size())
+                                ? (*prule_names)[r]
+                                : std::to_string(chosen);
+        return "stream_by_rule: rule '" + rname + "' consumed no tokens at line " +
+               std::to_string(la->getLine()) + ":" +
+               std::to_string(la->getCharPositionInLine()) +
+               " — it can match empty input, so the stream cannot advance. Give "
+               "stream_by_rule a record rule that always consumes at least one token.";
+    }
+
+    // Parse up to `n` records. Stops cleanly at EOF; raises (std::runtime_error)
+    // if an on-channel token begins no candidate rule, or a chosen rule consumes
+    // nothing — a malformed "file of records" rather than a silent truncation. Any
+    // records already gathered this batch are flushed first (returned with more=
+    // true) so none are lost; the stashed diagnostic is thrown on the next call.
     bool run_batch(size_t n, std::vector<ChunkRec> &out) {
+        if (!pending_error.empty()) {  // a flushed batch deferred this error
+            done = true;
+            throw std::runtime_error(pending_error);
+        }
         if (done) {
             return false;
         }
@@ -707,8 +790,13 @@ struct StreamRuleChunker {
                 }
             }
             if (chosen < 0) {  // nothing here can begin a record
-                done = true;
-                return false;
+                std::string msg = no_candidate_message(la, ttype);
+                if (!out.empty()) {  // flush gathered records; throw next call
+                    pending_error = std::move(msg);
+                    return true;
+                }
+                done = true;  // latch closed before throwing
+                throw std::runtime_error(msg);
             }
             size_t before = tokens->index();
             // Hold a mark across the parse so UnbufferedTokenStream keeps this
@@ -721,8 +809,13 @@ struct StreamRuleChunker {
             tokens->release(mark);
             parser->getTreeTracker().reset();  // free this record's parse tree
             if (tokens->index() == before || start < 0 || stop < start) {
-                done = true;  // no progress / no span — stop the stream
-                return false;
+                std::string msg = no_progress_message(chosen, la);
+                if (!out.empty()) {  // flush gathered records; throw next call
+                    pending_error = std::move(msg);
+                    return true;
+                }
+                done = true;
+                throw std::runtime_error(msg);
             }
             size_t s = static_cast<size_t>(start);
             size_t e = static_cast<size_t>(stop);

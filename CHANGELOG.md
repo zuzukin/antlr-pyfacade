@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.18] - 2026-06-22
+
+### Changed
+- `stream_by_rule` now **fails loudly instead of silently truncating**. When an
+  on-channel token begins no candidate record rule (e.g. an unsupported header or
+  record separator), or a chosen record consumes no tokens, it raises a `RuntimeError`
+  naming the offending token (type, text, `line:column`) and the candidate rules,
+  rather than quietly ending the stream — which previously surfaced a malformed input
+  as an empty or truncated result. Records parsed before the offending token are still
+  yielded first, so the error arrives after them. The streaming char source's `size()`
+  message is likewise rewritten to explain the cause (the parser fell back to
+  whole-input error recovery) and to point at `chunk_by_rule` / the `split_*` chunkers.
+
 ## [0.2.17] - 2026-06-22
 
 ### Added

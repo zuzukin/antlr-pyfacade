@@ -122,7 +122,11 @@ public:
 
     size_t size() override {
         throw antlr4::UnsupportedOperationException(
-            "Unbuffered stream cannot know its size");
+            "streaming char source has no known total size: size() requires the "
+            "whole input. This usually means the parser fell back to whole-input "
+            "error recovery on a malformed record. Give stream_by_rule / stream_on_* "
+            "a clean sequence of records, or use the in-memory chunkers "
+            "(chunk_by_rule, split_*) for input that needs a full parse.");
     }
 
     std::string getSourceName() const override {

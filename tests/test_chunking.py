@@ -590,13 +590,28 @@ def test_stream_by_rule(tmp_path):
 
 
 def test_stream_by_rule_stop_and_errors(tmp_path):
-    # The stream stops at the first token that begins no candidate rule: here a bare
-    # STRING is neither obj nor arr, so only the leading object is yielded.
+    # A streaming "file of records" must be a clean sequence: an on-channel token that
+    # begins no candidate rule fails loudly — naming the token and the candidates —
+    # rather than silently truncating. Records parsed before it are yielded first.
     path = tmp_path / "loose.json"
     path.write_text('{"a": 1} "loose" {"b": 2}', encoding="utf-8")
-    assert [c.text for c in JsonValueBuilder.stream_by_rule(path, ["obj", "arr"])] == [
-        '{"a": 1}'
-    ]
+    got = []
+    with pytest.raises(RuntimeError, match=r"STRING.*begins no candidate.*obj, arr"):
+        for c in JsonValueBuilder.stream_by_rule(path, ["obj", "arr"]):
+            got.append(c.text)
+    assert got == ['{"a": 1}']  # the valid leading record arrives before the error
+
+    # The same failure on the very first token yields nothing, then raises — the old
+    # behavior here was a silent empty result that hid the malformed input.
+    head = tmp_path / "head.json"
+    head.write_text('"header"\n{"a": 1}', encoding="utf-8")
+    with pytest.raises(RuntimeError, match="begins no candidate record rule"):
+        list(JsonValueBuilder.stream_by_rule(head, ["obj", "arr"]))
+
+    # A truly empty input is zero records, not an error.
+    empty = tmp_path / "empty.json"
+    empty.write_text("", encoding="utf-8")
+    assert list(JsonValueBuilder.stream_by_rule(empty, "value")) == []
 
     # sourcename defaults to the path and is overridable.
     seq = tmp_path / "s.json"

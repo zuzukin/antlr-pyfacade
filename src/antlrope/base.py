@@ -1583,12 +1583,19 @@ class FacadeListener:
 
         Yields:
             One [Chunk][antlrope.Chunk] per record, in source order, carrying its
-            position. The stream stops at end of input, or at the first token that begins
-            no candidate rule (or a record that fails to parse) — best-effort, like the
-            other chunkers.
+            position. The whole input must be a sequence of records: the stream stops
+            cleanly only at end of input (trailing lexer-skipped whitespace/comments
+            are fine).
 
         Raises:
             ValueError: If `encoding` is not UTF-8, or a rule name is unknown.
+            RuntimeError: If an on-channel token begins no candidate rule (e.g. an
+                unsupported header or record separator) or a chosen record fails to
+                make progress — the message names the offending token and the
+                candidate rules. Records parsed before the offending token are
+                yielded first, so the error surfaces only after them. (Previously the
+                stream stopped silently here, which could hide a malformed input as an
+                empty or truncated result.)
         """
         if codecs.lookup(encoding).name != "utf-8":
             raise ValueError(
