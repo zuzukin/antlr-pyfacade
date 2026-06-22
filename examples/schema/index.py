@@ -69,27 +69,35 @@ class SchemaIndexer(SchemaEventListener):
     """Collect a `TypeDef` for every message/enum definition walked.
 
     There are no node objects: state is reconstructed from the *order* of events,
-    the usual antlrope listener pattern. Each definition is bracketed by
-    `enter`/`exit{Message,Enum}Def`; inside it, the first `ID` (before the `{`) is
-    the type's name and the later `ID`s name its members.
+    the usual antlrope listener pattern — but here the scope helpers carry the
+    weight. `enter`/`exit{Message,Enum}Def` bracket each definition; inside it,
+    `current_rule()` says which kind of `ID` we're looking at, so there is no
+    `{`-seen flag and no field-name lookahead:
+
+      * an `ID` directly under `messageDef` / `enumDef` is the type's own name —
+        or, for an `enum` (whose constants are bare IDs), one of its members;
+      * an `ID` inside a `field` (`fieldType ID ';'`) is a message field's name;
+      * an `ID` inside a `fieldType` is the field's *type* — not part of the index.
+
+    `enterEveryRule` (a no-op here) subscribes the listener to every rule, so
+    `current_rule()` can see the inner `field` / `fieldType` scopes — without it,
+    the innermost *subscribed* rule would only ever be the message/enum we act on.
     """
 
     def __init__(self) -> None:
         self.types: list[TypeDef] = []
         self._cur: TypeDef | None = None
-        self._in_body = False
-        self._last_id = ""
+
+    # Subscribe to all rules so current_rule() reflects the true innermost rule
+    # (field / fieldType), not just the message/enum scopes we open below.
+    def enterEveryRule(self, rule_index: int) -> None: ...
 
     # A definition starts: open a fresh TypeDef…
     def enterMessageDef(self) -> None:
-        self._begin("message")
+        self._cur = TypeDef("message")
 
     def enterEnumDef(self) -> None:
-        self._begin("enum")
-
-    def _begin(self, kind: str) -> None:
-        self._cur = TypeDef(kind)
-        self._in_body = False
+        self._cur = TypeDef("enum")
 
     # …and ends: commit it.
     def exitMessageDef(self) -> None:
@@ -105,19 +113,17 @@ class SchemaIndexer(SchemaEventListener):
 
     def visitTerminal(self, token_type: int, text: str) -> None:
         cur = self._cur
-        if cur is None:
+        if cur is None or token_type != self.ID:
             return
-        if token_type == self.LBRACE:
-            self._in_body = True  # past the name, into the body
-        elif token_type == self.ID:
-            if not self._in_body:
-                cur.name = text  # the type's own name (before the `{`)
-            elif cur.kind == "enum":
-                cur.members.append(text)  # enum constants are bare IDs
+        rule = self.current_rule()
+        if rule == "field":
+            cur.members.append(text)  # a message field name: `fieldType ID ';'`
+        elif rule in ("messageDef", "enumDef"):
+            if not cur.name:
+                cur.name = text  # the definition's own name (the ID before `{`)
             else:
-                self._last_id = text  # message field is `fieldType ID ;`
-        elif token_type == self.SEMI and cur.kind == "message":
-            cur.members.append(self._last_id)  # the field name: the ID before `;`
+                cur.members.append(text)  # an enum constant (bare ID in the body)
+        # rule == "fieldType": the field's declared type — not indexed.
 
 
 # --- the three ways to run it -------------------------------------------------

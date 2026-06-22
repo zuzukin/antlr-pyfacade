@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.15] - 2026-06-21
+
+### Changed
+- The schema indexing example (`examples/schema/index.py` and its docs page) now
+  uses the new scope helpers: `current_rule()` (with a no-op `enterEveryRule` to
+  subscribe to all rules) distinguishes a definition name from a field name from a
+  field type, replacing the hand-tracked `_in_body` flag and `_last_id` lookahead.
+
 ## [0.2.14] - 2026-06-21
 
 ### Added

@@ -41,35 +41,41 @@ The keywords and punctuation get named lexer rules (`MESSAGE`, `LBRACE`, …), s
 
 `SchemaIndexer` collects one `TypeDef` (kind, name, member names) per definition.
 As in the JSON example there are no node objects — state is reconstructed from event
-order. A definition is bracketed by `enter`/`exit{Message,Enum}Def`; inside it, the
-first `ID` (before the `{`) is the type's name and the later `ID`s name its members:
+order — but here the scope helpers do the work. A definition is bracketed by
+`enter`/`exit{Message,Enum}Def`; inside it, `current_rule()` says which kind of `ID`
+we're looking at, so there's no `{`-seen flag and no field-name lookahead:
 
 ```python
 class SchemaIndexer(SchemaEventListener):
     def __init__(self) -> None:
         self.types: list[TypeDef] = []
         self._cur: TypeDef | None = None
-        self._in_body = False
-        self._last_id = ""
 
-    def enterMessageDef(self) -> None: self._begin("message")
-    def enterEnumDef(self) -> None:    self._begin("enum")
+    # Subscribe to every rule so current_rule() sees the inner field / fieldType
+    # scopes, not just the message/enum we act on. The hook itself does nothing.
+    def enterEveryRule(self, rule_index: int) -> None: ...
+
+    def enterMessageDef(self) -> None: self._cur = TypeDef("message")
+    def enterEnumDef(self) -> None:    self._cur = TypeDef("enum")
     def exitMessageDef(self) -> None:  self._commit()
     def exitEnumDef(self) -> None:     self._commit()
 
     def visitTerminal(self, token_type: int, text: str) -> None:
         cur = self._cur
-        if cur is None:
+        if cur is None or token_type != self.ID:
             return
-        if token_type == self.LBRACE:
-            self._in_body = True                 # past the name, into the body
-        elif token_type == self.ID:
-            if not self._in_body:    cur.name = text          # the type's own name
-            elif cur.kind == "enum": cur.members.append(text) # enum constants
-            else:                    self._last_id = text     # message field name
-        elif token_type == self.SEMI and cur.kind == "message":
-            cur.members.append(self._last_id)    # the ID right before `;`
+        rule = self.current_rule()
+        if rule == "field":                    # message field: `fieldType ID ';'`
+            cur.members.append(text)
+        elif rule in ("messageDef", "enumDef"):
+            if not cur.name: cur.name = text           # the definition's name…
+            else:            cur.members.append(text)  # …then enum constants
+        # rule == "fieldType": the field's declared type — not indexed.
 ```
+
+`current_rule()` (with `depth()` / `rule_stack()`) reflects exactly the rules you
+subscribe to; overriding the no-op `enterEveryRule` subscribes to all of them, so the
+inner `field` / `fieldType` scopes become visible.
 
 The same listener works whether it walks the whole file (accumulating every
 definition into `self.types`) or a single definition (one entry) — which is what
