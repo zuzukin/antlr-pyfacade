@@ -31,6 +31,25 @@ so there is **nothing to compile** on install. A single CPython Stable ABI
 
 The minimum supported Python is **3.12**.
 
+## Type checking
+
+`antlrope` ships `py.typed` with full type information, so type checkers resolve its
+public API and submodules out of the box — `from antlrope import Chunk,
+FacadeListener, SourceMap` and `import antlrope.generate` all check cleanly.
+
+If your checker reports `reportMissingImports` / "could not be resolved", it is
+almost always pointed at the wrong interpreter — not the environment where
+`antlrope` is installed. Point it at that environment:
+
+- **Pyright**: set `pythonPath` (or `venvPath` + `venv`) in `pyrightconfig.json` /
+  `pyproject.toml`, run it from the activated virtualenv, or pass
+  `--pythonpath /path/to/venv/bin/python`.
+- **mypy**: run it from the same environment, or use `--python-executable`.
+
+Note `antlrope.generate` is a *module* (the CLI), so import it as
+`import antlrope.generate` / `from antlrope.generate import generate` — it is not a
+top-level re-exported name.
+
 ## Install the ANTLR tool (to generate parsers)
 
 To turn a `.g4` grammar into the Python parser modules `antlrope` drives, you

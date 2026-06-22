@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.16] - 2026-06-22
+
+### Added
+- A "Type checking" section in the installation docs, plus a
+  `scripts/typecheck_smoke.py` guard (checked by `pixi run typecheck`) that the
+  public API resolves as `from antlrope import …`. antlrope's shipped types are
+  correct — `py.typed` ships in the wheel and the re-exports are public via `__all__`
+  (verified: Pyright reports 0 errors against an installed wheel). A "could not be
+  resolved" error means the checker is pointed at the wrong interpreter, not at the
+  environment where antlrope is installed.
+
 ## [0.2.15] - 2026-06-21
 
 ### Changed
