@@ -90,11 +90,11 @@ class ParserSpec:
     def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], serialized: Sequence[int]) -> None: ...
 
 class StreamChunker:
-    def __init__(self, lexer_spec: LexerSpec, path: str, delim_types: Sequence[int], where: int, channel: int | None, lenient: bool, block: int = 0) -> None: ...
+    def __init__(self, lexer_spec: LexerSpec, path: str, delim_types: Sequence[int], where: int, channel: int | None, lenient: bool, trim: bool, block: int = 0) -> None: ...
 
     def next_batch(self, n: int) -> tuple[list[tuple[int, int, int, str]], bool]:
         """
-        Pull up to n chunk records from the streaming token chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples (whitespace trimmed, whitespace-only regions skipped) and more is False once the final region at EOF has been emitted.
+        Pull up to n chunk records from the streaming token chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples (whitespace trimmed unless trim=False; empty regions skipped) and more is False once the final region at EOF has been emitted.
         """
 
 class StreamRuleChunker:

@@ -76,6 +76,7 @@ _RULE = struct.Struct("<3i")
 #: The default token channel — what the lexer routes ordinary tokens to.
 DEFAULT_CHANNEL = 0
 
+
 # Structural types for the stock ANTLR `<Grammar>Parser` / `<Grammar>Lexer`
 # classes — just the grammar metadata antlrope reads off them. A generated class
 # satisfies these without nominal inheritance: a `Protocol` matches by structure,
@@ -302,11 +303,22 @@ class Chunk(NamedTuple):
 
     @staticmethod
     def _from_span(
-        text: str, sm: SourceMap, start: int, stop: int, sourcename: str = ""
+        text: str,
+        sm: SourceMap,
+        start: int,
+        stop: int,
+        sourcename: str = "",
+        *,
+        trim: bool = True,
     ) -> Chunk | None:
-        """Build a positioned `Chunk` for `text[start:stop]`, trimming surrounding
-        whitespace; return `None` if the region is whitespace-only."""
+        """Build a positioned `Chunk` for `text[start:stop]`.
+
+        With `trim=True` (default) strip surrounding whitespace and skip a
+        whitespace-only region (returns `None`); with `trim=False` keep the span
+        verbatim (only an empty region returns `None`)."""
         seg = text[start:stop]
+        if not trim:
+            return Chunk(seg, start, *sm.line_col(start), sourcename) if seg else None
         stripped = seg.lstrip()
         body = stripped.rstrip()
         if not body:
@@ -321,6 +333,7 @@ class Chunk(NamedTuple):
         rx: re.Pattern[str],
         where: str,
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Split the concatenation of `increments` at each `rx` match, streaming.
 
@@ -353,15 +366,20 @@ class Chunk(NamedTuple):
                 origin = to
 
         def make_chunk(a: int, b: int) -> Chunk | None:
-            # Region [a, b): trim surrounding whitespace, advance origin to b, and
-            # return a positioned Chunk (None for a whitespace-only region).
+            # Region [a, b): with trim, strip surrounding whitespace; otherwise keep
+            # it verbatim. Advance origin to b; return None for an empty region (or,
+            # when trimming, a whitespace-only one).
             seg = buf[a - base : b - base]
-            stripped = seg.lstrip()
-            body = stripped.rstrip()
+            if trim:
+                stripped = seg.lstrip()
+                body = stripped.rstrip()
+                offset = a + (len(seg) - len(stripped))
+            else:
+                body = seg
+                offset = a
             if not body:
                 advance_origin(b)
                 return None
-            offset = a + (len(seg) - len(stripped))
             advance_origin(offset)
             line, column = oline, ocol
             advance_origin(b)
@@ -979,6 +997,7 @@ class FacadeListener:
         where: str = "before",
         channel: int | None = DEFAULT_CHANNEL,
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Split `text` into chunks at each delimiter token.
 
@@ -1002,11 +1021,16 @@ class FacadeListener:
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
+            trim: When `True` (the default) each chunk is stripped of surrounding
+                whitespace and whitespace-only regions are dropped. Pass `False`
+                to keep every region verbatim — preserving a leading or trailing
+                whitespace terminator such as a record's mandatory newline —
+                dropping only truly empty (zero-length) regions.
 
         Yields:
-            One [Chunk][antlrope.Chunk] per region between delimiters, trimmed of
-            surrounding whitespace and carrying its source position. Whitespace-only
-            regions are skipped.
+            One [Chunk][antlrope.Chunk] per region between delimiters, carrying its
+            source position; by default trimmed of surrounding whitespace with
+            whitespace-only regions skipped (see `trim`).
         """
         if where not in ("before", "after"):
             raise ValueError(f"where must be 'before' or 'after', got {where!r}")
@@ -1021,23 +1045,25 @@ class FacadeListener:
         if where == "before":
             first = bounds[0].start if bounds else n
             if first > 0:  # leading region, before the first delimiter
-                chunk = Chunk._from_span(text, sm, 0, first, sourcename)
+                chunk = Chunk._from_span(text, sm, 0, first, sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
             for i, b in enumerate(bounds):
                 end = bounds[i + 1].start if i + 1 < len(bounds) else n
-                chunk = Chunk._from_span(text, sm, b.start, end, sourcename)
+                chunk = Chunk._from_span(text, sm, b.start, end, sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
         else:  # after
             prev = 0
             for b in bounds:
-                chunk = Chunk._from_span(text, sm, prev, b.stop + 1, sourcename)
+                chunk = Chunk._from_span(
+                    text, sm, prev, b.stop + 1, sourcename, trim=trim
+                )
                 if chunk is not None:
                     yield chunk
                 prev = b.stop + 1
             if prev < n:  # trailing region, after the last delimiter
-                chunk = Chunk._from_span(text, sm, prev, n, sourcename)
+                chunk = Chunk._from_span(text, sm, prev, n, sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
 
@@ -1051,6 +1077,7 @@ class FacadeListener:
         encoding: str = "utf-8",
         channel: int | None = DEFAULT_CHANNEL,
         sourcename: str = "",
+        trim: bool = True,
         batch: int = 256,
         cached: bool = True,
         _block_bytes: int = 0,
@@ -1083,15 +1110,21 @@ class FacadeListener:
             sourcename: Source name recorded on each [Chunk][antlrope.Chunk] (and
                 surfaced as [sourcename][antlrope.FacadeListener.sourcename] during
                 a walk). Defaults to `str(path)`.
+            trim: When `True` (the default) each chunk is stripped of surrounding
+                whitespace and whitespace-only regions are dropped. Pass `False`
+                to keep every region verbatim — preserving a leading or trailing
+                whitespace terminator such as a record's mandatory newline —
+                dropping only truly empty (zero-length) regions.
             batch: How many chunk records to pull from C++ per call — a throughput knob,
                 not observable in the output.
             cached: Reuse the cached lexer spec (see
                 [lexer_spec][antlrope.FacadeListener.lexer_spec]).
 
         Yields:
-            One [Chunk][antlrope.Chunk] per region between delimiters, trimmed of
-            surrounding whitespace and carrying its source position; whitespace-only
-            regions are skipped. Equivalent to `split_on_token` over the file's text.
+            One [Chunk][antlrope.Chunk] per region between delimiters, carrying its
+            source position; by default trimmed of surrounding whitespace with
+            whitespace-only regions skipped (see `trim`). Equivalent to
+            `split_on_token` over the file's text.
 
         Raises:
             ValueError: If `where` is not `"before"`/`"after"`, or `encoding` is not
@@ -1117,6 +1150,7 @@ class FacadeListener:
             0 if where == "before" else 1,
             channel,
             True,  # lenient: substitute U+FFFD for malformed bytes
+            trim,
             _block_bytes,
         )
         more = True
@@ -1134,6 +1168,7 @@ class FacadeListener:
         nested: bool = False,
         channel: int | None = DEFAULT_CHANNEL,
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Yield a chunk for each region bounded by an opener/closer pair.
 
@@ -1159,6 +1194,9 @@ class FacadeListener:
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
+            trim: When `True` (the default) the region is stripped of surrounding
+                whitespace; pass `False` to keep it verbatim. The span runs from
+                the opener to the closer, so there is rarely any to strip.
 
         Yields:
             One [Chunk][antlrope.Chunk] per region — the text from the opener's
@@ -1204,6 +1242,7 @@ class FacadeListener:
                                 toks[start].start,
                                 toks[idx].stop + 1,
                                 sourcename,
+                                trim=trim,
                             )
                             if chunk is not None:
                                 yield chunk
@@ -1219,7 +1258,12 @@ class FacadeListener:
                     if j >= n:
                         break  # opener with no matching closer
                     chunk = Chunk._from_span(
-                        text, sm, toks[idx].start, toks[j].stop + 1, sourcename
+                        text,
+                        sm,
+                        toks[idx].start,
+                        toks[j].stop + 1,
+                        sourcename,
+                        trim=trim,
                     )
                     if chunk is not None:
                         yield chunk
@@ -1236,6 +1280,7 @@ class FacadeListener:
         where: str = "before",
         flags: int | re.RegexFlag = 0,
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Split `text` into chunks at each match of a delimiter regex.
 
@@ -1257,10 +1302,16 @@ class FacadeListener:
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
+            trim: When `True` (the default) each chunk is stripped of surrounding
+                whitespace and whitespace-only regions are dropped. Pass `False`
+                to keep every region verbatim — preserving a leading or trailing
+                whitespace terminator such as a record's mandatory newline —
+                dropping only truly empty (zero-length) regions.
 
         Yields:
-            One [Chunk][antlrope.Chunk] per region between matches, trimmed of
-            surrounding whitespace; whitespace-only regions are skipped.
+            One [Chunk][antlrope.Chunk] per region between matches, carrying its
+            source position; by default trimmed of surrounding whitespace with
+            whitespace-only regions skipped (see `trim`).
         """
         if where not in ("before", "after"):
             raise ValueError(f"where must be 'before' or 'after', got {where!r}")
@@ -1271,23 +1322,25 @@ class FacadeListener:
         if where == "before":
             first = matches[0].start() if matches else n
             if first > 0:  # leading region, before the first match
-                chunk = Chunk._from_span(text, sm, 0, first, sourcename)
+                chunk = Chunk._from_span(text, sm, 0, first, sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
             for i, m in enumerate(matches):
                 end = matches[i + 1].start() if i + 1 < len(matches) else n
-                chunk = Chunk._from_span(text, sm, m.start(), end, sourcename)
+                chunk = Chunk._from_span(
+                    text, sm, m.start(), end, sourcename, trim=trim
+                )
                 if chunk is not None:
                     yield chunk
         else:  # after
             prev = 0
             for m in matches:
-                chunk = Chunk._from_span(text, sm, prev, m.end(), sourcename)
+                chunk = Chunk._from_span(text, sm, prev, m.end(), sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
                 prev = m.end()
             if prev < n:  # trailing region, after the last match
-                chunk = Chunk._from_span(text, sm, prev, n, sourcename)
+                chunk = Chunk._from_span(text, sm, prev, n, sourcename, trim=trim)
                 if chunk is not None:
                     yield chunk
 
@@ -1303,6 +1356,7 @@ class FacadeListener:
         window_lines: int | None = None,
         encoding: str = "utf-8",
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Stream chunks from a text source at each delimiter regex match.
 
@@ -1341,12 +1395,17 @@ class FacadeListener:
                 surfaced as [sourcename][antlrope.FacadeListener.sourcename] during
                 a walk). Defaults to the path when `source` is a path, else `None` — pass
                 it for a stream or iterable that has no path.
+            trim: When `True` (the default) each chunk is stripped of surrounding
+                whitespace and whitespace-only regions are dropped. Pass `False`
+                to keep every region verbatim — preserving a leading or trailing
+                whitespace terminator such as a record's mandatory newline —
+                dropping only truly empty (zero-length) regions.
 
         Yields:
-            One [Chunk][antlrope.Chunk] per region between matches, trimmed of
-            surrounding whitespace and carrying its source position; whitespace-only
-            regions are skipped. Equivalent to `split_on_pattern` over the source's
-            decoded text.
+            One [Chunk][antlrope.Chunk] per region between matches, carrying its
+            source position; by default trimmed of surrounding whitespace with
+            whitespace-only regions skipped (see `trim`). Equivalent to
+            `split_on_pattern` over the source's decoded text.
 
         Raises:
             ValueError: If `where` is not `"before"`/`"after"`.
@@ -1367,7 +1426,7 @@ class FacadeListener:
         else:
             increments = iter(source)
         try:
-            yield from Chunk._split_stream(increments, rx, where, sourcename)
+            yield from Chunk._split_stream(increments, rx, where, sourcename, trim)
         finally:
             if opened is not None:
                 opened.close()
@@ -1380,6 +1439,7 @@ class FacadeListener:
         *,
         flags: int | re.RegexFlag = 0,
         sourcename: str = "",
+        trim: bool = True,
     ) -> Iterator[Chunk]:
         """Yield one chunk per non-overlapping match of `pattern`.
 
@@ -1398,15 +1458,22 @@ class FacadeListener:
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
+            trim: When `True` (the default) each match is stripped of surrounding
+                whitespace and a whitespace-only match is dropped. Pass `False` to
+                keep each match verbatim, dropping only truly empty (zero-length)
+                matches.
 
         Yields:
-            One [Chunk][antlrope.Chunk] per match, trimmed of surrounding
-            whitespace; empty matches are skipped.
+            One [Chunk][antlrope.Chunk] per match, carrying its source position; by
+            default trimmed of surrounding whitespace with whitespace-only matches
+            skipped (see `trim`).
         """
         rx = re.compile(pattern, flags) if isinstance(pattern, str) else pattern
         sm = SourceMap(text)
         for m in rx.finditer(text):
-            chunk = Chunk._from_span(text, sm, m.start(), m.end(), sourcename)
+            chunk = Chunk._from_span(
+                text, sm, m.start(), m.end(), sourcename, trim=trim
+            )
             if chunk is not None:
                 yield chunk
 

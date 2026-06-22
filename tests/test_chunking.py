@@ -199,7 +199,7 @@ def test_stream_on_token_encoding_and_errors(tmp_path):
     assert lenient[1] == '{"b": 2}'
 
     spec = JsonValueBuilder.lexer_spec()
-    strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, 0)
+    strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, True, 0)
     with pytest.raises(RuntimeError):
         strict.next_batch(10)
 
@@ -284,6 +284,70 @@ def test_stream_on_pattern_encoding(tmp_path):
             )
         ]
         assert got == want, enc
+
+
+def test_trim(tmp_path):
+    # trim=False keeps each region verbatim (only zero-length regions are dropped),
+    # so a record's mandatory whitespace terminator survives the split; trim=True
+    # (the default) strips surrounding whitespace and drops whitespace-only regions.
+    # The native streamers must honor trim= identically to their in-memory oracles.
+    text = '{"a":1}  \n  {"b":2}  \n '  # '}' at offsets 6 and 18
+    path = tmp_path / "v.json"
+    path.write_text(text, encoding="utf-8")
+
+    # token-based, where="after": each chunk ends just past a '}'.
+    assert [
+        c.text for c in JsonValueBuilder.split_on_token(text, RBRACE, where="after")
+    ] == ['{"a":1}', '{"b":2}']
+    raw = list(JsonValueBuilder.split_on_token(text, RBRACE, where="after", trim=False))
+    assert [c.text for c in raw] == ['{"a":1}', '  \n  {"b":2}', "  \n "]
+    # offsets/lines still index the original source — no shift from a skipped strip.
+    assert [(c.offset, c.line, c.column) for c in raw] == [
+        (0, 1, 0),
+        (7, 1, 7),
+        (19, 2, 9),
+    ]
+    assert raw[-1].text.endswith("\n ")  # trailing whitespace-only region preserved
+
+    # the native stream_on_token reproduces that trim=False output exactly, across
+    # block sizes that straddle the trailing-whitespace regions.
+    want = [(c.text, c.offset, c.line, c.column) for c in raw]
+    for block in (0, 1, 2, 3, 7):
+        got = [
+            (c.text, c.offset, c.line, c.column)
+            for c in JsonValueBuilder.stream_on_token(
+                path, RBRACE, where="after", trim=False, _block_bytes=block
+            )
+        ]
+        assert got == want, block
+
+    # pattern-based: split_on_pattern and its native streamer agree with trim=False.
+    pat = [
+        c.text
+        for c in JsonValueBuilder.split_on_pattern(
+            text, r"\}", where="after", trim=False
+        )
+    ]
+    assert pat == ['{"a":1}', '  \n  {"b":2}', "  \n "]
+    for wc in (1, 2, 3, 65536):
+        got = [
+            c.text
+            for c in JsonValueBuilder.stream_on_pattern(
+                path, r"\}", where="after", trim=False, window_chars=wc
+            )
+        ]
+        assert got == pat, wc
+
+    # chunk_by_pattern: a record pattern that also captures the trailing whitespace
+    # keeps it only with trim=False.
+    rec = r"\{[^}]*\}\s*"
+    assert [c.text for c in JsonValueBuilder.chunk_by_pattern(text, rec)] == [
+        '{"a":1}',
+        '{"b":2}',
+    ]
+    assert [
+        c.text for c in JsonValueBuilder.chunk_by_pattern(text, rec, trim=False)
+    ] == ['{"a":1}  \n  ', '{"b":2}  \n ']
 
 
 def test_sourcename(tmp_path):

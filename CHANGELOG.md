@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.17] - 2026-06-22
+
+### Added
+- `trim=` (default `True`) on the delimiter chunkers — `split_on_token`,
+  `stream_on_token`, `split_on_pattern`, `stream_on_pattern`, `split_between_tokens`,
+  and `chunk_by_pattern`. With `trim=False` each region is kept verbatim and only
+  truly-empty (zero-length) regions are dropped, instead of stripping surrounding
+  whitespace and skipping whitespace-only regions. This lets a record's mandatory
+  whitespace terminator (e.g. a trailing newline) survive the split. The native
+  streamer (`StreamChunker`) honors `trim=` identically to its in-memory `split_*`
+  oracle. `chunk_by_rule` is unaffected — its spans are already token-exact.
+
 ## [0.2.16] - 2026-06-22
 
 ### Added

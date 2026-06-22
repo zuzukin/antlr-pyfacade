@@ -478,6 +478,7 @@ struct StreamChunker {
     int where;  // 0 = before (chunk begins at a delimiter), 1 = after (ends at one)
     bool have_channel;
     int channel;
+    bool trim;  // strip surrounding whitespace from each emitted chunk
 
     size_t chunk_start = 0;  // absolute codepoint index the current chunk begins at
     size_t origin_idx = 0;   // absolute index for which (origin_line/col) hold
@@ -487,9 +488,10 @@ struct StreamChunker {
 
     StreamChunker(LexerSpec &spec, const std::string &path,
                   std::vector<int32_t> delim_types, int where_,
-                  std::optional<int> channel_, bool lenient, size_t block)
+                  std::optional<int> channel_, bool lenient, bool trim_,
+                  size_t block)
         : where(where_), have_channel(channel_.has_value()),
-          channel(channel_.value_or(0)) {
+          channel(channel_.value_or(0)), trim(trim_) {
         stream = std::make_unique<antlrope::Utf8FileCharStream>(path, lenient,
                                                                       block);
         // The interpreter holds references into the spec (ATN + name lists), so
@@ -535,16 +537,18 @@ struct StreamChunker {
         size_t la = chunk_start - bs;
         size_t lb = b - bs;
         size_t fa = la;
-        while (fa < lb && is_ws(buf[fa])) {
-            fa++;
+        size_t lb2 = lb;
+        if (trim) {
+            while (fa < lb && is_ws(buf[fa])) {
+                fa++;
+            }
+            while (lb2 > fa && is_ws(buf[lb2 - 1])) {
+                lb2--;
+            }
         }
-        if (fa == lb) {  // whitespace-only or empty: skip, but keep positions exact
+        if (fa >= lb2) {  // empty (or whitespace-only when trimming): skip
             advance_origin(b);
             return;
-        }
-        size_t lb2 = lb;
-        while (lb2 > fa && is_ws(buf[lb2 - 1])) {
-            lb2--;
         }
         size_t offset = bs + fa;
         advance_origin(offset);
@@ -850,15 +854,15 @@ NB_MODULE(_native, m) {
 
     nb::class_<StreamChunker>(m, "StreamChunker")
         .def(nb::init<LexerSpec &, const std::string &, std::vector<int32_t>, int,
-                      std::optional<int>, bool, size_t>(),
+                      std::optional<int>, bool, bool, size_t>(),
              nb::arg("lexer_spec"), nb::arg("path"), nb::arg("delim_types"),
              nb::arg("where"), nb::arg("channel").none(), nb::arg("lenient"),
-             nb::arg("block") = 0, nb::keep_alive<1, 2>())
+             nb::arg("trim"), nb::arg("block") = 0, nb::keep_alive<1, 2>())
         .def("next_batch", &StreamChunker::next_batch, nb::arg("n"),
              "Pull up to n chunk records from the streaming token chunker. Returns "
              "(rows, more): rows is a list of (offset, line, column, text) tuples "
-             "(whitespace trimmed, whitespace-only regions skipped) and more is "
-             "False once the final region at EOF has been emitted.");
+             "(whitespace trimmed unless trim=False; empty regions skipped) and more "
+             "is False once the final region at EOF has been emitted.");
 
     nb::class_<StreamRuleChunker>(m, "StreamRuleChunker")
         .def(nb::init<ParserSpec &, LexerSpec &, const std::string &,
