@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.14] - 2026-06-21
+
+### Added
+- Consumer-ergonomics helpers on `FacadeListener`, so listeners no longer hand-roll
+  scope/state scaffolding:
+  - **Scope/depth:** `depth()`, `rule_stack()`, `current_rule()` — auto-maintained
+    nesting state (tracks the rules you subscribe to; override the new
+    `enterEveryRule`/`exitEveryRule` no-op hooks to track the full parse tree).
+  - **Current text:** `text()` — the source slice of the current event (token text,
+    or a rule's whole extent), so rule text needs no manual `span()` slicing.
+  - **Name lookups:** `token_name(token_type)` and `rule_name(index)`.
+
+  All additive and backward-compatible; no native/C++ changes.
+
 ## [0.2.13] - 2026-06-21
 
 ### Added

@@ -99,6 +99,27 @@ That's the whole model:
 - **Override only what you need.** The callbacks you define are the only events
   the C++ side bothers to send to Python — fewer overrides, faster walk.
 
+## Scope and source helpers
+
+You don't have to track nesting by hand. While a callback runs, the listener knows
+where it is:
+
+- **`self.depth()`** — current nesting depth; **`self.rule_stack()`** — the open
+  rule names, outermost first; **`self.current_rule()`** — the innermost open rule
+  (e.g. inside `visitTerminal`, the rule the token belongs to). These count the
+  rules you actually subscribe to — the constructs *you* track. Override
+  `enterEveryRule`/`exitEveryRule` (no-op hooks called on every rule) to track the
+  full parse tree instead.
+- **`self.text()`** — the source slice of the current event. For a token it's the
+  token text; for a rule it's the rule's whole extent (e.g. the full `{...}` in
+  `exitObj`), so you don't have to keep the source around and slice `span()`.
+- **`self.token_name(t)` / `self.rule_name(i)`** — names for a token type or rule
+  index, handy for logging or a generic `visitTerminal`.
+
+So the JSON-style "push on enter, pop on exit" stack is only needed when you're
+*building a result*; for "how deep am I / what am I inside / what's the text here"
+the helpers above already answer it.
+
 ## Handling parse errors
 
 By default ANTLR prints `line X:Y ...` messages to stderr. The facade captures

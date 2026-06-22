@@ -112,6 +112,26 @@ class LexerProtocol(Protocol):
 _PARSER_SPEC_CACHE: dict[type[ParserProtocol], _native.ParserSpec] = {}
 _LEXER_SPEC_CACHE: dict[type[LexerProtocol], _native.LexerSpec] = {}
 
+# token type -> name map per grammar, for FacadeListener.token_name (built on
+# demand). Keyed by the PARSER class: its literalNames / symbolicNames are indexed
+# by token type and cover the whole vocabulary (the lexer's symbolicNames is a
+# compact list of just its named rules, not type-indexed).
+_TOKEN_NAME_CACHE: dict[type[ParserProtocol], dict[int, str]] = {}
+
+
+def _build_token_names(parser_cls: type[ParserProtocol]) -> dict[int, str]:
+    """Map each token type to its symbolic name, falling back to its literal name."""
+    sym = list(parser_cls.symbolicNames)
+    lit = list(parser_cls.literalNames)
+    names: dict[int, str] = {}
+    for ttype in range(max(len(sym), len(lit))):
+        name = sym[ttype] if ttype < len(sym) else ""
+        if not name or name == "<INVALID>":
+            name = lit[ttype] if ttype < len(lit) else ""
+        if name and name != "<INVALID>":
+            names[ttype] = name
+    return names
+
 
 def _build_parser_spec(parser_cls: type[ParserProtocol]) -> _native.ParserSpec:
     mod = sys.modules[parser_cls.__module__]
@@ -406,6 +426,10 @@ class FacadeListener:
     # Name of the source being parsed (e.g. a filename), for diagnostics. Empty
     # unless a Chunk carried a sourcename or `drive` was given one.
     _pyfacade_sourcename: str = ""
+    # Indices of the rules currently open (innermost last), maintained by `drive`
+    # for depth / rule_stack / current_rule. Reassigned to a fresh list per walk
+    # (never mutated at the class level), so the shared default is safe.
+    _pyfacade_scope: list[int] = []  # noqa: RUF012
 
     # Reassigned to a fresh list by `drive` on every walk (never mutated in
     # place), so the shared class-level default is safe — hence the RUF012 waiver.
@@ -463,11 +487,90 @@ class FacadeListener:
         """
         return self._pyfacade_sourcename
 
+    def text(self) -> str:
+        """Return the source text of the current event (rule or terminal).
+
+        Inside `visitTerminal` this is the token's text (the same string passed to
+        it); inside an `enter`/`exit` rule callback it is the rule's whole extent —
+        e.g. the full `{...}` of an object. Empty when the event has no span (an
+        empty rule, or an inserted/missing error token).
+        """
+        start = self._pyfacade_start
+        if start < 0:
+            return ""
+        return self._pyfacade_text[start : self._pyfacade_stop + 1]
+
+    def depth(self) -> int:
+        """Return the current nesting depth: the number of open rule scopes.
+
+        The scope stack holds exactly the rules whose enter/exit events cross into
+        Python — the rules you subscribe to (so this is the depth of the constructs
+        *you* track). Override
+        [enterEveryRule][antlrope.FacadeListener.enterEveryRule] /
+        [exitEveryRule][antlrope.FacadeListener.exitEveryRule] to track every rule
+        (true full parse-tree depth).
+        """
+        return len(self._pyfacade_scope)
+
+    def rule_stack(self) -> tuple[str, ...]:
+        """Return the names of the currently open rules, outermost first.
+
+        See [depth][antlrope.FacadeListener.depth] for which rules are tracked.
+        Test containment with `"obj" in self.rule_stack()` to ask "am I anywhere
+        inside an `obj`?".
+        """
+        names = self.ruleNames
+        return tuple(names[i] for i in self._pyfacade_scope)
+
+    def current_rule(self) -> str | None:
+        """Return the innermost open rule's name, or `None` outside any tracked rule.
+
+        Inside a terminal callback this is the rule containing the token; inside an
+        `enter`/`exit` callback it is that rule.
+        """
+        scope = self._pyfacade_scope
+        return self.ruleNames[scope[-1]] if scope else None
+
+    @classmethod
+    def rule_name(cls, index: int) -> str:
+        """Return the grammar rule name for a rule index (e.g. from `enterEveryRule`)."""
+        return cls.ruleNames[index]
+
+    @classmethod
+    def token_name(cls, token_type: int) -> str:
+        """Return the name for a token type — symbolic (e.g. `STRING`), else literal.
+
+        Falls back to the literal name (e.g. `"'{'"`) for anonymous tokens, and to
+        the type's number as a string for an unknown type. Useful for logging /
+        debugging and generic `visitTerminal` handlers.
+        """
+        names = _TOKEN_NAME_CACHE.get(cls.PARSER)
+        if names is None:
+            names = _TOKEN_NAME_CACHE[cls.PARSER] = _build_token_names(cls.PARSER)
+        return names.get(token_type, str(token_type))
+
     def visitTerminal(self, token_type: int, text: str) -> None:
         """No-op terminal callback; override in a subclass to handle tokens."""
 
     def visitError(self, token_type: int, text: str) -> None:
         """No-op error callback; override in a subclass to handle error nodes."""
+
+    def enterEveryRule(self, rule_index: int) -> None:
+        """No-op hook called on entry to *every* rule; override to use.
+
+        Overriding this (or [exitEveryRule][antlrope.FacadeListener.exitEveryRule])
+        subscribes to all rule events, so [depth][antlrope.FacadeListener.depth] /
+        [rule_stack][antlrope.FacadeListener.rule_stack] then track the full parse
+        tree. `rule_index` is the rule's index;
+        [rule_name][antlrope.FacadeListener.rule_name] or
+        [current_rule][antlrope.FacadeListener.current_rule] gives its name.
+        """
+
+    def exitEveryRule(self, rule_index: int) -> None:
+        """No-op hook called on exit from *every* rule; override to use.
+
+        See [enterEveryRule][antlrope.FacadeListener.enterEveryRule].
+        """
 
     @classmethod
     def _facade_base(cls) -> type[FacadeListener]:
@@ -745,7 +848,7 @@ class FacadeListener:
 
         enter: list[Callable | None] = [None] * len(rule_names)
         leave: list[Callable | None] = [None] * len(rule_names)
-        rule_mask: list[int] = []
+        rule_mask: list[int] | None = []
         for idx, name in enumerate(rule_names):
             cap = name[0].upper() + name[1:]
             e_over = getattr(cls, "enter" + cap) is not getattr(base_cls, "enter" + cap)
@@ -768,6 +871,18 @@ class FacadeListener:
         if cls.visitError is not base_cls.visitError:
             on_error = self.visitError
 
+        # enterEveryRule / exitEveryRule fire on every rule; overriding either
+        # forces all rule events (mask -> None) so the hooks see them all and the
+        # scope stack tracks the full parse tree.
+        every_enter = None
+        if cls.enterEveryRule is not base_cls.enterEveryRule:
+            every_enter = self.enterEveryRule
+        every_exit = None
+        if cls.exitEveryRule is not base_cls.exitEveryRule:
+            every_exit = self.exitEveryRule
+        if every_enter is not None or every_exit is not None:
+            rule_mask = None
+
         # filtered=False forces a faithful full stream regardless of overrides.
         r_mask = rule_mask if filtered else None
         t_mask = token_mask if filtered else None
@@ -783,6 +898,7 @@ class FacadeListener:
         self._pyfacade_sourcename = sourcename
         self._pyfacade_base_offset = origin[0]
         self._pyfacade_base_linecol = LineCol(origin[1], origin[2])
+        scope = self._pyfacade_scope = []
 
         for kind, payload, start, stop in struct.iter_unpack(_REC, raw):
             if kind == EV_TERMINAL:
@@ -791,17 +907,26 @@ class FacadeListener:
                     self._pyfacade_stop = stop
                     visit(payload, text[start : stop + 1])
             elif kind == EV_ENTER:
+                scope.append(payload)  # push before callbacks: depth() includes self
                 cb = enter[payload]
-                if cb is not None:
+                if every_enter is not None or cb is not None:
                     self._pyfacade_start = start
                     self._pyfacade_stop = stop
-                    cb()
+                    if every_enter is not None:
+                        every_enter(payload)
+                    if cb is not None:
+                        cb()
             elif kind == EV_EXIT:
                 cb = leave[payload]
-                if cb is not None:
+                if every_exit is not None or cb is not None:
                     self._pyfacade_start = start
                     self._pyfacade_stop = stop
-                    cb()
+                    if every_exit is not None:
+                        every_exit(payload)
+                    if cb is not None:
+                        cb()
+                if scope:  # pop after callbacks: exit sees the same depth as enter
+                    scope.pop()
             elif kind == EV_ERROR and on_error is not None:
                 self._pyfacade_start = start
                 self._pyfacade_stop = stop
