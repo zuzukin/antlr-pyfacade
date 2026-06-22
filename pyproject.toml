@@ -170,23 +170,21 @@ openjdk = ">=11"
 [tool.pixi.feature.gen.pypi-dependencies]
 antlr4-tools = "*"
 
-# Documentation toolchain. Isolated and default-feature-free so it pulls neither
-# the JDK nor the C++ build toolchain — building the docs never compiles the
-# extension. Everything is from conda-forge except Zensical (below).
+# Documentation toolchain, all from conda-forge (except mike, below). Isolated and
+# default-feature-free so it pulls neither the JDK nor the C++ build toolchain —
+# building the docs never compiles the extension.
 [tool.pixi.feature.docs.dependencies]
 python = ">=3.12"
-# API reference from docstrings (mkdocstrings + griffe). Ruff formats the rendered
-# signatures (separate_signature + line_length in zensical.toml); mkdocstrings
-# imports `ruff.__main__.find_ruff_bin`, which the conda-forge ruff package provides.
+# Zensical (Material-for-MkDocs-team static site generator) + the mkdocstrings/griffe
+# API-reference handler. Ruff formats the rendered signatures (separate_signature +
+# line_length in zensical.toml); mkdocstrings imports `ruff.__main__.find_ruff_bin`,
+# which the conda-forge ruff package provides.
+zensical = "*"
 mkdocstrings-python = "*"
 mkdocstrings-python-xref = "*"
 ruff = "*"
 
 [tool.pixi.feature.docs.pypi-dependencies]
-# Zensical's conda-forge package is currently a py310-only build, incompatible with
-# this >=3.12 docs env, so it stays on PyPI (pure-Python wheel) until conda-forge
-# ships a 3.12+ build. The Material-for-MkDocs-team static site generator.
-zensical = "*"
 # Versioned-docs deploys to gh-pages (the docs-deploy / docs-set-default tasks).
 # Must be the zensical-compatible fork (it builds via zensical, not mkdocs); it is
 # not on PyPI.

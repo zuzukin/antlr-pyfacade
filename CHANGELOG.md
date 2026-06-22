@@ -31,10 +31,11 @@ development notes and may be pruned before the first release.
 - Reference-doc signatures now render as their own formatted code block, wrapped
   one-argument-per-line for long signatures (mkdocstrings `separate_signature` +
   `line_length = 80`, formatted by Ruff).
-- The documentation toolchain now comes from conda-forge — `mkdocstrings-python`,
-  `mkdocstrings-python-xref`, and `ruff` moved from PyPI to conda dependencies.
-  Zensical stays on PyPI because its conda-forge package is currently a py310-only
-  build, incompatible with the 3.12+ docs environment.
+- The documentation toolchain now comes from conda-forge — `zensical`,
+  `mkdocstrings-python`, `mkdocstrings-python-xref`, and `ruff` are conda
+  dependencies. (Only `mike`, a git-only fork, remains a PyPI dependency.) Zensical's
+  conda-forge package is a CEP-20 abi3 build with a `py310` build string that denotes
+  its 3.10 floor, not a 3.10-only lock — it installs fine on 3.12–3.14.
 - `clean` now also removes Zensical's `.zensical/` incremental cache (a stale cache
   there can otherwise mask docs config changes).
 
