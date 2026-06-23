@@ -28,6 +28,7 @@ changed.
 from __future__ import annotations
 
 import glob
+import os
 import subprocess
 import sys
 import sysconfig
@@ -38,20 +39,33 @@ def main() -> int:
     if not build_dirs:
         sys.exit("No build/ directory found — run `pixi install` first.")
 
-    # With more than one build dir (e.g. several Python versions), pick the one
-    # for the running interpreter, identified by its extension suffix.
+    purelib = sysconfig.get_paths()["purelib"]
+
+    # With more than one build dir present (e.g. a stale pre-abi3 leftover sitting
+    # beside the current one), pick the dir that builds the extension actually
+    # installed in this environment. The editable install is built abi3
+    # (`wheel.py-api = "cp312"` in pyproject), so it lands `_native.abi3.so` whatever
+    # the running interpreter's version tag — matching on the interpreter's
+    # `EXT_SUFFIX` would pick the wrong (or a stale `cp3XX`) dir, rebuild it, and
+    # leave the loaded `_native.abi3.so` untouched. Resolve by the installed file's
+    # name instead, the same way scripts/asan_pytest.py does.
     if len(build_dirs) > 1:
-        ext = sysconfig.get_config_var("EXT_SUFFIX") or ".so"
-        matched = [d for d in build_dirs if glob.glob(d + "_native" + ext)]
+        installed = next(
+            glob.iglob(os.path.join(purelib, "antlrope", "_native*.so")), None
+        )
+        name = os.path.basename(installed) if installed else None
+        matched = [
+            d for d in build_dirs if name and os.path.exists(os.path.join(d, name))
+        ]
         if len(matched) != 1:
             sys.exit(
-                f"Expected exactly one build dir for {ext}, found {build_dirs}. "
-                "Remove stale build/* dirs and re-run `pixi install`."
+                f"Could not match a unique build dir to the installed extension "
+                f"{name!r} among {build_dirs}. Remove stale build/* dirs and re-run "
+                f"`pixi install`."
             )
         build_dirs = matched
 
     build_dir = build_dirs[0]
-    purelib = sysconfig.get_paths()["purelib"]
     subprocess.run(["cmake", "--build", build_dir], check=True)
     subprocess.run(["cmake", "--install", build_dir, "--prefix", purelib], check=True)
     print(f"rebuilt _native -> {purelib}")

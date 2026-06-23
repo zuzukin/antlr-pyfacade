@@ -252,7 +252,10 @@ cmd = "mkdir -p .coverage && pytest --cov --cov-report=term-missing --cov-report
 description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."
 cmd = "python scripts/build_native.py"
 inputs = ["cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeLists.txt", "scripts/build_native.py"]
-outputs = ["build/*/_native.cpython-*.so"]
+# Track the abi3 editable artifact (`_native.abi3.so`) — not a version-tagged
+# `_native.cpython-*.so`, which the default env never loads, so caching on it let
+# stale builds slip through.
+outputs = ["build/*/_native*.so"]
 
 [tool.pixi.tasks.build-wheel]
 description = "Build a distributable abi3 wheel into dist/ (pypa build + scikit-build-core, no isolation)."
@@ -261,13 +264,13 @@ inputs = ["src/antlrope/**/*", "cpp/**/*", "vendor/antlr4-cpp/src/**/*", "CMakeL
 outputs = ["dist/*.whl"]
 
 [tool.pixi.tasks.clean]
-description = "Remove build/packaging artifacts (dist/, output/, the wheel build dirs, build-asan/, wheelhouse/, .coverage/, site/, .zensical/). Leaves the editable build/ intact; `pixi install` rebuilds it."
-cmd = "rm -rf dist output build-asan wheelhouse .coverage site .zensical build/*-abi3-*"
+description = "Remove build/packaging artifacts (dist/, output/, the per-wheel-tag native build trees under build/, build-asan/, wheelhouse/, .coverage/, site/, .zensical/); `pixi install` rebuilds the editable extension."
+cmd = "rm -rf dist output build-asan wheelhouse .coverage site .zensical build/cp*-*"
 
 [tool.pixi.tasks.stubgen]
 description = "Regenerate src/antlrope/_native.pyi from the built extension (runs nanobind stubgen + re-applies the hand edits)."
 cmd = "python scripts/stubgen.py"
-inputs = ["build/*/_native.cpython-*.so", "scripts/stubgen.py"]
+inputs = ["build/*/_native*.so", "scripts/stubgen.py"]
 outputs = ["src/antlrope/_native.pyi"]
 
 [tool.pixi.tasks.asan-test]
