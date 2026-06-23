@@ -18,7 +18,7 @@
         <link rel="prev" href="../chunking/">
       
       
-        <link rel="next" href="../migrating/">
+        <link rel="next" href="../streaming-records/">
       
       
         
@@ -228,6 +228,8 @@
       
         
       
+        
+      
     
     
     
@@ -411,6 +413,8 @@
       
         
           
+        
+      
         
       
         
@@ -638,6 +642,33 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1373,6 +1404,10 @@ input nor all results need to be held in memory — consume it incrementally, or
 <a href="../reference/api/#antlrope.FacadeListener.stream_on_pattern"><code>stream_on_pattern</code></a>), the whole
 pipeline — read, chunk, parse — stays bounded in the input size.</p>
 <p><code>max_workers</code> defaults to <code>os.cpu_count()</code>; pass <code>1</code> to run inline without a pool.</p>
+<p>For an end-to-end pipeline over a file too large to hold in memory — streaming
+chunker into <code>walk_parallel</code>, plus preamble handling, terminator preservation, and
+recovering off-channel metadata — see the
+<a href="../streaming-records/">streaming-records recipe</a>.</p>
 <h2 id="how-much-speedup">How much speedup?<a class="headerlink" href="#how-much-speedup" title="Permanent link">&para;</a></h2>
 <p>The per-event Python dispatch still holds the GIL, so the parallel speedup scales
 with how parse-heavy the work is relative to per-callback Python work. See the
@@ -1432,13 +1467,13 @@ limitations for the scaling details and measured numbers.</p>
         
         
           
-          <a href="../migrating/" class="md-footer__link md-footer__link--next" aria-label="Next: Migrating">
+          <a href="../streaming-records/" class="md-footer__link md-footer__link--next" aria-label="Next: Recipe: streaming records">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Migrating
+                Recipe: streaming records
               </div>
             </div>
             <div class="md-footer__button md-icon">

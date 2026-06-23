@@ -228,6 +228,8 @@
       
         
       
+        
+      
     
     
     
@@ -427,6 +429,8 @@
       
         
       
+        
+      
     
     
     
@@ -551,6 +555,33 @@
     
   
   Parallel parsing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
 
     
   </span>
@@ -1515,6 +1546,14 @@ are unaffected.</p>
 <li><strong><a href="../glossary/#gil">GIL</a>.</strong> The native parse <strong>releases the GIL</strong>, so other Python threads keep
   running during a parse and <code>asyncio.to_thread(listener.walk, ...)</code> won't block
   the event loop.</li>
+<li><strong>A full per-record listener costs about its parse again.</strong> Walking a record with
+  every rule/token subscribed pays one Python loop iteration per kept event, so a
+  fully-subscribed listener roughly doubles the per-record cost over the native parse
+  alone (the "Python's per-item iteration" cost above). Claw it back by subscribing to
+  fewer rules/tokens — the facade emits only those from C++ — or by aggregating inside
+  a rule so fewer events cross into Python at all. The
+  <a href="../streaming-records/#cost-of-a-full-per-record-listener">streaming-records recipe</a>
+  ties this to a record pipeline.</li>
 </ul>
 <h2 id="parallel-parsing">Parallel parsing<a class="headerlink" href="#parallel-parsing" title="Permanent link">&para;</a></h2>
 <p>When your input is a sequence of <strong>independent pieces</strong> — the records of a log,

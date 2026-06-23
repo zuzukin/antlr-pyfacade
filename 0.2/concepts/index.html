@@ -228,6 +228,8 @@
       
         
       
+        
+      
     
     
     
@@ -427,6 +429,8 @@
       
         
       
+        
+      
     
     
     
@@ -570,6 +574,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../migrating/" class="md-nav__link">
         
   
@@ -682,6 +713,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Native filtering via masks
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#off-channel-tokens-are-not-in-the-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Off-channel tokens are not in the stream
       </span>
     </span>
   </a>
@@ -1348,6 +1390,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#off-channel-tokens-are-not-in-the-stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Off-channel tokens are not in the stream
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-runs-where" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1473,6 +1526,19 @@ Subscribe to three rules and one token type, and the C++ side emits only those
 events. Override nothing extra and you pay for nothing extra.</p>
 <p>You can force a faithful, unfiltered stream with <code>walk(..., filtered=False)</code>,
 which is useful for diagnostics and for the correctness tests.</p>
+<h2 id="off-channel-tokens-are-not-in-the-stream">Off-channel tokens are not in the stream<a class="headerlink" href="#off-channel-tokens-are-not-in-the-stream" title="Permanent link">&para;</a></h2>
+<p>The event stream is built from the <strong>parse tree</strong>, which holds only the tokens the
+parser consumed — the default <a href="../glossary/#token-channel">token channel</a>. Tokens the lexer routed to a hidden
+channel (comments, directives, alignment metadata) are not in the tree, so they never
+appear as <code>TERMINAL</code> events and never reach <code>visitTerminal</code>. The walk is channel-blind
+by construction; even <code>filtered=False</code> only adds back the <em>on-channel</em> events the masks
+dropped.</p>
+<p>To recover off-channel tokens, lex the source separately:
+<a href="../reference/api/#antlrope.FacadeListener.lex"><code>lex</code></a> returns <em>every</em> token with its
+<code>channel</code> and <code>(start, stop)</code> span, so you can filter to the off-channel ones and
+correlate them with the parse by offset. The
+<a href="../streaming-records/#recover-off-channel-metadata">streaming-records recipe</a> shows
+this against per-record chunks.</p>
 <h2 id="what-runs-where">What runs where<a class="headerlink" href="#what-runs-where" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>C++</strong>: <a href="../glossary/#atn">ATN</a> deserialization, <code>LexerInterpreter</code> + <code>ParserInterpreter</code>, the

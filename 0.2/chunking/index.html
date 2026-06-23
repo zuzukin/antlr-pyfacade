@@ -228,6 +228,8 @@
       
         
       
+        
+      
     
     
     
@@ -411,6 +413,8 @@
       
         
           
+        
+      
         
       
         
@@ -629,6 +633,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#leading-and-trailing-regions-the-preamble" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Leading and trailing regions (the preamble)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -653,6 +668,33 @@
     
   
   Parallel parsing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
 
     
   </span>
@@ -1352,6 +1394,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#leading-and-trailing-regions-the-preamble" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Leading and trailing regions (the preamble)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1450,17 +1503,31 @@ the pipeline stays bounded.</p>
   record at a time over a bounded-memory lexer→parser pipeline. Records must be
   <strong>directly adjacent</strong> (only lexer-skipped whitespace/comments between them); with
   several candidate rules the next token chooses which to parse, so they should have
-  disjoint leading tokens (e.g. <code>class</code> vs <code>def</code>). Unlike <code>chunk_by_rule</code> it does not
-  find a rule <em>anywhere</em> in a full parse — for arbitrary nesting or comma-separated
-  records, use <code>chunk_by_rule</code> or <code>stream_on_token</code>.</li>
+  disjoint leading tokens (e.g. <code>class</code> vs <code>def</code>). If an on-channel token begins no
+  candidate rule (an unsupported header or separator), it <strong>raises</strong> a clear error
+  naming the token and candidates rather than silently truncating. Unlike
+  <code>chunk_by_rule</code> it does not find a rule <em>anywhere</em> in a full parse — for arbitrary
+  nesting or comma-separated records, use <code>chunk_by_rule</code> or <code>stream_on_token</code>.</li>
 </ul>
 <h2 id="source-positions-and-names">Source positions and names<a class="headerlink" href="#source-positions-and-names" title="Permanent link">&para;</a></h2>
-<p>Every chunk is trimmed of surrounding whitespace and carries its start
-<code>(offset, line, column)</code>; whitespace-only regions are skipped. Each chunker also
-takes a <code>sourcename=</code> (a filename for diagnostics) recorded on every chunk — the
+<p>Every chunk carries its start <code>(offset, line, column)</code> against the whole source, so
+callbacks still report positions against the original after splitting. Each chunker
+also takes a <code>sourcename=</code> (a filename for diagnostics) recorded on every chunk — the
 streaming chunkers default it to their file path. During the parse it surfaces as
 <a href="../reference/api/#antlrope.FacadeListener.sourcename"><code>FacadeListener.sourcename()</code></a>,
 so a callback can report a position as <code>sourcename:line:column</code>.</p>
+<p>By default each chunk is <strong>trimmed</strong> of surrounding whitespace and whitespace-only
+regions are dropped. Pass <code>trim=False</code> (on the delimiter chunkers) to keep every
+region verbatim — preserving a leading or trailing whitespace terminator such as a
+record's mandatory newline — dropping only truly empty, zero-length regions.</p>
+<h2 id="leading-and-trailing-regions-the-preamble">Leading and trailing regions (the preamble)<a class="headerlink" href="#leading-and-trailing-regions-the-preamble" title="Permanent link">&para;</a></h2>
+<p>With <code>where="before"</code>, content <em>before the first delimiter</em> becomes its own leading
+chunk — often a file's header or preamble; with <code>where="after"</code>, content <em>after the
+last delimiter</em> is a trailing chunk. Neither is special — each is just the first or
+last chunk — so skip or handle it explicitly. The
+<a href="../streaming-records/">streaming-records recipe</a> walks through preamble handling,
+<code>trim=False</code> terminators, absolute positions, and recovering off-channel metadata end
+to end.</p>
 
 
 

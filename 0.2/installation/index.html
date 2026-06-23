@@ -226,6 +226,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,8 @@
       
         
       
+        
+      
     
     
     
@@ -546,6 +550,33 @@
     
   
   Parallel parsing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
 
     
   </span>
@@ -873,6 +904,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Install the package
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-checking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type checking
       </span>
     </span>
   </a>
@@ -1282,6 +1324,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#type-checking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type checking
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install-the-antlr-tool-to-generate-parsers" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1350,6 +1403,22 @@ so there is <strong>nothing to compile</strong> on install. A single CPython Sta
 <li>Windows (x86-64)</li>
 </ul>
 <p>The minimum supported Python is <strong>3.12</strong>.</p>
+<h2 id="type-checking">Type checking<a class="headerlink" href="#type-checking" title="Permanent link">&para;</a></h2>
+<p><code>antlrope</code> ships <code>py.typed</code> with full type information, so type checkers resolve its
+public API and submodules out of the box — <code>from antlrope import Chunk,
+FacadeListener, SourceMap</code> and <code>import antlrope.generate</code> all check cleanly.</p>
+<p>If your checker reports <code>reportMissingImports</code> / "could not be resolved", it is
+almost always pointed at the wrong interpreter — not the environment where
+<code>antlrope</code> is installed. Point it at that environment:</p>
+<ul>
+<li><strong>Pyright</strong>: set <code>pythonPath</code> (or <code>venvPath</code> + <code>venv</code>) in <code>pyrightconfig.json</code> /
+  <code>pyproject.toml</code>, run it from the activated virtualenv, or pass
+  <code>--pythonpath /path/to/venv/bin/python</code>.</li>
+<li><strong>mypy</strong>: run it from the same environment, or use <code>--python-executable</code>.</li>
+</ul>
+<p>Note <code>antlrope.generate</code> is a <em>module</em> (the CLI), so import it as
+<code>import antlrope.generate</code> / <code>from antlrope.generate import generate</code> — it is not a
+top-level re-exported name.</p>
 <h2 id="install-the-antlr-tool-to-generate-parsers">Install the ANTLR tool (to generate parsers)<a class="headerlink" href="#install-the-antlr-tool-to-generate-parsers" title="Permanent link">&para;</a></h2>
 <p>To turn a <code>.g4</code> grammar into the Python parser modules <code>antlrope</code> drives, you
 also need the <strong>ANTLR tool</strong> itself, which is a Java program. The easiest way is the

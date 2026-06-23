@@ -228,6 +228,8 @@
       
         
       
+        
+      
     
     
     
@@ -427,6 +429,8 @@
       
         
       
+        
+      
     
     
     
@@ -581,6 +585,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#scope-and-source-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Scope and source helpers
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#handling-parse-errors" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -653,6 +668,33 @@
     
   
   Parallel parsing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
 
     
   </span>
@@ -1331,6 +1373,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#scope-and-source-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Scope and source helpers
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#handling-parse-errors" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1455,6 +1508,25 @@ raw source slice for the token):</p>
 <li><strong>Override only what you need.</strong> The callbacks you define are the only events
   the C++ side bothers to send to Python — fewer overrides, faster walk.</li>
 </ul>
+<h2 id="scope-and-source-helpers">Scope and source helpers<a class="headerlink" href="#scope-and-source-helpers" title="Permanent link">&para;</a></h2>
+<p>You don't have to track nesting by hand. While a callback runs, the listener knows
+where it is:</p>
+<ul>
+<li><strong><code>self.depth()</code></strong> — current nesting depth; <strong><code>self.rule_stack()</code></strong> — the open
+  rule names, outermost first; <strong><code>self.current_rule()</code></strong> — the innermost open rule
+  (e.g. inside <code>visitTerminal</code>, the rule the token belongs to). These count the
+  rules you actually subscribe to — the constructs <em>you</em> track. Override
+  <code>enterEveryRule</code>/<code>exitEveryRule</code> (no-op hooks called on every rule) to track the
+  full parse tree instead.</li>
+<li><strong><code>self.text()</code></strong> — the source slice of the current event. For a token it's the
+  token text; for a rule it's the rule's whole extent (e.g. the full <code>{...}</code> in
+  <code>exitObj</code>), so you don't have to keep the source around and slice <code>span()</code>.</li>
+<li><strong><code>self.token_name(t)</code> / <code>self.rule_name(i)</code></strong> — names for a token type or rule
+  index, handy for logging or a generic <code>visitTerminal</code>.</li>
+</ul>
+<p>So the JSON-style "push on enter, pop on exit" stack is only needed when you're
+<em>building a result</em>; for "how deep am I / what am I inside / what's the text here"
+the helpers above already answer it.</p>
 <h2 id="handling-parse-errors">Handling parse errors<a class="headerlink" href="#handling-parse-errors" title="Permanent link">&para;</a></h2>
 <p>By default ANTLR prints <code>line X:Y ...</code> messages to stderr. The facade captures
 them instead, so nothing is printed and you decide what to do. After <code>walk</code>, the

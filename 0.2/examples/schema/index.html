@@ -226,6 +226,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,8 @@
       
         
       
+        
+      
     
     
     
@@ -546,6 +550,33 @@
     
   
   Parallel parsing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../streaming-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Recipe: streaming records
 
     
   </span>
@@ -1466,33 +1497,38 @@ defines a file as a sequence of <code>message</code> (struct) and <code>enum</co
 <h2 id="the-listener">The listener<a class="headerlink" href="#the-listener" title="Permanent link">&para;</a></h2>
 <p><code>SchemaIndexer</code> collects one <code>TypeDef</code> (kind, name, member names) per definition.
 As in the JSON example there are no node objects — state is reconstructed from event
-order. A definition is bracketed by <code>enter</code>/<code>exit{Message,Enum}Def</code>; inside it, the
-first <code>ID</code> (before the <code>{</code>) is the type's name and the later <code>ID</code>s name its members:</p>
+order — but here the scope helpers do the work. A definition is bracketed by
+<code>enter</code>/<code>exit{Message,Enum}Def</code>; inside it, <code>current_rule()</code> says which kind of <code>ID</code>
+we're looking at, so there's no <code>{</code>-seen flag and no field-name lookahead:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">SchemaIndexer</span><span class="p">(</span><span class="n">SchemaEventListener</span><span class="p">):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TypeDef</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_cur</span><span class="p">:</span> <span class="n">TypeDef</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_in_body</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_last_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enterMessageDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enterEnumDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">(</span><span class="s2">&quot;enum&quot;</span><span class="p">)</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">exitMessageDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_commit</span><span class="p">()</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">exitEnumDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_commit</span><span class="p">()</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">visitTerminal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cur</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="k">if</span> <span class="n">cur</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>            <span class="k">return</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="k">if</span> <span class="n">token_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">LBRACE</span><span class="p">:</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_in_body</span> <span class="o">=</span> <span class="kc">True</span>                 <span class="c1"># past the name, into the body</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_body</span><span class="p">:</span>    <span class="n">cur</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">text</span>          <span class="c1"># the type&#39;s own name</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>            <span class="k">elif</span> <span class="n">cur</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">cur</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="c1"># enum constants</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>            <span class="k">else</span><span class="p">:</span>                    <span class="bp">self</span><span class="o">.</span><span class="n">_last_id</span> <span class="o">=</span> <span class="n">text</span>     <span class="c1"># message field name</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        <span class="k">elif</span> <span class="n">token_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEMI</span> <span class="ow">and</span> <span class="n">cur</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>            <span class="n">cur</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_id</span><span class="p">)</span>    <span class="c1"># the ID right before `;`</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="c1"># Subscribe to every rule so current_rule() sees the inner field / fieldType</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="c1"># scopes, not just the message/enum we act on. The hook itself does nothing.</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enterEveryRule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enterMessageDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cur</span> <span class="o">=</span> <span class="n">TypeDef</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enterEnumDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">_cur</span> <span class="o">=</span> <span class="n">TypeDef</span><span class="p">(</span><span class="s2">&quot;enum&quot;</span><span class="p">)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">exitMessageDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_commit</span><span class="p">()</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">exitEnumDef</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_commit</span><span class="p">()</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">visitTerminal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cur</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="k">if</span> <span class="n">cur</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">token_type</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>            <span class="k">return</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="n">rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_rule</span><span class="p">()</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s2">&quot;field&quot;</span><span class="p">:</span>                    <span class="c1"># message field: `fieldType ID &#39;;&#39;`</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>            <span class="n">cur</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        <span class="k">elif</span> <span class="n">rule</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;messageDef&quot;</span><span class="p">,</span> <span class="s2">&quot;enumDef&quot;</span><span class="p">):</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">cur</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">text</span>           <span class="c1"># the definition&#39;s name…</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>            <span class="k">else</span><span class="p">:</span>            <span class="n">cur</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># …then enum constants</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        <span class="c1"># rule == &quot;fieldType&quot;: the field&#39;s declared type — not indexed.</span>
 </span></code></pre></div>
+<p><code>current_rule()</code> (with <code>depth()</code> / <code>rule_stack()</code>) reflects exactly the rules you
+subscribe to; overriding the no-op <code>enterEveryRule</code> subscribes to all of them, so the
+inner <code>field</code> / <code>fieldType</code> scopes become visible.</p>
 <p>The same listener works whether it walks the whole file (accumulating every
 definition into <code>self.types</code>) or a single definition (one entry) — which is what
 lets all three modes below share it.</p>
