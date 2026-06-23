@@ -6,22 +6,22 @@ parser module. (It reads the parser's `ruleNames` and token-name metadata — no
 annotated grammar or other input.)
 
 ```text
-antlrope PARSER_MODULE GRAMMAR [--lexer LEXER_MODULE] [-o OUTPUT]
+antlrope <parser-module> <name> [--lexer <lexer-module>] [-o <file>]
 ```
 
 ## Arguments
 
 | Argument | Description |
 | --- | --- |
-| `PARSER_MODULE` | Importable dotted path to the generated parser module, e.g. `generated.JSONParser` or `mypkg.generated.MyParser`. It must be importable on `sys.path`. |
-| `GRAMMAR` | Grammar-name prefix for the generated class, which is named `<Grammar.capitalize()>EventListener` (e.g. `JSON` → `JsonEventListener`). |
+| `<parser-module>` | Importable dotted path to the generated parser module, e.g. `generated.JSONParser` or `mypkg.generated.MyParser`. It must be importable on `sys.path`. |
+| `<name>` | Grammar-name prefix for the generated class, which is named `<Grammar.capitalize()>EventListener` (e.g. `JSON` → `JsonEventListener`). |
 
 ## Options
 
 | Option | Description |
 | --- | --- |
-| `--lexer LEXER_MODULE` | Importable dotted path to the generated lexer module. Defaults to `PARSER_MODULE` with a trailing `Parser` replaced by `Lexer` (e.g. `generated.JSONParser` → `generated.JSONLexer`). Pass this when your lexer is named differently. |
-| `-o`, `--output FILE` | Write the facade to `FILE` instead of stdout. |
+| `--lexer <lexer-module>` | Importable dotted path to the generated lexer module. Defaults to the parser path with a trailing `Parser` replaced by `Lexer` (e.g. `generated.JSONParser` → `generated.JSONLexer`). Pass this when your lexer is named differently. |
+| `-o`, `--output <file>` | Write the facade to `<file>` instead of stdout. |
 | `--version` | Print the version and exit. |
 | `-h`, `--help` | Show usage and exit. |
 

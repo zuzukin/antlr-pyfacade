@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.20] - 2026-06-22
+
+### Changed
+- Docs: the command-line reference now shows the current angle-bracket metavar names
+  (`<parser-module>`, `<name>`, `<lexer-module>`, `<file>`), matching `antlrope --help`.
+
 ## [0.2.19] - 2026-06-22
 
 ### Added
