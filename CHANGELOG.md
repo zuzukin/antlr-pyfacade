@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.21] - 2026-06-23
+
+### Changed
+- The facade generator now emits the `ruleNames` list in ruff/black format — kept on
+  one line when it fits, otherwise exploded one-per-line with a trailing comma — so
+  the generated `<Grammar>EventListener` is format-clean as written, with no
+  `ruff format` pass needed after generating. Previously a grammar with many rules
+  produced a single very long line.
+
 ## [0.2.20] - 2026-06-22
 
 ### Changed

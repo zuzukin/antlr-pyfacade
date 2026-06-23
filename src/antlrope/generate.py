@@ -45,6 +45,31 @@ def _ident(name: str) -> str:
     return name[0].upper() + name[1:]
 
 
+# black/ruff wrap a collection literal across multiple lines once the statement
+# exceeds this width (their shared default). Matching it lets the generator emit
+# ruff-format-clean source directly, with no formatting pass.
+_LINE_LENGTH = 88
+
+
+def _rule_names_block(rule_names: list[str]) -> str:
+    """Render the `ruleNames` class attribute as ruff/black-formatted source.
+
+    A single line when the whole statement fits the line-length budget, otherwise
+    the exploded one-item-per-line form with the trailing comma ruff/black would
+    add (which then keeps it stable via the magic trailing comma). Rule names are
+    ANTLR identifiers, so the double-quoted literals need no escaping — `repr()`
+    would emit single quotes and churn under the formatter.
+    """
+    indent = "    "
+    prefix = f"{indent}ruleNames: ClassVar[list[str]] = "
+    items = [f'"{name}"' for name in rule_names]
+    single = f"{prefix}[{', '.join(items)}]"
+    if len(single) <= _LINE_LENGTH:
+        return single
+    body = "".join(f"{indent}{indent}{item},\n" for item in items)
+    return f"{prefix}[\n{body}{indent}]"
+
+
 def _derive_lexer(parser_qualname: str) -> str:
     """Derive the lexer module path from the parser's, by ANTLR convention.
 
@@ -124,10 +149,7 @@ def generate(
         for cap in map(_ident, rule_names)
     )
 
-    # Emit the rule-name list as a double-quoted literal (rule names are ANTLR
-    # identifiers, so no escaping is needed) so the generated file is
-    # ruff-format-clean as written — repr() would use single quotes.
-    rule_names_src = "[" + ", ".join(f'"{name}"' for name in rule_names) + "]"
+    rule_names_block = _rule_names_block(rule_names)
 
     # dedent() must run before .format(): an f-string would interpolate the
     # multi-line token_lines/rule_methods first, and their lower indentation would
@@ -151,7 +173,7 @@ def generate(
 
 
         class {cls}(FacadeListener):
-            ruleNames: ClassVar[list[str]] = {rule_names_src}
+        {rule_names_block}
             START_RULE = 0  # {rule0}
             LEXER: ClassVar[type] = {lexer_clsname}
             PARSER: ClassVar[type] = {parser_clsname}
@@ -172,7 +194,7 @@ def generate(
         lexer_clsname=lexer_clsname,
         parser_qualname=parser_qualname,
         parser_clsname=parser_clsname,
-        rule_names_src=rule_names_src,
+        rule_names_block=rule_names_block,
         rule0=rule_names[0],
         token_lines=token_lines,
         rule_methods=rule_methods,
@@ -194,7 +216,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Importable dotted path to the generated parser module "
         "(e.g. mypkg.generated.MyParser).",
     )
-    parser.add_argument("grammar", metavar="<name>", help="Grammar name prefix for the facade class.")
+    parser.add_argument(
+        "grammar", metavar="<name>", help="Grammar name prefix for the facade class."
+    )
     parser.add_argument(
         "--lexer",
         metavar="<lexer-module>",
@@ -203,7 +227,9 @@ def main(argv: list[str] | None = None) -> int:
         "(e.g. mypkg.generated.MyLexer); pass this when the lexer is named "
         "differently.",
     )
-    parser.add_argument("-o", "--output", metavar="<file>", help="Write to this file instead of stdout.")
+    parser.add_argument(
+        "-o", "--output", metavar="<file>", help="Write to this file instead of stdout."
+    )
     args = parser.parse_args(argv)
 
     source = generate(args.parser_module, args.grammar, args.lexer)

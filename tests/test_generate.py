@@ -22,7 +22,7 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
 from antlrope import FacadeListener, __version__
-from antlrope.generate import _derive_lexer, generate, main
+from antlrope.generate import _derive_lexer, _rule_names_block, generate, main
 
 PARSER_MODULE = "generated.JSONParser"
 
@@ -121,3 +121,25 @@ def test_lexer_resolution_and_override(capsys):
         _derive_lexer("generated.JSONGrammar")
     with pytest.raises(ModuleNotFoundError):
         generate(PARSER_MODULE, "JSON", "generated.NoSuchLexer")
+
+
+def test_rule_names_block_is_ruff_formatted():
+    # The generated ruleNames list follows ruff/black formatting, so the facade is
+    # format-clean as written with no post-generation `ruff format` pass: short
+    # lists stay on one line, long ones explode one-per-line with a trailing comma.
+    short = _rule_names_block(["json", "obj", "value"])
+    assert short == '    ruleNames: ClassVar[list[str]] = ["json", "obj", "value"]'
+    assert "\n" not in short
+
+    block = _rule_names_block([f"rule{i}" for i in range(20)])
+    lines = block.split("\n")
+    assert lines[0] == "    ruleNames: ClassVar[list[str]] = ["  # opener at line end
+    assert lines[1] == '        "rule0",'  # 8-space indent, trailing comma
+    assert lines[-1] == "    ]"  # 4-space closing bracket
+    assert all(ln.startswith('        "') and ln.endswith('",') for ln in lines[1:-1])
+
+    # Boundary at the 88-column budget: the prefix is 37 chars, so a single 47-char
+    # name lands the one-line form at exactly 88 (stays single); 48 tips it to 89
+    # and it explodes.
+    assert "\n" not in _rule_names_block(["x" * 47])
+    assert "\n" in _rule_names_block(["x" * 48])

@@ -290,7 +290,7 @@ inputs = ["examples/json/JSON.g4"]
 outputs = ["examples/json/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-facade]
-description = "Regenerate the event-listener facade from the generated parser module (run `pixi run format` afterward)."
+description = "Regenerate the event-listener facade from the generated parser module."
 cmd = "antlrope generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }
@@ -314,7 +314,7 @@ inputs = ["examples/schema/Schema.g4"]
 outputs = ["examples/schema/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-schema-facade]
-description = "Regenerate the schema example's event-listener facade (run `pixi run format` afterward)."
+description = "Regenerate the schema example's event-listener facade."
 cmd = "antlrope generated.SchemaParser Schema -o schema_listener.py"
 cwd = "examples/schema"
 env = { PYTHONPATH = "." }
