@@ -39,13 +39,13 @@ text of a few token kinds, so most slices never happen.
 ## Native filtering via masks
 
 The second lever is **filtering in C++**. A consumer usually cares about a
-subset of rules and tokens. `parse_events` accepts a `rule_mask` and a
+subset of rules and tokens. The native event builder takes a `rule_mask` and a
 `token_mask` (lists of indices to keep); events that fail the mask are dropped
 *before* they are appended to the buffer. This cuts the number of records Python
 must iterate, not merely the per-call cost.
 
-The generated [facade] wires this up automatically. `drive` (the engine behind the
-facade's `walk`) inspects **which callbacks your subclass actually overrides** —
+The generated [facade] wires this up automatically. `walk` inspects **which
+callbacks your subclass actually overrides** —
 comparing each `enter<Rule>` / `exit<Rule>` / `visitTerminal` against the
 generated base class's no-op stub — and builds the masks from exactly those.
 Subscribe to three rules and one token type, and the C++ side emits only those
@@ -80,9 +80,7 @@ this against per-record chunks.
 There is no generated C++ parser and no compilation of your grammar. The C++
 runtime is driven entirely from the **serialized ATN** that the stock
 `-Dlanguage=Python3` ANTLR tool already emits, plus the rule/token name metadata
-read off the generated Python classes (see
-[`parser_spec`](reference/api.md#antlrope.FacadeListener.parser_spec) /
-[`lexer_spec`](reference/api.md#antlrope.FacadeListener.lexer_spec)).
+read off the generated Python classes.
 
 ## The vendored runtime and its patches
 

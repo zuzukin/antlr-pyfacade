@@ -66,8 +66,8 @@ def bench_one(n: int) -> None:
     text = make_input(n)
     mb = len(text) / 1e6
     parser_spec, lexer_spec = (
-        JsonEventListener.parser_spec(),
-        JsonEventListener.lexer_spec(),
+        JsonEventListener._parser_spec(),
+        JsonEventListener._lexer_spec(),
     )
 
     # All three families must produce the same object chunks.

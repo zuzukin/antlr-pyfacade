@@ -184,8 +184,8 @@ def generate(
         class {cls}(FacadeListener):
         {rule_names_block}
             START_RULE = 0  # {rule0}
-            LEXER: ClassVar[type] = {lexer_clsname}
-            PARSER: ClassVar[type] = {parser_clsname}
+            _LEXER: ClassVar[type] = {lexer_clsname}
+            _PARSER: ClassVar[type] = {parser_clsname}
 
             # token-type constants
         {token_lines}

@@ -46,7 +46,7 @@ sys.path.insert(0, str(ROOT / "examples" / "json"))
 _jlist: Any = importlib.import_module("json_listener")
 JsonEventListener = _jlist.JsonEventListener
 
-from antlrope import parse_events  # noqa: E402
+from antlrope._native import parse_events  # noqa: E402
 
 LABEL = sys.argv[1] if len(sys.argv) > 1 else "variant"
 
@@ -77,8 +77,8 @@ def _best_of(fn, trials: int = 7) -> float:
 
 def _single_thread() -> float:
     """Best-of-7 single-thread native parse (cached spec, warmed)."""
-    pspec = JsonEventListener.parser_spec()
-    lspec = JsonEventListener.lexer_spec()
+    pspec = JsonEventListener._parser_spec()
+    lspec = JsonEventListener._lexer_spec()
 
     def one() -> None:
         _raw, errors = parse_events(pspec, lspec, _BIG, 0, None, None)
@@ -90,8 +90,8 @@ def _single_thread() -> float:
 
 def _parallel_shared() -> tuple[float, float]:
     """Serial vs threaded wall time for N tasks through ONE shared cached spec."""
-    pspec = JsonEventListener.parser_spec()
-    lspec = JsonEventListener.lexer_spec()
+    pspec = JsonEventListener._parser_spec()
+    lspec = JsonEventListener._lexer_spec()
 
     def one(_=None) -> int:
         raw, errors = parse_events(pspec, lspec, _BIG, 0, None, None)

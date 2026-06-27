@@ -36,8 +36,8 @@ RULE_JSON = JSONParser.RULE_json
 
 
 def _event_tallies(text: str) -> dict[int, int]:
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
-    raw, _ = ap.parse_events(pspec, lspec, text, RULE_JSON)
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
+    raw, _ = ap._native.parse_events(pspec, lspec, text, RULE_JSON)
     mv = memoryview(raw).cast("i")
     tally = {EV_ENTER: 0, EV_EXIT: 0, EV_TERMINAL: 0, EV_ERROR: 0}
     for i in range(len(mv) // 4):
@@ -83,7 +83,7 @@ def test_events_match_pure_python_walker(json_text):
 
 
 def test_events_match_native_count(json_text):
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
     tally = _event_tallies(json_text)
     cnt = ap._native.parse_count(pspec, lspec, json_text, RULE_JSON)
     assert tally[EV_ENTER] == cnt["enters"]

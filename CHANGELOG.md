@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.25] - 2026-06-24
+
+### Changed
+- **Breaking:** the low-level native layer is now internal. `parse_events`,
+  `ParserSpec`, and `LexerSpec` are no longer exported from `antlrope`, and
+  `FacadeListener.drive` / `.parser_spec` / `.lexer_spec` are now `_drive` /
+  `_parser_spec` / `_lexer_spec`. Use `walk` / `walk_parallel` (and the chunkers);
+  the raw event buffer is no longer a public API.
+- **Breaking:** the generated facade's `LEXER` / `PARSER` class variables are now
+  `_LEXER` / `_PARSER`, and the `LexerProtocol` / `ParserProtocol` typing protocols are
+  no longer exported from `antlrope`. The baked-in lexer/parser are an implementation
+  detail of the generated subclass.
+
 ## [0.2.24] - 2026-06-24
 
 ### Added

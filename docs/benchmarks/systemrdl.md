@@ -40,8 +40,8 @@ the cost you pay before any application logic runs:
 - **pure-Python**: lex + parse to a Python parse tree.
 - **speedy-antlr**: lex + parse in C++, then translate the tree into Python nodes
   (`sa_systemrdl.parse`, the accelerator bundled in `systemrdl-compiler`).
-- **antlrope**: parse in C++ and emit the full, unfiltered bulk event buffer
-  (`parse_events`) — no Python tree.
+- **antlrope**: parse in C++ and emit the full, unfiltered bulk event buffer —
+  no Python tree.
 
 Wall-clock is the best of 7 warm runs over an in-memory string; **peak memory** is
 the process's peak resident set (`ru_maxrss`), each tool measured in a fresh

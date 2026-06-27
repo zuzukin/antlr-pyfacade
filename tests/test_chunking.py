@@ -198,7 +198,7 @@ def test_stream_on_token_encoding_and_errors(tmp_path):
     assert "�" in lenient[0]
     assert lenient[1] == '{"b": 2}'
 
-    spec = JsonValueBuilder.lexer_spec()
+    spec = JsonValueBuilder._lexer_spec()
     strict = _native.StreamChunker(spec, str(bad), [LBRACE], 0, 0, False, True, 0)
     with pytest.raises(RuntimeError):
         strict.next_batch(10)

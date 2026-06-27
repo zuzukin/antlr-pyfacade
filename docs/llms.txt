@@ -17,7 +17,7 @@ When to use it: throughput on large or many-record inputs. When NOT to use it (u
    `antlr4 -Dlanguage=Python3 JSON.g4 -o generated`  → `generated/JSONLexer.py`, `generated/JSONParser.py`
 2. Generate a facade from the parser module (an importable dotted path) + a grammar-name prefix:
    `antlrope gen generated.JSONParser JSON -o json_listener.py`
-   → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes them in as `LEXER`/`PARSER`, so `walk`/`walk_parallel` need no class arguments. The lexer module is derived from the parser's (`<Grammar>Parser` → `<Grammar>Lexer`); pass `--lexer` to override. You subclass it; you do not edit it.
+   → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes them in, so `walk`/`walk_parallel` need no class arguments. The lexer module is derived from the parser's (`<Grammar>Parser` → `<Grammar>Lexer`); pass `--lexer` to override. You subclass it; you do not edit it.
 3. Subclass the facade, override only the callbacks you need, and call `walk`:
 
 ```python
@@ -44,8 +44,8 @@ Key model facts for writing listeners:
 
 ## Public API (`from antlrope import ...`)
 
-- `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attributes `syntax_errors`, `LEXER` / `PARSER` (the baked-in stock lexer/parser classes). Methods `walk(text, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, *, start_rule=None, max_workers=None, filtered=True)` — both use the baked-in `LEXER`/`PARSER`; `walk_parallel` parses independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
-- Chunking — `classmethod`s on the generated `<Grammar>EventListener` (call as `MyListener.split_on_token(...)`), all yielding positioned `Chunk`s for `walk_parallel`. Token/rule ones use the baked-in `LEXER`/`PARSER` and the class's token-type constants; no lexer/parser argument:
+- `FacadeListener` — base of every generated `<Grammar>EventListener`. Callbacks `enter<Rule>()` / `exit<Rule>()` / `visitTerminal(token_type, text)` / `visitError(token_type, text)`; helpers `line_col()`, `span()`, `sourcename()`; attribute `syntax_errors`. Methods `walk(text, *, start_rule=None, filtered=True)` (on the generated subclass) and classmethod `walk_parallel(chunks, *, start_rule=None, max_workers=None, filtered=True)` — both use the baked-in lexer/parser; `walk_parallel` parses independent chunks across CPU cores; lazy iterator, results in input order, at most `max_workers` parses in flight (default `os.cpu_count()`).
+- Chunking — `classmethod`s on the generated `<Grammar>EventListener` (call as `MyListener.split_on_token(...)`), all yielding positioned `Chunk`s for `walk_parallel`. Token/rule ones use the baked-in lexer/parser and the class's token-type constants; no lexer/parser argument:
   - `split_on_token(text, token_types, *, where="before"|"after", channel=0, sourcename="")` and `split_between_tokens(text, pairs, *, nested=False, ...)` — token-aware (a delimiter inside a string/comment never splits).
   - `split_on_pattern(text, pattern, *, where=..., flags=0, sourcename="")` and `chunk_by_pattern(text, pattern, ...)` — regex; faster but not token-aware.
   - `chunk_by_rule(text, rule, *, start_rule=None, outermost=True, ...)` — split on grammar structure (parses in C++).
@@ -54,8 +54,6 @@ Key model facts for writing listeners:
 - `Chunk(text, offset=0, line=1, column=0, sourcename="")` — a source piece plus its position and optional source name; a bare `str` may be passed to `walk_parallel` instead (positioned contiguously).
 - `SourceMap(text)` — `.line_col(offset)` / `.offset(line, column)` between char offsets and `(line, column)`.
 - `ParseError` — a parse diagnostic: `line`, `column`, `start`, `stop`, `message`.
-- `FacadeListener.parser_spec()` / `FacadeListener.lexer_spec()` — `classmethod`s building the cached native `ParserSpec` / `LexerSpec` from the baked-in `PARSER` / `LEXER` (pass `cached=False` for a fresh, unshared spec). Feed them to `drive(...)` to run the native layer directly.
-- `parse_events(...)` — the raw bulk int32 event buffer, for power users (the facade wraps this).
 - CLI (`antlrope` is a command group): `antlrope gen <parser-module> <name> [-o <file>]` generates a facade (writing a provenance header — version, command, rundir, input SHA256s — when `-o` is used); `antlrope regen <file>` regenerates it from that header; `antlrope up-to-date <file>` exits non-zero if its inputs changed.
 
 Character offsets throughout are 0-based **codepoint** indices; `line` is 1-based, `column` 0-based (matching ANTLR's `line:column`).

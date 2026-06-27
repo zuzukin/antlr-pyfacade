@@ -16,9 +16,4 @@
         - LexToken
         - SourceMap
         - LineCol
-        - parse_events
         - ParseError
-        - LexerSpec
-        - ParserSpec
-        - LexerProtocol
-        - ParserProtocol

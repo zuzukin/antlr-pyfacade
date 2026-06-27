@@ -24,15 +24,15 @@ import antlrope as ap
 
 
 def test_specs_build_and_cache():
-    assert isinstance(JsonEventListener.parser_spec(), ap.ParserSpec)
-    assert isinstance(JsonEventListener.lexer_spec(), ap.LexerSpec)
+    assert isinstance(JsonEventListener._parser_spec(), ap._native.ParserSpec)
+    assert isinstance(JsonEventListener._lexer_spec(), ap._native.LexerSpec)
     # Cached by class: the same object on repeat calls; cached=False forces a fresh,
     # independent spec (neither read from nor written to the cache).
-    assert JsonEventListener.parser_spec() is JsonEventListener.parser_spec()
-    assert JsonEventListener.lexer_spec() is JsonEventListener.lexer_spec()
+    assert JsonEventListener._parser_spec() is JsonEventListener._parser_spec()
+    assert JsonEventListener._lexer_spec() is JsonEventListener._lexer_spec()
     assert (
-        JsonEventListener.parser_spec(cached=False)
-        is not JsonEventListener.parser_spec()
+        JsonEventListener._parser_spec(cached=False)
+        is not JsonEventListener._parser_spec()
     )
 
 

@@ -34,13 +34,15 @@ def _rows(raw) -> list[tuple[int, int, int, int]]:
 
 
 def test_mask_keeps_only_subscribed(json_text):
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
     rule_mask = [RULE_OBJ]
     token_mask = [STRING]
 
-    full = _rows(ap.parse_events(pspec, lspec, json_text, RULE_JSON)[0])
+    full = _rows(ap._native.parse_events(pspec, lspec, json_text, RULE_JSON)[0])
     filtered = _rows(
-        ap.parse_events(pspec, lspec, json_text, RULE_JSON, rule_mask, token_mask)[0]
+        ap._native.parse_events(
+            pspec, lspec, json_text, RULE_JSON, rule_mask, token_mask
+        )[0]
     )
 
     expected = [
@@ -53,6 +55,6 @@ def test_mask_keeps_only_subscribed(json_text):
 
 
 def test_empty_mask_drops_everything(json_text):
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
-    raw, _ = ap.parse_events(pspec, lspec, json_text, RULE_JSON, [], [])
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
+    raw, _ = ap._native.parse_events(pspec, lspec, json_text, RULE_JSON, [], [])
     assert _rows(raw) == []

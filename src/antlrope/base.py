@@ -16,7 +16,7 @@ Driver for generated grammar-specific event listeners.
 
 A generated `<Grammar>EventListener` subclass declares named callbacks
 (`enter<Rule>` / `exit<Rule>` / `visitTerminal` / `visitError`) just like the
-stock ANTLR listener. [drive][antlrope.FacadeListener.drive] runs the bulk native event
+stock ANTLR listener. `walk` runs the bulk native event
 stream and dispatches those callbacks, instead of building a Python parse tree and
 walking it.
 
@@ -29,7 +29,7 @@ The class is also the grammar's chunking API: classmethods like
 [chunk_by_rule][antlrope.FacadeListener.chunk_by_rule] split a whole source into
 positioned [Chunk][antlrope.Chunk]s for
 [walk_parallel][antlrope.FacadeListener.walk_parallel], sourcing the lexer/parser
-from the baked-in `LEXER` / `PARSER`.
+from the baked-in lexer/parser.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ DEFAULT_CHANNEL = 0
 # classes. The current standard ANTLR Parser and Lexer base classes do not declare
 # these members, but the generated classes do, so we use Protocol classes to record
 # the expected interface.
-class ParserProtocol(Protocol):
+class _ParserProtocol(Protocol):
     """The stock ANTLR `<Grammar>Parser` class interface that antlrope expects."""
 
     literalNames: ClassVar[Sequence[str]]
@@ -88,7 +88,7 @@ class ParserProtocol(Protocol):
     grammarFileName: ClassVar[str]
 
 
-class LexerProtocol(Protocol):
+class _LexerProtocol(Protocol):
     """The stock ANTLR `<Grammar>Lexer` class interface that antlrope expects."""
 
     literalNames: ClassVar[Sequence[str]]
@@ -103,17 +103,17 @@ class LexerProtocol(Protocol):
 # cost once. Parser and lexer specs cache independently — the lexer-only chunkers
 # need no parser spec. The Python3 ANTLR target emits a module-level
 # `serializedATN()` alongside each class, resolved here via the class's module.
-_PARSER_SPEC_CACHE: dict[type[ParserProtocol], _native.ParserSpec] = {}
-_LEXER_SPEC_CACHE: dict[type[LexerProtocol], _native.LexerSpec] = {}
+_PARSER_SPEC_CACHE: dict[type[_ParserProtocol], _native.ParserSpec] = {}
+_LEXER_SPEC_CACHE: dict[type[_LexerProtocol], _native.LexerSpec] = {}
 
 # token type -> name map per grammar, for FacadeListener.token_name (built on
-# demand). Keyed by the PARSER class: its literalNames / symbolicNames are indexed
+# demand). Keyed by the _PARSER class: its literalNames / symbolicNames are indexed
 # by token type and cover the whole vocabulary (the lexer's symbolicNames is a
 # compact list of just its named rules, not type-indexed).
-_TOKEN_NAME_CACHE: dict[type[ParserProtocol], dict[int, str]] = {}
+_TOKEN_NAME_CACHE: dict[type[_ParserProtocol], dict[int, str]] = {}
 
 
-def _build_token_names(parser_cls: type[ParserProtocol]) -> dict[int, str]:
+def _build_token_names(parser_cls: type[_ParserProtocol]) -> dict[int, str]:
     """Map each token type to its symbolic name, falling back to its literal name."""
     sym = list(parser_cls.symbolicNames)
     lit = list(parser_cls.literalNames)
@@ -127,7 +127,7 @@ def _build_token_names(parser_cls: type[ParserProtocol]) -> dict[int, str]:
     return names
 
 
-def _build_parser_spec(parser_cls: type[ParserProtocol]) -> _native.ParserSpec:
+def _build_parser_spec(parser_cls: type[_ParserProtocol]) -> _native.ParserSpec:
     mod = sys.modules[parser_cls.__module__]
     grammar_file = getattr(parser_cls, "grammarFileName", "<grammar>.g4")
     return _native.ParserSpec(
@@ -139,7 +139,7 @@ def _build_parser_spec(parser_cls: type[ParserProtocol]) -> _native.ParserSpec:
     )
 
 
-def _build_lexer_spec(lexer_cls: type[LexerProtocol]) -> _native.LexerSpec:
+def _build_lexer_spec(lexer_cls: type[_LexerProtocol]) -> _native.LexerSpec:
     mod = sys.modules[lexer_cls.__module__]
     grammar_file = getattr(lexer_cls, "grammarFileName", "<grammar>.g4")
     return _native.LexerSpec(
@@ -166,12 +166,12 @@ def _specs_for_thread(
     cache = getattr(_thread_specs, "cache", None)
     if cache is None:
         cache = _thread_specs.cache = {}
-    key = (cls.LEXER, cls.PARSER)
+    key = (cls._LEXER, cls._PARSER)
     specs = cache.get(key)
     if specs is None:
         specs = cache[key] = (
-            _build_parser_spec(cls.PARSER),
-            _build_lexer_spec(cls.LEXER),
+            _build_parser_spec(cls._PARSER),
+            _build_lexer_spec(cls._LEXER),
         )
     return specs
 
@@ -414,14 +414,14 @@ class FacadeListener:
     running, [span][antlrope.FacadeListener.span] returns its
     `(start, stop)` character offsets and
     [line_col][antlrope.FacadeListener.line_col] the 1-based line / 0-based
-    column of its start. [drive][antlrope.FacadeListener.drive] populates this state per
+    column of its start. `walk` populates this state per
     dispatched callback; outside a callback it reflects the most recent one.
     """
 
     # The stock ANTLR `<Grammar>Lexer` / `<Grammar>Parser` classes plus the grammar
     # metadata, all set by every generated subclass (declared here, no value).
-    LEXER: ClassVar[type[LexerProtocol]]
-    PARSER: ClassVar[type[ParserProtocol]]
+    _LEXER: ClassVar[type[_LexerProtocol]]
+    _PARSER: ClassVar[type[_ParserProtocol]]
     ruleNames: ClassVar[list[str]]
     START_RULE: ClassVar[int]
 
@@ -492,7 +492,7 @@ class FacadeListener:
 
         This is the `sourcename` of the [Chunk][antlrope.Chunk] being parsed
         (the chunkers can set it; the streaming ones default it to their file path),
-        or whatever was passed to [drive][antlrope.FacadeListener.drive]. Use
+        or whatever was passed to `walk`. Use
         it with [line_col][antlrope.FacadeListener.line_col] to report a
         position as `sourcename:line:column`.
         """
@@ -555,9 +555,9 @@ class FacadeListener:
         the type's number as a string for an unknown type. Useful for logging /
         debugging and generic `visitTerminal` handlers.
         """
-        names = _TOKEN_NAME_CACHE.get(cls.PARSER)
+        names = _TOKEN_NAME_CACHE.get(cls._PARSER)
         if names is None:
-            names = _TOKEN_NAME_CACHE[cls.PARSER] = _build_token_names(cls.PARSER)
+            names = _TOKEN_NAME_CACHE[cls._PARSER] = _build_token_names(cls._PARSER)
         return names.get(token_type, str(token_type))
 
     def visitTerminal(self, token_type: int, text: str) -> None:
@@ -588,7 +588,7 @@ class FacadeListener:
         """Return the generated `<Grammar>EventListener` in this class's ancestry.
 
         That base (the class that directly subclasses `FacadeListener`) holds the
-        no-op callback stubs [drive][antlrope.FacadeListener.drive] compares against to
+        no-op callback stubs `walk` compares against to
         detect overrides, plus `ruleNames` / `START_RULE`. Works whether `cls` is
         the generated class itself or a user subclass of it.
 
@@ -629,14 +629,12 @@ class FacadeListener:
             raise ValueError(f"unknown rule {rule!r}; known rules: {names}") from None
 
     @classmethod
-    def parser_spec(cls, *, cached: bool = True) -> _native.ParserSpec:
-        """Return the native `parser_spec` built from this grammar's `PARSER` class.
+    def _parser_spec(cls, *, cached: bool = True) -> _native.ParserSpec:
+        """Return the native `parser_spec` built from this grammar's baked-in parser.
 
         Reads the serialized ATN + name/vocabulary metadata off the baked-in stock
         `<Grammar>Parser` and hands it to the C++ runtime — the bridge that makes the
-        runtime grammar-agnostic, with no codegen of our own. Pair it with
-        [lexer_spec][antlrope.FacadeListener.lexer_spec] to feed
-        [drive][antlrope.FacadeListener.drive] directly.
+        runtime grammar-agnostic, with no codegen of our own.
 
         Args:
             cached: When `True` (default), reuse/store the result in the per-parser
@@ -651,20 +649,20 @@ class FacadeListener:
             [walk_parallel][antlrope.FacadeListener.walk_parallel]).
         """
         if cached:
-            hit = _PARSER_SPEC_CACHE.get(cls.PARSER)
+            hit = _PARSER_SPEC_CACHE.get(cls._PARSER)
             if hit is not None:
                 return hit
-        spec = _build_parser_spec(cls.PARSER)
+        spec = _build_parser_spec(cls._PARSER)
         if cached:
-            _PARSER_SPEC_CACHE[cls.PARSER] = spec
+            _PARSER_SPEC_CACHE[cls._PARSER] = spec
         return spec
 
     @classmethod
-    def lexer_spec(cls, *, cached: bool = True) -> _native.LexerSpec:
-        """Return the native `lexer_spec` built from this grammar's `LEXER` class.
+    def _lexer_spec(cls, *, cached: bool = True) -> _native.LexerSpec:
+        """Return the native `lexer_spec` built from this grammar's baked-in lexer.
 
         The lexer-only counterpart of
-        [parser_spec][antlrope.FacadeListener.parser_spec], for the token-based
+        the parser spec, for the token-based
         chunkers (and [lex][antlrope.FacadeListener.lex]) that lex without parsing.
 
         Args:
@@ -675,12 +673,12 @@ class FacadeListener:
             The `lexer_spec` for the grammar.
         """
         if cached:
-            hit = _LEXER_SPEC_CACHE.get(cls.LEXER)
+            hit = _LEXER_SPEC_CACHE.get(cls._LEXER)
             if hit is not None:
                 return hit
-        spec = _build_lexer_spec(cls.LEXER)
+        spec = _build_lexer_spec(cls._LEXER)
         if cached:
-            _LEXER_SPEC_CACHE[cls.LEXER] = spec
+            _LEXER_SPEC_CACHE[cls._LEXER] = spec
         return spec
 
     def walk(
@@ -693,8 +691,8 @@ class FacadeListener:
         """Parse `text` with this listener's baked-in lexer/parser and return `self`.
 
         Runs the parse in C++ and dispatches the event stream to this listener's
-        callbacks. The lexer/parser come from the generated subclass's `LEXER` /
-        `PARSER`, so no class arguments are needed.
+        callbacks. The lexer/parser are baked into the generated subclass, so no
+        class arguments are needed.
 
         Args:
             start_rule: The rule to parse as — a rule name, a rule index, or `None`
@@ -710,7 +708,9 @@ class FacadeListener:
                 `<Grammar>EventListener` subclass.
         """
         rule = self._resolve_start_rule(self._facade_base(), start_rule)
-        self.drive(self.parser_spec(), self.lexer_spec(), text, rule, filtered=filtered)
+        self._drive(
+            self._parser_spec(), self._lexer_spec(), text, rule, filtered=filtered
+        )
         return self
 
     @classmethod
@@ -763,7 +763,7 @@ class FacadeListener:
 
         Raises:
             TypeError: If called on a class that is not a generated
-                `<Grammar>EventListener` subclass (no baked-in `LEXER` / `PARSER`).
+                `<Grammar>EventListener` subclass (no baked-in lexer/parser).
         """
         base = cls._facade_base()  # raises if not a generated facade subclass
         rule = cls._resolve_start_rule(base, start_rule)  # validate eagerly
@@ -773,7 +773,7 @@ class FacadeListener:
         def run(chunk: Chunk) -> Self:
             parser_spec, lexer_spec = _specs_for_thread(cls)
             listener = make()
-            listener.drive(
+            listener._drive(
                 parser_spec,
                 lexer_spec,
                 chunk.text,
@@ -818,7 +818,7 @@ class FacadeListener:
 
         return stream()
 
-    def drive(
+    def _drive(
         self,
         parser_spec: _native.ParserSpec,
         lexer_spec: _native.LexerSpec,
@@ -836,8 +836,7 @@ class FacadeListener:
         directly to drive a listener from already-loaded specs.
 
         Args:
-            parser_spec: The native parser spec (see
-                [parser_spec][antlrope.FacadeListener.parser_spec]).
+            parser_spec: The native parser spec.
             lexer_spec: The native lexer spec.
             text: The source to parse.
             start_rule: The index of the rule to start parsing at.
@@ -946,8 +945,8 @@ class FacadeListener:
 
     # ------------------------------------------------------------------ chunking
     # Split a whole source into positioned `Chunk`s for `walk_parallel`. Token- and
-    # rule-based chunkers source the lexer/parser from this class's baked-in `LEXER`
-    # / `PARSER`; the regex ones need neither. See `docs/chunking.md`.
+    # rule-based chunkers source the lexer/parser baked into this class; the regex
+    # ones need neither. See `docs/chunking.md`.
 
     @classmethod
     def lex(
@@ -966,8 +965,7 @@ class FacadeListener:
             text: The source to tokenize.
             keep: Optional token types to return; the lexer drops every other token in
                 C++ so only these cross into Python. `None` returns all tokens.
-            cached: Reuse the cached lexer spec (see
-                [lexer_spec][antlrope.FacadeListener.lexer_spec]).
+            cached: Reuse the cached lexer spec.
 
         Yields:
             The kept tokens in source order (the EOF sentinel omitted). Tokens the
@@ -975,7 +973,7 @@ class FacadeListener:
             channel (`-> channel(...)`) appear with that `channel`. Lexer errors are
             recovered from and not reported here.
         """
-        spec = cls.lexer_spec(cached=cached)
+        spec = cls._lexer_spec(cached=cached)
         mask = None if keep is None else list(keep)
         raw, _errors = _native.lex(spec, text, mask)
         for rec in _TOK.iter_unpack(raw):
@@ -1110,8 +1108,7 @@ class FacadeListener:
                 dropping only truly empty (zero-length) regions.
             batch: How many chunk records to pull from C++ per call — a throughput knob,
                 not observable in the output.
-            cached: Reuse the cached lexer spec (see
-                [lexer_spec][antlrope.FacadeListener.lexer_spec]).
+            cached: Reuse the cached lexer spec.
 
         Yields:
             One [Chunk][antlrope.Chunk] per region between delimiters, carrying its
@@ -1135,7 +1132,7 @@ class FacadeListener:
         src_path = os.fspath(path)
         if not sourcename:
             sourcename = src_path
-        spec = cls.lexer_spec(cached=cached)
+        spec = cls._lexer_spec(cached=cached)
         chunker = _native.StreamChunker(
             spec,
             src_path,
@@ -1500,8 +1497,7 @@ class FacadeListener:
             outermost: When `True` (default), only top-level occurrences are emitted;
                 a matched rule nested inside another match is skipped. `False` emits
                 every occurrence (which would overlap).
-            cached: Reuse the cached specs (see
-                [parser_spec][antlrope.FacadeListener.parser_spec]).
+            cached: Reuse the cached specs.
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
@@ -1511,8 +1507,8 @@ class FacadeListener:
             order, trimmed of surrounding whitespace and carrying its position. An
             empty occurrence (a rule that consumed no token) is skipped.
         """
-        parser_spec = cls.parser_spec(cached=cached)
-        lexer_spec = cls.lexer_spec(cached=cached)
+        parser_spec = cls._parser_spec(cached=cached)
+        lexer_spec = cls._lexer_spec(cached=cached)
         if isinstance(rule, (int, str)):
             rule_mask = [cls._resolve_rule(rule)]
         else:
@@ -1572,7 +1568,7 @@ class FacadeListener:
             encoding: The source encoding. Only UTF-8 is supported today (Python codec
                 aliases are accepted); the keyword is reserved for future encodings.
             batch: How many records to pull from C++ per call — a throughput knob.
-            cached: Reuse the cached specs (see [parser_spec][antlrope.FacadeListener.parser_spec]).
+            cached: Reuse the cached specs.
 
         Yields:
             One [Chunk][antlrope.Chunk] per record, in source order, carrying its
@@ -1602,8 +1598,8 @@ class FacadeListener:
         src_path = os.fspath(path)
         if not sourcename:
             sourcename = src_path
-        parser_spec = cls.parser_spec(cached=cached)
-        lexer_spec = cls.lexer_spec(cached=cached)
+        parser_spec = cls._parser_spec(cached=cached)
+        lexer_spec = cls._lexer_spec(cached=cached)
         chunker = _native.StreamRuleChunker(
             parser_spec,
             lexer_spec,

@@ -31,8 +31,8 @@ RULE_JSON = JSONParser.RULE_json
 
 
 def test_parse_events_returns_events_and_errors():
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
-    events, errors = ap.parse_events(pspec, lspec, "[1 2]", RULE_JSON)
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
+    events, errors = ap._native.parse_events(pspec, lspec, "[1 2]", RULE_JSON)
     assert isinstance(events, bytes)
     assert len(errors) == 1
     err = errors[0]
@@ -43,8 +43,8 @@ def test_parse_events_returns_events_and_errors():
 
 
 def test_parse_events_no_errors_on_valid_input():
-    pspec, lspec = JsonEventListener.parser_spec(), JsonEventListener.lexer_spec()
-    _events, errors = ap.parse_events(pspec, lspec, '{"a": 1}', RULE_JSON)
+    pspec, lspec = JsonEventListener._parser_spec(), JsonEventListener._lexer_spec()
+    _events, errors = ap._native.parse_events(pspec, lspec, '{"a": 1}', RULE_JSON)
     assert errors == []
 
 

@@ -44,12 +44,12 @@ def test_generate_facade_source():
     # facade neither defines it nor needs load_specs.
     assert "def walk(" not in src
     assert "load_specs" not in src
-    # The facade imports the stock lexer/parser and bakes them in as LEXER/PARSER,
+    # The facade imports the stock lexer/parser and bakes them in as _LEXER/_PARSER,
     # so the inherited .walk() / .walk_parallel() need no class arguments.
     assert "from generated.JSONLexer import JSONLexer" in src
     assert "from generated.JSONParser import JSONParser" in src
-    assert "LEXER: ClassVar[type] = JSONLexer" in src
-    assert "PARSER: ClassVar[type] = JSONParser" in src
+    assert "_LEXER: ClassVar[type] = JSONLexer" in src
+    assert "_PARSER: ClassVar[type] = JSONParser" in src
     # Token-type constants cover both branches: symbolic names (STRING/NUMBER) and
     # anonymous literals, which the facade emits with ANTLR's positional name
     # (T__0 is the first literal — token type 1 — not T__1).
@@ -65,8 +65,8 @@ def test_generate_facade_source():
     assert issubclass(cls, FacadeListener)
     assert list(cls.ruleNames) == list(JSONParser.ruleNames)
     # The baked-in classes are the stock lexer/parser themselves.
-    assert cls.LEXER is JSONLexer
-    assert cls.PARSER is JSONParser
+    assert cls._LEXER is JSONLexer
+    assert cls._PARSER is JSONParser
 
     # Every token constant matches the stock lexer the user has — both the
     # symbolic names and the positional T__n names for anonymous literals.

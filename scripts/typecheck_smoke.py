@@ -29,30 +29,20 @@ from __future__ import annotations
 from antlrope import (
     Chunk,
     FacadeListener,
-    LexerProtocol,
-    LexerSpec,
     LexToken,
     LineCol,
     ParseError,
-    ParserProtocol,
-    ParserSpec,
     SourceMap,
     __version__,
-    parse_events,
 )
 
 # Reference each name so it is not flagged unused; the tuple is never evaluated.
 _PUBLIC: tuple[object, ...] = (
     Chunk,
     FacadeListener,
-    LexerProtocol,
-    LexerSpec,
     LexToken,
     LineCol,
     ParseError,
-    ParserProtocol,
-    ParserSpec,
     SourceMap,
     __version__,
-    parse_events,
 )

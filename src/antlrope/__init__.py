@@ -31,13 +31,8 @@ from __future__ import annotations
 from importlib.resources import files as _files
 
 from . import _native
-from ._native import (
-    LexerSpec,
-    ParseError,
-    ParserSpec,
-    parse_events,
-)
-from .base import Chunk, FacadeListener, LexerProtocol, LexToken, ParserProtocol
+from ._native import ParseError
+from .base import Chunk, FacadeListener, LexToken
 from .location import LineCol, SourceMap
 
 __version__ = _files(__name__).joinpath("VERSION").read_text(encoding="utf-8").strip()
@@ -46,13 +41,8 @@ __all__ = [
     "Chunk",
     "FacadeListener",
     "LexToken",
-    "LexerProtocol",
-    "LexerSpec",
     "LineCol",
     "ParseError",
-    "ParserProtocol",
-    "ParserSpec",
     "SourceMap",
     "__version__",
-    "parse_events",
 ]
