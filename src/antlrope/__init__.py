@@ -28,14 +28,8 @@ Basic usage:
 
 from __future__ import annotations
 
-# Version is read from the VERSION file (the single source of truth), shipped as
-# package data in the wheel/sdist and present in the source tree.
 from importlib.resources import files as _files
 
-# The compiled extension stays internal: only the few names users actually need
-# are re-exported below. The low-level binding (the diagnostic functions and the
-# parse-tree node classes) remains reachable as `antlrope._native` for
-# power/diagnostic use, but is not part of the public top-level surface.
 from . import _native
 from ._native import (
     LexerSpec,
