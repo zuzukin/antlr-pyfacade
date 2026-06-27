@@ -24,10 +24,10 @@ from __future__ import annotations
 import argparse
 
 from antlrope import __version__
-from antlrope.cli import generate
+from antlrope.cli import generate, regen, uptodate
 
 # Each entry is a subcommand module exposing `register(subparsers)`.
-_SUBCOMMANDS = (generate,)
+_SUBCOMMANDS = (generate, regen, uptodate)
 
 
 def main(argv: list[str] | None = None) -> int:

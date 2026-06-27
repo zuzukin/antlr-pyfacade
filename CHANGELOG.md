@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.24] - 2026-06-24
+
+### Added
+- `antlrope gen` now writes a **provenance header** into the generated facade: the
+  antlrope version, the exact command, the run directory (relative to the output
+  file), and a SHA256 of each input module — all deterministic, so output stays
+  byte-reproducible. Two new subcommands consume it: **`antlrope regen <file>`**
+  re-runs the recorded command from the recorded directory to regenerate in place, and
+  **`antlrope up-to-date <file>`** re-hashes the inputs (and checks the version) and
+  exits non-zero when the file is stale.
+
 ## [0.2.23] - 2026-06-24
 
 ### Added

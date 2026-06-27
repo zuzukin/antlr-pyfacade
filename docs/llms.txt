@@ -56,7 +56,7 @@ Key model facts for writing listeners:
 - `ParseError` — a parse diagnostic: `line`, `column`, `start`, `stop`, `message`.
 - `FacadeListener.parser_spec()` / `FacadeListener.lexer_spec()` — `classmethod`s building the cached native `ParserSpec` / `LexerSpec` from the baked-in `PARSER` / `LEXER` (pass `cached=False` for a fresh, unshared spec). Feed them to `drive(...)` to run the native layer directly.
 - `parse_events(...)` — the raw bulk int32 event buffer, for power users (the facade wraps this).
-- CLI: `antlrope gen <parser-module> <name> [-o <file>]` — generate a facade (`antlrope` is a command group; `gen` is the only command today).
+- CLI (`antlrope` is a command group): `antlrope gen <parser-module> <name> [-o <file>]` generates a facade (writing a provenance header — version, command, rundir, input SHA256s — when `-o` is used); `antlrope regen <file>` regenerates it from that header; `antlrope up-to-date <file>` exits non-zero if its inputs changed.
 
 Character offsets throughout are 0-based **codepoint** indices; `line` is 1-based, `column` 0-based (matching ANTLR's `line:column`).
 
