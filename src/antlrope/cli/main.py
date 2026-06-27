@@ -16,12 +16,14 @@
 
 `antlrope` is a command group. Each subcommand lives in its own module under
 `antlrope.cli` and exposes a `register(subparsers)` function; add new commands to
-`_SUBCOMMANDS` below. Today the only command is `gen` (antlrope.cli.generate).
+`_SUBCOMMANDS` below. Today these are `gen`, `regen`, and `up-to-date`.
 """
 
 from __future__ import annotations
 
 import argparse
+import shutil
+from typing import Any
 
 from antlrope import __version__
 from antlrope.cli import generate, regen, uptodate
@@ -29,9 +31,27 @@ from antlrope.cli import generate, regen, uptodate
 # Each entry is a subcommand module exposing `register(subparsers)`.
 _SUBCOMMANDS = (generate, regen, uptodate)
 
+# Cap help text at ~90 columns (never wider than the terminal) instead of letting it
+# stretch across a wide window.
+_HELP_WIDTH = 90
+
+
+def _help_formatter(prog: str) -> argparse.HelpFormatter:
+    width = min(shutil.get_terminal_size().columns - 2, _HELP_WIDTH)
+    return argparse.HelpFormatter(prog, width=width)
+
+
+class _Parser(argparse.ArgumentParser):
+    """ArgumentParser that caps help width. `add_subparsers` copies this class to the
+    subparsers (via `type(self)`), so every subcommand's help is capped too."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("formatter_class", _help_formatter)
+        super().__init__(*args, **kwargs)
+
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
+    parser = _Parser(
         prog="antlrope",
         description="Command-line tools for the antlrope ANTLR runtime.",
     )
