@@ -726,7 +726,7 @@ class FacadeListener:
         """Parse independent `chunks` across a thread pool, one listener each.
 
         The native parse releases the GIL, so the parses overlap across cores. Each
-        worker thread uses its own specs (built once via `cached=False`), so they
+        worker thread uses its own copy of the parser state (built once via `cached=False`), so they
         never contend on a shared ATN. The per-event Python dispatch still holds
         the GIL, so parallel speedup scales with how parse-heavy the work is
         relative to per-callback Python work — see the "Parallel parsing" section
@@ -958,20 +958,27 @@ class FacadeListener:
     ) -> Iterator[LexToken]:
         """Tokenize `text` with the grammar's lexer (no parsing).
 
-        Lazy: the work runs as the result is iterated. Wrap in `list(...)` for random
-        access. The native lexer streams tokens rather than buffering the whole stream.
+        This efficiently generates a stream of tokens on all channels.
 
         Args:
             text: The source to tokenize.
-            keep: Optional token types to return; the lexer drops every other token in
+            keep: Optional set of token types to return; the lexer drops every other token in
                 C++ so only these cross into Python. `None` returns all tokens.
-            cached: Reuse the cached lexer spec.
+            cached: Reuse the cached lexer state.
 
         Yields:
-            The kept tokens in source order (the EOF sentinel omitted). Tokens the
-            lexer drops via `-> skip` do not appear; tokens routed to a non-default
-            channel (`-> channel(...)`) appear with that `channel`. Lexer errors are
-            recovered from and not reported here.
+            Every token the lexer produces, in source order, on all channels: the
+            default channel plus any hidden or custom channel a rule routes to with
+            `-> channel(...)` (each token carries its own `channel`). Excluded are
+            tokens the lexer discards via `-> skip` (and the partials merged by
+            `-> more`, which never become standalone tokens), the EOF sentinel, and
+            — when `keep` is given — any token type not listed.
+
+            On illegal input the lexer applies ANTLR's default recovery — discard
+            the offending character and continue — rather than raising or stopping,
+            so malformed input still yields a token stream for the rest of the text.
+            Those lexer error diagnostics are not surfaced by `lex`; parse with
+            `walk` if you need `syntax_errors`.
         """
         spec = cls._lexer_spec(cached=cached)
         mask = None if keep is None else list(keep)
