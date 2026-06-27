@@ -11,13 +11,13 @@ The examples below use a JSON grammar, which lives in the repository under
 (see [Examples](examples/index.md) for the full programs). Swap in your own `.g4`
 grammar and the steps are identical.
 
-!!! note "Before you start: will this work with your grammar?"
+!!! warning "Before you start: will this work with your grammar?"
 
     **Antlrope** parses grammars that describe *structure* — data formats,
     config languages, most DSLs and programming languages. It does **not** run
     **[semantic predicates][semantic predicate]** (`{...}?`) or **[embedded actions][embedded action]** (`{...}` code)
     that some grammars use, because those are target-language code this runtime
-    doesn't execute. If your grammar depends on them, use the official
+    will not execute. If your grammar depends on them, use the official
     `antlr4-python3-runtime`. See
     [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions).
 
