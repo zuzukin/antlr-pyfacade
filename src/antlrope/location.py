@@ -33,14 +33,21 @@ __all__ = [
 
 
 class LineCol(NamedTuple):
-    """A source position: 1-based `line` and 0-based `column` (ANTLR's convention).
+    """A line/column tuple for tracking source locations.
 
     Returned by [SourceMap.line_col][antlrope.SourceMap.line_col] and
     [FacadeListener.line_col][antlrope.FacadeListener.line_col].
     """
 
     line: int = 1
+    """
+    Line number (1-based)
+    """
+
     column: int = 0
+    """
+    Column number (0-based)
+    """
 
     def add(self, offset: LineCol) -> LineCol:
         """
