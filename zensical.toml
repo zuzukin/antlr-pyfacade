@@ -14,6 +14,9 @@ copyright = """
 Copyright &copy; 2026 Christopher Barber
 """
 
+# Custom styling (inline-code color/background — see the file header).
+extra_css = ["stylesheets/extra.css"]
+
 nav = [
   { "User Guide" = [
     { "Overview" = "index.md" },
