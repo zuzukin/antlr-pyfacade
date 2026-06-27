@@ -696,7 +696,7 @@ class FacadeListener:
 
         Args:
             start_rule: The rule to parse as — a rule name, a rule index, or `None`
-                for the grammar's start rule.
+                for the grammar's default start rule.
             filtered: When `True` (default), only overridden rules/tokens are
                 emitted by C++; `False` forces the full event stream.
 
