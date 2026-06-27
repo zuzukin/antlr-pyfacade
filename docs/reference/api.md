@@ -2,9 +2,9 @@
 
 !!! note
 
-    This section contains the public API of **Antlrope**, generated from the package docstrings.
+    This section contains the public API of the **antlrope** package, generated from docstrings.
     For task-oriented guidance see the [User Guide](../getting-started.md); the
-    Antlrope generator command is documented under [Command line](cli.md).
+    **antlrope** generator command is documented under [Command line](cli.md).
 
 ::: antlrope
     options:
