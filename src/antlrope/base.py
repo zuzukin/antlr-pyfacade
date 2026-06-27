@@ -960,6 +960,16 @@ class FacadeListener:
 
         This efficiently generates a stream of tokens on all channels.
 
+        Use it to inspect the token stream directly: to recover off-channel tokens
+        such as comments that the parser drops and so never reach `visitTerminal`,
+        to gather token statistics or run a cheap pre-scan, or to build a custom
+        token-aware splitter. It is also the pass the built-in `split_on_token` /
+        `split_between_tokens` chunkers run on.
+
+        `lex` works in memory and has no streaming variant: for a large file, chunk
+        it with the `stream_*` methods and `lex` each chunk's `text` (see the
+        "streaming records" recipe in the docs).
+
         Args:
             text: The source to tokenize.
             keep: Optional set of token types to return; the lexer drops every other token in
