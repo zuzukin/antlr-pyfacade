@@ -273,6 +273,10 @@ cmd = "python scripts/stubgen.py"
 inputs = ["build/*/_native*.so", "scripts/stubgen.py"]
 outputs = ["src/antlrope/_native.pyi"]
 
+[tool.pixi.tasks.gen-cli-docs]
+description = "Regenerate the CLI reference in docs/reference/cli.md from the live `--help` output."
+cmd = "python scripts/gen_cli_docs.py"
+
 [tool.pixi.tasks.asan-test]
 description = "Build and run the AddressSanitizer C++ harness over the example grammars (macOS + Linux)."
 cmd = "python scripts/asan_harness.py"

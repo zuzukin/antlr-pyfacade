@@ -86,6 +86,21 @@ install instructions, the supported Python/platform versions, or the doc page se
 `site_url` (its doc links are absolute). It is excluded from the rendered docs — no
 nav, search, or sitemap — so `pixi run docs-build` will **not** flag it as stale.
 
+## CLI reference
+
+The command reference in `docs/reference/cli.md` (the region between the
+`gen-cli-help` markers) is **generated from the live `antlrope --help` output** by
+`scripts/gen_cli_docs.py`. After any change to the CLI (`antlrope.cli` — a command's
+arguments or help text, or adding/renaming a subcommand), regenerate it:
+
+```sh
+pixi run gen-cli-docs
+```
+
+The prose outside the markers (the intro and the provenance section) is hand-written.
+`tests/test_cli_docs.py` runs `gen-cli-docs --check`, so `pixi run test` fails if the
+committed doc has drifted from the CLI.
+
 ## Version
 
 The version lives in one place: `src/antlrope/VERSION`. The build reads it
@@ -115,6 +130,8 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 - Run `pixi run test` and make sure the suite is green.
 - If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` (it
   re-applies the hand edits automatically).
+- If you changed the CLI (`antlrope.cli`), run `pixi run gen-cli-docs` to regenerate
+  the `docs/reference/cli.md` command reference (`pixi run test` fails if it's stale).
 - If you changed the docs, confirm `pixi run docs-build` succeeds.
 - If you changed the public API, the workflow, or the doc page set, update
   `docs/llms.txt` to match (it's hand-maintained and not flagged by `docs-build`).

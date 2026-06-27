@@ -1,51 +1,114 @@
 # Command line
 
-Installing the package provides the `antlrope` command — a **command group** with
-the subcommands `gen`, `regen`, and `up-to-date`. `antlrope` with no subcommand
-prints help; `antlrope --version` prints the version.
+Installing the package provides the `antlrope` command — a **command group** with the
+subcommands `gen`, `regen`, and `up-to-date`. `antlrope` with no subcommand prints
+help; `antlrope --version` prints the version. See
+[Getting started](../getting-started.md) for the full generate → subclass → walk
+workflow.
+
+The reference below is generated from the live `--help` output (by
+`scripts/gen_cli_docs.py` / `pixi run gen-cli-docs`), so it always matches the CLI.
+
+<!-- gen-cli-help: start (managed by scripts/gen_cli_docs.py — do not edit) -->
+
+## antlrope
 
 ```text
-antlrope <command> ...
-antlrope gen <parser-module> <name> [--lexer <lexer-module>] [-o <file>]
-antlrope regen <file>
-antlrope up-to-date <file>
+usage: antlrope [-h] [--version] <command> ...
+
+Command-line tools for the antlrope ANTLR runtime.
 ```
 
-## `antlrope gen`
+### positional arguments
 
-Generates a grammar-specific event-listener **facade** from an already-generated
-ANTLR Python parser module (`antlrope generate` is an accepted alias). It reads the
-parser's `ruleNames` and token-name metadata — no annotated grammar or other input.
-
-### Arguments
-
-| Argument | Description |
-| --- | --- |
-| `<parser-module>` | Importable dotted path to the generated parser module, e.g. `generated.JSONParser` or `mypkg.generated.MyParser`. It must be importable on `sys.path`. |
-| `<name>` | Grammar-name prefix for the generated class, which is named `<Grammar.capitalize()>EventListener` (e.g. `JSON` → `JsonEventListener`). |
-
-### Options
-
-| Option | Description |
-| --- | --- |
-| `--lexer <lexer-module>` | Importable dotted path to the generated lexer module. Defaults to the parser path with a trailing `Parser` replaced by `Lexer` (e.g. `generated.JSONParser` → `generated.JSONLexer`). Pass this when your lexer is named differently. |
-| `-o`, `--output <file>` | Write the facade to `<file>` instead of stdout. |
-| `-h`, `--help` | Show usage and exit. |
-
-### Example
-
-```sh
-antlrope gen generated.JSONParser JSON -o json_listener.py
+```text
+  <command>
+    gen (generate)      Generate a <Grammar>EventListener facade from a parser module.
+    regen (regenerate)  Regenerate a facade in place from its embedded metadata.
+    up-to-date          Check whether a generated facade is current with its inputs.
 ```
 
-emits `json_listener.py` with a `JsonEventListener` base class: an `enter<Rule>` /
-`exit<Rule>` pair per grammar rule, `visitTerminal` / `visitError`, the token-type
-constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes
-them in (as `LEXER` / `PARSER`), so `walk` and `walk_parallel` take no class
-arguments. You subclass it — you do not edit the generated file. See
-[Getting started](../getting-started.md) for the full workflow.
+### options
 
-### Provenance header
+```text
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+```
+
+## antlrope gen
+
+```text
+usage: antlrope gen [-h] [--lexer <lexer-module>] [-o <file>] <parser-module> <name>
+
+Generate a <Grammar>EventListener facade from a stock-generated ANTLR Python parser
+module.
+```
+
+### positional arguments
+
+```text
+  <parser-module>       Importable dotted path to the generated parser module (e.g.
+                        mypkg.generated.MyParser).
+  <name>                Grammar name prefix for the facade class.
+```
+
+### options
+
+```text
+  -h, --help            show this help message and exit
+  --lexer <lexer-module>
+                        Importable dotted path to the generated lexer module. Defaults to
+                        the parser path with a trailing 'Parser' replaced by 'Lexer' (e.g.
+                        mypkg.generated.MyLexer); pass this when the lexer is named
+                        differently.
+  -o, --output <file>   Write to this file instead of stdout.
+```
+
+## antlrope regen
+
+```text
+usage: antlrope regen [-h] <file>
+
+Re-run the `gen` command recorded in a generated facade's metadata header, from the
+recorded run directory, overwriting the file.
+```
+
+### positional arguments
+
+```text
+  <file>      A facade previously written by `antlrope gen`.
+```
+
+### options
+
+```text
+  -h, --help  show this help message and exit
+```
+
+## antlrope up-to-date
+
+```text
+usage: antlrope up-to-date [-h] <file>
+
+Compare the input SHA256 hashes and antlrope version recorded in a generated facade
+against the current files. Zero exit status if up-to-date.
+```
+
+### positional arguments
+
+```text
+  <file>      A facade previously written by `antlrope gen`.
+```
+
+### options
+
+```text
+  -h, --help  show this help message and exit
+```
+
+<!-- gen-cli-help: end -->
+
+## Provenance header
 
 When generating to a file (`-o`), `gen` writes a machine-readable comment header
 recording the antlrope version, the exact command, the run directory (relative to the
@@ -61,25 +124,7 @@ output file), and a base64-encoded SHA256 of each input module:
 ```
 
 Every field is deterministic, so regenerating an unchanged facade is byte-identical.
-The `regen` and `up-to-date` subcommands read this header back.
-
-## `antlrope regen`
-
-```sh
-antlrope regen json_listener.py
-```
-
-Re-runs the `gen` command recorded in the file's header, from the recorded run
-directory, overwriting the file in place. It assumes the input modules are importable
-from that directory, as in the original invocation.
-
-## `antlrope up-to-date`
-
-```sh
-antlrope up-to-date json_listener.py
-```
-
-Re-hashes the recorded input modules and compares them — and the antlrope version — to
-the header. Prints `up to date` (exit `0`) or `STALE` with the reasons (exit `1`), so
-it slots into a `Makefile` or CI to catch facades that need regenerating. A file with
-no antlrope header is a usage error (exit `2`).
+[`antlrope regen`](#antlrope-regen) re-runs the recorded command (from the recorded
+run directory) to regenerate the file in place; [`antlrope
+up-to-date`](#antlrope-up-to-date) re-hashes the inputs and checks the version,
+exiting non-zero when the file is stale — handy in a `Makefile` or CI.

@@ -50,7 +50,8 @@ class _Parser(argparse.ArgumentParser):
         super().__init__(*args, **kwargs)
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """Build the top-level `antlrope` parser with every subcommand registered."""
     parser = _Parser(
         prog="antlrope",
         description="Command-line tools for the antlrope ANTLR runtime.",
@@ -61,7 +62,11 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", metavar="<command>")
     for module in _SUBCOMMANDS:
         module.register(subparsers)
+    return parser
 
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
     args = parser.parse_args(argv)
     if args.command is None:  # bare `antlrope`: show help and exit cleanly
         parser.print_help()
