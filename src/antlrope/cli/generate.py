@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Generate a grammar-specific event-listener facade from ANTLR parser metadata.
+"""The `gen` subcommand: generate a grammar-specific event-listener facade.
 
 Reads `ruleNames` + token name lists from an already-generated ANTLR Python parser
 module (no annotated grammar, no extra inputs) and emits a `<Grammar>EventListener`
@@ -26,7 +26,7 @@ The generated surface mirrors the stock ANTLR listener so consumers write the sa
 code; the difference is that callbacks are driven by a flat event buffer rather
 than a Python parse-tree walk. Usage (console script or module):
 
-    antlrope mypkg.generated.MyParser My -o my_listener.py
+    antlrope gen mypkg.generated.MyParser My -o my_listener.py
 """
 
 from __future__ import annotations
@@ -35,10 +35,6 @@ import argparse
 import importlib
 import sys
 from textwrap import dedent
-
-from antlrope import __version__
-
-# TODO - add doc strings
 
 
 def _ident(name: str) -> str:
@@ -201,14 +197,14 @@ def generate(
     )
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="antlrope",
+def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    """Add the `gen` subcommand to the top-level `antlrope` parser."""
+    parser = subparsers.add_parser(
+        "gen",
+        aliases=["generate"],
+        help="Generate a <Grammar>EventListener facade from a parser module.",
         description="Generate a <Grammar>EventListener facade from a "
         "stock-generated ANTLR Python parser module.",
-    )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
         "parser_module",
@@ -230,8 +226,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "-o", "--output", metavar="<file>", help="Write to this file instead of stdout."
     )
-    args = parser.parse_args(argv)
+    parser.set_defaults(main=main)
 
+
+def main(args: argparse.Namespace) -> int:
     source = generate(args.parser_module, args.grammar, args.lexer)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as fh:
@@ -239,7 +237,3 @@ def main(argv: list[str] | None = None) -> int:
     else:
         sys.stdout.write(source)
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -26,7 +26,7 @@ Generate the parser and the [facade] (already checked in):
 
 ```sh
 antlr4 -Dlanguage=Python3 JSON.g4 -o generated
-antlrope generated.JSONParser JSON -o json_listener.py
+antlrope gen generated.JSONParser JSON -o json_listener.py
 ```
 
 The facade, `JsonEventListener`, has an `enter`/`exit` pair per rule, a

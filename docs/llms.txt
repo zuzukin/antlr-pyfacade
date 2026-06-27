@@ -16,7 +16,7 @@ When to use it: throughput on large or many-record inputs. When NOT to use it (u
 1. Generate a parser with the stock ANTLR tool (ordinary ANTLR, nothing special):
    `antlr4 -Dlanguage=Python3 JSON.g4 -o generated`  → `generated/JSONLexer.py`, `generated/JSONParser.py`
 2. Generate a facade from the parser module (an importable dotted path) + a grammar-name prefix:
-   `antlrope generated.JSONParser JSON -o json_listener.py`
+   `antlrope gen generated.JSONParser JSON -o json_listener.py`
    → a `JsonEventListener` base class (named `<Grammar>.capitalize() + "EventListener"`) with an `enter<Rule>`/`exit<Rule>` pair per grammar rule, `visitTerminal`/`visitError`, token-type constants, and a `walk(text)` method. The facade imports the lexer/parser and bakes them in as `LEXER`/`PARSER`, so `walk`/`walk_parallel` need no class arguments. The lexer module is derived from the parser's (`<Grammar>Parser` → `<Grammar>Lexer`); pass `--lexer` to override. You subclass it; you do not edit it.
 3. Subclass the facade, override only the callbacks you need, and call `walk`:
 
@@ -56,7 +56,7 @@ Key model facts for writing listeners:
 - `ParseError` — a parse diagnostic: `line`, `column`, `start`, `stop`, `message`.
 - `FacadeListener.parser_spec()` / `FacadeListener.lexer_spec()` — `classmethod`s building the cached native `ParserSpec` / `LexerSpec` from the baked-in `PARSER` / `LEXER` (pass `cached=False` for a fresh, unshared spec). Feed them to `drive(...)` to run the native layer directly.
 - `parse_events(...)` — the raw bulk int32 event buffer, for power users (the facade wraps this).
-- CLI: `antlrope PARSER_MODULE GRAMMAR [-o OUTPUT]` — generate a facade.
+- CLI: `antlrope gen <parser-module> <name> [-o <file>]` — generate a facade (`antlrope` is a command group; `gen` is the only command today).
 
 Character offsets throughout are 0-based **codepoint** indices; `line` is 1-based, `column` 0-based (matching ANTLR's `line:column`).
 

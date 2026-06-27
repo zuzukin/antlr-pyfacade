@@ -34,7 +34,7 @@ Homepage = "https://github.com/zuzukin/antlrope"
 Source = "https://github.com/zuzukin/antlrope"
 
 [project.scripts]
-antlrope = "antlrope.generate:main"
+antlrope = "antlrope.cli.main:main"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -291,7 +291,7 @@ outputs = ["examples/json/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-facade]
 description = "Regenerate the event-listener facade from the generated parser module."
-cmd = "antlrope generated.JSONParser JSON -o json_listener.py"
+cmd = "antlrope gen generated.JSONParser JSON -o json_listener.py"
 cwd = "examples/json"
 env = { PYTHONPATH = "." }
 inputs = ["examples/json/generated/*.py"]
@@ -315,7 +315,7 @@ outputs = ["examples/schema/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-schema-facade]
 description = "Regenerate the schema example's event-listener facade."
-cmd = "antlrope generated.SchemaParser Schema -o schema_listener.py"
+cmd = "antlrope gen generated.SchemaParser Schema -o schema_listener.py"
 cwd = "examples/schema"
 env = { PYTHONPATH = "." }
 inputs = ["examples/schema/generated/*.py"]

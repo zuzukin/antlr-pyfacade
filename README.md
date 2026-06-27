@@ -57,7 +57,7 @@ Either way you get a pre-compiled binary — nothing to build — and the offici
 2. **Generate the facade** from the generated parser module:
 
    ```sh
-   antlrope generated.MyGrammarParser MyGrammar -o my_listener.py
+   antlrope gen generated.MyGrammarParser MyGrammar -o my_listener.py
    ```
 
    This emits a `MyGrammarEventListener` base class with `enter<Rule>` /

@@ -41,7 +41,7 @@ rule. Point `antlrope` at your generated **parser module** (an importable
 dotted path) and give it a name prefix:
 
 ```sh
-antlrope generated.JSONParser JSON -o json_listener.py
+antlrope gen generated.JSONParser JSON -o json_listener.py
 ```
 
 That emits `json_listener.py` containing a `JsonEventListener` class with:

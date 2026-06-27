@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.22] - 2026-06-24
+
+### Changed
+- **Breaking (CLI):** the facade generator is now the `antlrope gen` subcommand rather
+  than bare `antlrope <parser-module> <name>`. `antlrope` is now a command group (with
+  room for future subcommands); bare `antlrope` prints help and `antlrope --version` is
+  unchanged. Update invocations to `antlrope gen …` (`antlrope generate` is an accepted
+  alias). The CLI moved into the new `antlrope.cli` package (entry point
+  `antlrope.cli.main`, one module per subcommand); the old `antlrope.generate` module is
+  removed.
+
 ## [0.2.21] - 2026-06-23
 
 ### Changed

@@ -1,34 +1,39 @@
 # Command line
 
-Installing the package provides the `antlrope` command, which generates a
-grammar-specific event-listener **facade** from an already-generated ANTLR Python
-parser module. (It reads the parser's `ruleNames` and token-name metadata — no
-annotated grammar or other input.)
+Installing the package provides the `antlrope` command. It is a **command group**:
+today it has a single subcommand, `gen`, with room for more later. `antlrope`
+with no subcommand prints help; `antlrope --version` prints the version.
 
 ```text
-antlrope <parser-module> <name> [--lexer <lexer-module>] [-o <file>]
+antlrope <command> ...
+antlrope gen <parser-module> <name> [--lexer <lexer-module>] [-o <file>]
 ```
 
-## Arguments
+## `antlrope gen`
+
+Generates a grammar-specific event-listener **facade** from an already-generated
+ANTLR Python parser module (`antlrope generate` is an accepted alias). It reads the
+parser's `ruleNames` and token-name metadata — no annotated grammar or other input.
+
+### Arguments
 
 | Argument | Description |
 | --- | --- |
 | `<parser-module>` | Importable dotted path to the generated parser module, e.g. `generated.JSONParser` or `mypkg.generated.MyParser`. It must be importable on `sys.path`. |
 | `<name>` | Grammar-name prefix for the generated class, which is named `<Grammar.capitalize()>EventListener` (e.g. `JSON` → `JsonEventListener`). |
 
-## Options
+### Options
 
 | Option | Description |
 | --- | --- |
 | `--lexer <lexer-module>` | Importable dotted path to the generated lexer module. Defaults to the parser path with a trailing `Parser` replaced by `Lexer` (e.g. `generated.JSONParser` → `generated.JSONLexer`). Pass this when your lexer is named differently. |
 | `-o`, `--output <file>` | Write the facade to `<file>` instead of stdout. |
-| `--version` | Print the version and exit. |
 | `-h`, `--help` | Show usage and exit. |
 
-## Example
+### Example
 
 ```sh
-antlrope generated.JSONParser JSON -o json_listener.py
+antlrope gen generated.JSONParser JSON -o json_listener.py
 ```
 
 emits `json_listener.py` with a `JsonEventListener` base class: an `enter<Rule>` /

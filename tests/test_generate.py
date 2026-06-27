@@ -22,7 +22,8 @@ from generated.JSONLexer import JSONLexer
 from generated.JSONParser import JSONParser
 
 from antlrope import FacadeListener, __version__
-from antlrope.generate import _derive_lexer, _rule_names_block, generate, main
+from antlrope.cli.generate import _derive_lexer, _rule_names_block, generate
+from antlrope.cli.main import main
 
 PARSER_MODULE = "generated.JSONParser"
 
@@ -80,17 +81,27 @@ def test_generate_facade_source():
 
 
 def test_cli_main(tmp_path, capsys):
-    # No -o: the facade is written to stdout; rc 0.
-    rc = main([PARSER_MODULE, "JSON"])
+    # The facade generator is the `gen` subcommand. No -o: written to stdout; rc 0.
+    rc = main(["gen", PARSER_MODULE, "JSON"])
     assert rc == 0
     stdout = capsys.readouterr().out
     assert "class JsonEventListener(FacadeListener):" in stdout
 
+    # `generate` is an accepted alias for `gen`.
+    rc = main(["generate", PARSER_MODULE, "JSON"])
+    assert rc == 0
+    assert "class JsonEventListener(FacadeListener):" in capsys.readouterr().out
+
     # -o writes the same source to a file instead.
     out = tmp_path / "json_facade.py"
-    rc = main([PARSER_MODULE, "JSON", "-o", str(out)])
+    rc = main(["gen", PARSER_MODULE, "JSON", "-o", str(out)])
     assert rc == 0
     assert "class JsonEventListener(FacadeListener):" in out.read_text(encoding="utf-8")
+
+    # Bare `antlrope` (no subcommand) prints help and exits 0 — no traceback.
+    rc = main([])
+    assert rc == 0
+    assert "gen" in capsys.readouterr().out
 
     # --version prints the package version and exits 0 (argparse raises SystemExit).
     with pytest.raises(SystemExit) as exc:
@@ -110,7 +121,7 @@ def test_lexer_resolution_and_override(capsys):
     )
 
     # The --lexer CLI flag takes the same override.
-    rc = main([PARSER_MODULE, "JSON", "--lexer", "generated.JSONLexer"])
+    rc = main(["gen", PARSER_MODULE, "JSON", "--lexer", "generated.JSONLexer"])
     assert rc == 0
     assert "class JsonEventListener(FacadeListener):" in capsys.readouterr().out
 
