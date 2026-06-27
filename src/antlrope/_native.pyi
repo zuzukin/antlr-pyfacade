@@ -22,23 +22,17 @@
 
 from collections.abc import Sequence
 
-
 class AtnShape:
     @property
     def grammar_type(self) -> int: ...
-
     @property
     def num_states(self) -> int: ...
-
     @property
     def num_decisions(self) -> int: ...
-
     @property
     def num_rules(self) -> int: ...
-
     @property
     def max_token_type(self) -> int: ...
-
     def __repr__(self) -> str: ...
 
 def atn_shape(serialized: Sequence[int]) -> AtnShape:
@@ -46,7 +40,10 @@ def atn_shape(serialized: Sequence[int]) -> AtnShape:
 
 class ParseError:
     """
-    A collected parse diagnostic, as found on a listener's [syntax_errors][antlrope.FacadeListener.syntax_errors]. The default ANTLR console error listener is suppressed, so these are the only report of a parse failure.
+    A collected parse diagnostic, as found on a listener's
+    [syntax_errors][antlrope.FacadeListener.syntax_errors]. The default
+    ANTLR console error listener is suppressed, so these are the only report
+    of a parse failure.
     """
 
     @property
@@ -60,13 +57,16 @@ class ParseError:
     @property
     def start(self) -> int:
         """
-        0-based codepoint offset of the offending token's first character (matching the event-stream offsets), or -1 when there is no token (e.g. a lexer error).
+        0-based codepoint offset of the offending token's first
+        character (matching the event-stream offsets), or -1 when there
+        is no token (e.g. a lexer error).
         """
 
     @property
     def stop(self) -> int:
         """
-        0-based codepoint offset of the offending token's last character, inclusive, or -1 when there is no token.
+        0-based codepoint offset of the offending token's last character,
+        inclusive, or -1 when there is no token.
         """
 
     @property
@@ -77,41 +77,82 @@ class ParseError:
 
 class LexerSpec:
     """
-    A deserialized lexer specification — the grammar's vocabulary, name lists, and ATN — that the native lex/parse entry points run on. Build one with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated <Grammar>EventListener rather than constructing it directly.
+    A deserialized lexer specification — the grammar's vocabulary, name
+    lists, and ATN — that the native lex/parse entry points run on. Build one
+    with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated
+    <Grammar>EventListener rather than constructing it directly.
     """
 
-    def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], channel_names: Sequence[str], mode_names: Sequence[str], serialized: Sequence[int]) -> None: ...
+    def __init__(
+        self,
+        grammar_file_name: str,
+        literal_names: Sequence[str],
+        symbolic_names: Sequence[str],
+        rule_names: Sequence[str],
+        channel_names: Sequence[str],
+        mode_names: Sequence[str],
+        serialized: Sequence[int],
+    ) -> None: ...
 
 class ParserSpec:
     """
-    A deserialized parser specification — the grammar's vocabulary, rule names, and ATN — that the native parse entry points run on. Build one with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated <Grammar>EventListener rather than constructing it directly.
+    A deserialized parser specification — the grammar's vocabulary, rule
+    names, and ATN — that the native parse entry points run on. Build one
+    with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated
+    <Grammar>EventListener rather than constructing it directly.
     """
 
-    def __init__(self, grammar_file_name: str, literal_names: Sequence[str], symbolic_names: Sequence[str], rule_names: Sequence[str], serialized: Sequence[int]) -> None: ...
+    def __init__(
+        self,
+        grammar_file_name: str,
+        literal_names: Sequence[str],
+        symbolic_names: Sequence[str],
+        rule_names: Sequence[str],
+        serialized: Sequence[int],
+    ) -> None: ...
 
 class StreamChunker:
-    def __init__(self, lexer_spec: LexerSpec, path: str, delim_types: Sequence[int], where: int, channel: int | None, lenient: bool, trim: bool, block: int = 0) -> None: ...
-
+    def __init__(
+        self,
+        lexer_spec: LexerSpec,
+        path: str,
+        delim_types: Sequence[int],
+        where: int,
+        channel: int | None,
+        lenient: bool,
+        trim: bool,
+        block: int = 0,
+    ) -> None: ...
     def next_batch(self, n: int) -> tuple[list[tuple[int, int, int, str]], bool]:
         """
-        Pull up to n chunk records from the streaming token chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples (whitespace trimmed unless trim=False; empty regions skipped) and more is False once the final region at EOF has been emitted.
+        Pull up to n chunk records from the streaming token chunker. Returns
+        (rows, more): rows is a list of (offset, line, column, text) tuples
+        (whitespace trimmed unless trim=False; empty regions skipped) and more
+        is False once the final region at EOF has been emitted.
         """
 
 class StreamRuleChunker:
-    def __init__(self, parser_spec: ParserSpec, lexer_spec: LexerSpec, path: str, rule_indices: Sequence[int], lenient: bool, block: int = 0) -> None: ...
-
+    def __init__(
+        self,
+        parser_spec: ParserSpec,
+        lexer_spec: LexerSpec,
+        path: str,
+        rule_indices: Sequence[int],
+        lenient: bool,
+        block: int = 0,
+    ) -> None: ...
     def next_batch(self, n: int) -> tuple[list[tuple[int, int, int, str]], bool]:
         """
-        Pull up to n parsed-rule chunk records from the streaming rule chunker. Returns (rows, more): rows is a list of (offset, line, column, text) tuples and more is False once EOF (or a token that begins no candidate rule) is reached.
+        Pull up to n parsed-rule chunk records from the streaming rule
+        chunker. Returns (rows, more): rows is a list of (offset, line,
+        column, text) tuples and more is False once EOF (or a token that
+        begins no candidate rule) is reached.
         """
 
 class Token:
     def getType(self) -> int: ...
-
     def getText(self) -> str: ...
-
     def getLine(self) -> int: ...
-
     def getCharPositionInLine(self) -> int: ...
 
 class ParseTree:
@@ -122,7 +163,6 @@ class RuleContext(ParseTree):
 
 class ParserRuleContext(RuleContext):
     def getStart(self) -> Token: ...
-
     def getStop(self) -> Token: ...
 
 class TerminalNode(ParseTree):
@@ -133,41 +173,77 @@ class ErrorNode(TerminalNode):
 
 class ParseTreeListener:
     def __init__(self) -> None: ...
-
     def visitTerminal(self, arg: TerminalNode, /) -> None: ...
-
     def visitErrorNode(self, arg: ErrorNode, /) -> None: ...
-
     def enterEveryRule(self, arg: ParserRuleContext, /) -> None: ...
-
     def exitEveryRule(self, arg: ParserRuleContext, /) -> None: ...
 
-def parse_count(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int) -> dict:
+def parse_count(
+    parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int
+) -> dict:
     """
     Diagnostic: parse + walk with a native counting listener (no Python crossing).
     """
 
-def parse_walk(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int, listener: ParseTreeListener) -> None:
+def parse_walk(
+    parser_spec: ParserSpec,
+    lexer_spec: LexerSpec,
+    text: str,
+    start_rule: int,
+    listener: ParseTreeListener,
+) -> None:
     """
-    Diagnostic escape hatch: parse + walk the tree, dispatching to a Python ParseTreeListener (slow per-node FFI path).
-    """
-
-def parse_events(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int, rule_mask: Sequence[int] | None = None, token_mask: Sequence[int] | None = None) -> tuple[bytes, list[ParseError]]:
-    """
-    Parse and return (events, errors): a bulk flat int32 event buffer of 4*N values (kind, payload, start, stop) as bytes, and a list of SyntaxError diagnostics collected during the parse. Optional rule_mask/token_mask (lists of indices to keep) filter events natively. The default stderr error listener is suppressed.
-    """
-
-def parse_stage_times(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int) -> dict:
-    """
-    Diagnostic: dict of per-stage seconds (input_decode, lex_fill, parse_tree, walk) plus token/event/codepoint counts.
+    Diagnostic escape hatch: parse + walk the tree, dispatching to a
+    Python ParseTreeListener (slow per-node FFI path).
     """
 
-def lex(lexer_spec: LexerSpec, text: str, token_mask: Sequence[int] | None = None) -> tuple[bytes, list[ParseError]]:
+def parse_events(
+    parser_spec: ParserSpec,
+    lexer_spec: LexerSpec,
+    text: str,
+    start_rule: int,
+    rule_mask: Sequence[int] | None = None,
+    token_mask: Sequence[int] | None = None,
+) -> tuple[bytes, list[ParseError]]:
     """
-    Run only the lexer and return (tokens, errors): a flat int32 buffer of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and a list of ParseError diagnostics. Optional token_mask (list of token types to keep) drops the rest natively. The cheap stage used to chunk input for walk_parallel without a full parse.
+    Parse and return (events, errors): a bulk flat int32 event buffer of
+    4*N values (kind, payload, start, stop) as bytes, and a list of
+    SyntaxError diagnostics collected during the parse. Optional
+    rule_mask/token_mask (lists of indices to keep) filter events
+    natively. The default stderr error listener is suppressed.
     """
 
-def rule_spans(parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int, rule_mask: Sequence[int] | None = None, outermost: bool = True) -> tuple[bytes, list[ParseError]]:
+def parse_stage_times(
+    parser_spec: ParserSpec, lexer_spec: LexerSpec, text: str, start_rule: int
+) -> dict:
     """
-    Parse (entirely in C++) and return (spans, errors): a flat int32 buffer of 3*N values (rule_index, start, stop) for each parse-tree rule kept by rule_mask (None = all), plus a list of ParseError diagnostics. With outermost=True a matched rule's subtree is skipped. Used for rule-based chunking.
+    Diagnostic: dict of per-stage seconds (input_decode, lex_fill,
+    parse_tree, walk) plus token/event/codepoint counts.
+    """
+
+def lex(
+    lexer_spec: LexerSpec, text: str, token_mask: Sequence[int] | None = None
+) -> tuple[bytes, list[ParseError]]:
+    """
+    Run only the lexer and return (tokens, errors): a flat int32 buffer
+    of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and
+    a list of ParseError diagnostics. Optional token_mask (list of token
+    types to keep) drops the rest natively. The cheap stage used to chunk
+    input for walk_parallel without a full parse.
+    """
+
+def rule_spans(
+    parser_spec: ParserSpec,
+    lexer_spec: LexerSpec,
+    text: str,
+    start_rule: int,
+    rule_mask: Sequence[int] | None = None,
+    outermost: bool = True,
+) -> tuple[bytes, list[ParseError]]:
+    """
+    Parse (entirely in C++) and return (spans, errors): a flat int32
+    buffer of 3*N values (rule_index, start, stop) for each parse-tree
+    rule kept by rule_mask (None = all), plus a list of ParseError
+    diagnostics. With outermost=True a matched rule's subtree is skipped.
+    Used for rule-based chunking.
     """

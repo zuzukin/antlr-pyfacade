@@ -75,7 +75,7 @@ HEADER = f"""\
 
 
 def main() -> int:
-    subprocess.run(
+    subprocess.check_call(
         [
             sys.executable,
             "-m",
@@ -84,8 +84,7 @@ def main() -> int:
             "antlrope._native",
             "-o",
             str(STUB),
-        ],
-        check=True,
+        ]
     )
 
     text = STUB.read_text(encoding="utf-8")
@@ -103,7 +102,14 @@ def main() -> int:
             )
 
     STUB.write_text(HEADER + text, encoding="utf-8")
-    print(f"wrote {STUB.relative_to(ROOT)} (stubgen + hand edits applied)")
+
+    # nanobind's stubgen does not follow our formatting rules, so run the same
+    # `ruff format` the rest of the tree uses (config from pyproject.toml).
+    subprocess.check_call([sys.executable, "-m", "ruff", "format", str(STUB)])
+
+    print(
+        f"wrote {STUB.relative_to(ROOT)} (stubgen + hand edits + ruff format applied)"
+    )
     return 0
 
 

@@ -892,20 +892,20 @@ NB_MODULE(_native, m) {
 
     nb::class_<SyntaxError>(
         m, "ParseError",
-        "A collected parse diagnostic, as found on a listener's "
-        "[syntax_errors][antlrope.FacadeListener.syntax_errors]. The default "
-        "ANTLR console error listener is suppressed, so these are the only report "
+        "A collected parse diagnostic, as found on a listener's\n"
+        "[syntax_errors][antlrope.FacadeListener.syntax_errors]. The default\n"
+        "ANTLR console error listener is suppressed, so these are the only report\n"
         "of a parse failure.")
         .def_ro("line", &SyntaxError::line,
                 "1-based line of the offending token.")
         .def_ro("column", &SyntaxError::column,
                 "0-based column of the offending token.")
         .def_ro("start", &SyntaxError::start,
-                "0-based codepoint offset of the offending token's first "
-                "character (matching the event-stream offsets), or -1 when there "
+                "0-based codepoint offset of the offending token's first\n"
+                "character (matching the event-stream offsets), or -1 when there\n"
                 "is no token (e.g. a lexer error).")
         .def_ro("stop", &SyntaxError::stop,
-                "0-based codepoint offset of the offending token's last character, "
+                "0-based codepoint offset of the offending token's last character,\n"
                 "inclusive, or -1 when there is no token.")
         .def_ro("message", &SyntaxError::message,
                 "ANTLR's human-readable error message.")
@@ -919,9 +919,9 @@ NB_MODULE(_native, m) {
 
     nb::class_<LexerSpec>(
         m, "LexerSpec",
-        "A deserialized lexer specification — the grammar's vocabulary, name "
-        "lists, and ATN — that the native lex/parse entry points run on. Build one "
-        "with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated "
+        "A deserialized lexer specification — the grammar's vocabulary, name\n"
+        "lists, and ATN — that the native lex/parse entry points run on. Build one\n"
+        "with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated\n"
         "<Grammar>EventListener rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -934,9 +934,9 @@ NB_MODULE(_native, m) {
 
     nb::class_<ParserSpec>(
         m, "ParserSpec",
-        "A deserialized parser specification — the grammar's vocabulary, rule "
-        "names, and ATN — that the native parse entry points run on. Build one "
-        "with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated "
+        "A deserialized parser specification — the grammar's vocabulary, rule\n"
+        "names, and ATN — that the native parse entry points run on. Build one\n"
+        "with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated\n"
         "<Grammar>EventListener rather than constructing it directly.")
         .def(nb::init<std::string, std::vector<std::string>,
                       std::vector<std::string>, std::vector<std::string>,
@@ -952,9 +952,9 @@ NB_MODULE(_native, m) {
              nb::arg("where"), nb::arg("channel").none(), nb::arg("lenient"),
              nb::arg("trim"), nb::arg("block") = 0, nb::keep_alive<1, 2>())
         .def("next_batch", &StreamChunker::next_batch, nb::arg("n"),
-             "Pull up to n chunk records from the streaming token chunker. Returns "
-             "(rows, more): rows is a list of (offset, line, column, text) tuples "
-             "(whitespace trimmed unless trim=False; empty regions skipped) and more "
+             "Pull up to n chunk records from the streaming token chunker. Returns\n"
+             "(rows, more): rows is a list of (offset, line, column, text) tuples\n"
+             "(whitespace trimmed unless trim=False; empty regions skipped) and more\n"
              "is False once the final region at EOF has been emitted.");
 
     nb::class_<StreamRuleChunker>(m, "StreamRuleChunker")
@@ -964,9 +964,9 @@ NB_MODULE(_native, m) {
              nb::arg("rule_indices"), nb::arg("lenient"), nb::arg("block") = 0,
              nb::keep_alive<1, 2>(), nb::keep_alive<1, 3>())
         .def("next_batch", &StreamRuleChunker::next_batch, nb::arg("n"),
-             "Pull up to n parsed-rule chunk records from the streaming rule "
-             "chunker. Returns (rows, more): rows is a list of (offset, line, "
-             "column, text) tuples and more is False once EOF (or a token that "
+             "Pull up to n parsed-rule chunk records from the streaming rule\n"
+             "chunker. Returns (rows, more): rows is a list of (offset, line,\n"
+             "column, text) tuples and more is False once EOF (or a token that\n"
              "begins no candidate rule) is reached.");
 
     // Minimal node/token surface the listener callbacks need.
@@ -1002,33 +1002,33 @@ NB_MODULE(_native, m) {
     m.def("parse_walk", &parse_walk, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           nb::arg("listener"),
-          "Diagnostic escape hatch: parse + walk the tree, dispatching to a "
+          "Diagnostic escape hatch: parse + walk the tree, dispatching to a\n"
           "Python ParseTreeListener (slow per-node FFI path).");
     m.def("parse_events", &parse_events, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           nb::arg("rule_mask") = nb::none(), nb::arg("token_mask") = nb::none(),
-          "Parse and return (events, errors): a bulk flat int32 event buffer of "
-          "4*N values (kind, payload, start, stop) as bytes, and a list of "
-          "SyntaxError diagnostics collected during the parse. Optional "
-          "rule_mask/token_mask (lists of indices to keep) filter events "
+          "Parse and return (events, errors): a bulk flat int32 event buffer of\n"
+          "4*N values (kind, payload, start, stop) as bytes, and a list of\n"
+          "SyntaxError diagnostics collected during the parse. Optional\n"
+          "rule_mask/token_mask (lists of indices to keep) filter events\n"
           "natively. The default stderr error listener is suppressed.");
     m.def("parse_stage_times", &parse_stage_times, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
-          "Diagnostic: dict of per-stage seconds (input_decode, lex_fill, "
+          "Diagnostic: dict of per-stage seconds (input_decode, lex_fill,\n"
           "parse_tree, walk) plus token/event/codepoint counts.");
     m.def("lex", &lex, nb::arg("lexer_spec"), nb::arg("text"),
           nb::arg("token_mask") = nb::none(),
-          "Run only the lexer and return (tokens, errors): a flat int32 buffer "
-          "of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and "
-          "a list of ParseError diagnostics. Optional token_mask (list of token "
-          "types to keep) drops the rest natively. The cheap stage used to chunk "
+          "Run only the lexer and return (tokens, errors): a flat int32 buffer\n"
+          "of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and\n"
+          "a list of ParseError diagnostics. Optional token_mask (list of token\n"
+          "types to keep) drops the rest natively. The cheap stage used to chunk\n"
           "input for walk_parallel without a full parse.");
     m.def("rule_spans", &rule_spans, nb::arg("parser_spec"),
           nb::arg("lexer_spec"), nb::arg("text"), nb::arg("start_rule"),
           nb::arg("rule_mask") = nb::none(), nb::arg("outermost") = true,
-          "Parse (entirely in C++) and return (spans, errors): a flat int32 "
-          "buffer of 3*N values (rule_index, start, stop) for each parse-tree "
-          "rule kept by rule_mask (None = all), plus a list of ParseError "
-          "diagnostics. With outermost=True a matched rule's subtree is skipped. "
+          "Parse (entirely in C++) and return (spans, errors): a flat int32\n"
+          "buffer of 3*N values (rule_index, start, stop) for each parse-tree\n"
+          "rule kept by rule_mask (None = all), plus a list of ParseError\n"
+          "diagnostics. With outermost=True a matched rule's subtree is skipped.\n"
           "Used for rule-based chunking.");
 }
