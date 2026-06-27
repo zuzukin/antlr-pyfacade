@@ -38,7 +38,7 @@ from ._native import (
     parse_events,
 )
 from .base import Chunk, FacadeListener, LexerProtocol, LexToken, ParserProtocol
-from .location import SourceMap
+from .location import LineCol, SourceMap
 
 __version__ = _files(__name__).joinpath("VERSION").read_text(encoding="utf-8").strip()
 
@@ -48,6 +48,7 @@ __all__ = [
     "LexToken",
     "LexerProtocol",
     "LexerSpec",
+    "LineCol",
     "ParseError",
     "ParserProtocol",
     "ParserSpec",

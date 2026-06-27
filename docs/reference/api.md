@@ -15,6 +15,7 @@
         - Chunk
         - LexToken
         - SourceMap
+        - LineCol
         - parse_events
         - ParseError
         - LexerSpec

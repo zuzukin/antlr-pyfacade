@@ -33,6 +33,12 @@ __all__ = [
 
 
 class LineCol(NamedTuple):
+    """A source position: 1-based `line` and 0-based `column` (ANTLR's convention).
+
+    Returned by [SourceMap.line_col][antlrope.SourceMap.line_col] and
+    [FacadeListener.line_col][antlrope.FacadeListener.line_col].
+    """
+
     line: int = 1
     column: int = 0
 
@@ -51,7 +57,7 @@ class LineCol(NamedTuple):
 
 
 class SourceMap:
-    """Maps character offsets in a source string to `(line, column)`.
+    """Translates between character offsets and line/columns for source text
 
     Line numbers are numbered from 1 and columns numbered from 0.
     """

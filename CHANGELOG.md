@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.23] - 2026-06-24
+
+### Added
+- Export `LineCol` (the 1-based-line / 0-based-column source position returned by
+  `SourceMap.line_col()` and surfaced by `FacadeListener.line_col()`) as a top-level
+  public name, and document it in the API reference. It was already public from
+  `antlrope.location` but missing from the package's public surface.
+
 ## [0.2.22] - 2026-06-24
 
 ### Changed
