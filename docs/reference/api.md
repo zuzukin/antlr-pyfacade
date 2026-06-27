@@ -1,8 +1,10 @@
 # API reference
 
-The public API of `antlrope`, generated from the package docstrings. For
-task-oriented guidance see the [User Guide](../getting-started.md); the
-`antlrope` generator command is documented under [Command line](cli.md).
+!!! note
+
+    This section contains the public API of **antlrope**, generated from the package docstrings.
+    For task-oriented guidance see the [User Guide](../getting-started.md); the
+    **antlrope** generator command is documented under [Command line](cli.md).
 
 ::: antlrope
     options:
