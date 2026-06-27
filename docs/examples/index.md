@@ -13,31 +13,62 @@ consumer, so you can read the whole thing end to end:
   `message` / `enum` definitions, indexed three ways: one whole-file walk, chunk +
   parse across cores, and bounded-memory streaming.
 
-## How the examples are published
+## What you need
 
-The examples are **part of the repository, not the installed package**. Installing `antlrope`
-gives you the runtime only — it does not ship the example grammars, their
-generated parsers, or the sample data. To run an example, browse or clone the
-`examples/` directory and run it in place. But make sure to be using the latest version
-of Antlrope when using the examples.
+The examples are **part of the repository, not the installed package** — installing
+**Antlrope** gives you the runtime only, not the example grammars, their generated
+parsers, or the sample data. To run one you need just two things:
+
+- **Antlrope installed** in your environment (`pip install antlrope` or
+  `conda install -c conda-forge antlrope`). The consumers depend only on Antlrope and
+  the Python standard library — no other packages, and no pixi.
+- **A copy of the `examples/` files** (see below). Each parser and facade is checked
+  in, so the examples run as-is. A JDK and the ANTLR tool are needed only if you want
+  to *regenerate* a parser after editing a grammar.
+
+Use example files from the same version as your installed Antlrope. The generated
+facades carry a provenance version; if it drifts the code still runs, but
+`antlrope up-to-date <facade>` will flag the mismatch.
+
+## Getting the example files
+
+Clone the repository (works everywhere):
+
+```sh
+git clone --depth 1 https://github.com/zuzukin/antlrope
+cd antlrope
+```
+
+Or, without git, pull down just the `examples/` directory (macOS / Linux; on GNU tar
+add `--wildcards` before the pattern):
+
+```sh
+curl -L https://github.com/zuzukin/antlrope/archive/refs/heads/dev.tar.gz \
+  | tar -xz --strip-components=1 '*/examples'
+```
 
 ## Running them
 
-Each grammar's parser is generated with the ordinary ANTLR tool and the facade with
-`antlrope`; both are checked in, so the examples run as-is. With this repo's
-[pixi](https://pixi.sh) tasks:
+Run a consumer from **inside its example directory** — the scripts import their facade
+and generated parser by directory-relative name, so the working directory matters:
+
+```sh
+cd examples/json    && python to_python.py '{"a": [1, true], "b": "hi"}'
+cd examples/schema  && python index.py                      # the bundled sample
+cd examples/schema  && python index.py --benchmark 50000    # time the three modes
+```
+
+That is the whole story in an installed environment: `python`, the example files, and
+Antlrope on the path.
+
+### From a source-tree clone (pixi)
+
+If you are working in a clone of the repo with [pixi](https://pixi.sh) set up, the
+bundled tasks wrap the same commands:
 
 ```sh
 pixi run example          # JSON: reconstruct a value from argv
 pixi run example-schema   # Schema: index the bundled sample.schema
-```
-
-Or directly, from inside an example's directory:
-
-```sh
-cd examples/json    && python to_python.py '{"a": [1, true], "b": "hi"}'
-cd examples/schema  && python index.py            # the bundled sample
-cd examples/schema  && python index.py --benchmark 50000   # time the three modes
 ```
 
 To regenerate a parser or facade after editing a grammar (needs the `gen`
