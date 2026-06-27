@@ -15,16 +15,11 @@ consumer, so you can read the whole thing end to end:
 
 ## How the examples are published
 
-The examples are **part of the repository, not the installed package**. `pip install
-antlrope` gives you the runtime only — it does not ship the example grammars, their
+The examples are **part of the repository, not the installed package**. Installing `antlrope`
+gives you the runtime only — it does not ship the example grammars, their
 generated parsers, or the sample data. To run an example, browse or clone the
-`examples/` directory and run it in place.
-
-This is deliberate: a runtime library's wheel should stay lean, and examples carry
-things that don't belong in it — `.g4` grammars, ANTLR-generated parser modules,
-sample inputs, and (sometimes) extra dependencies. Keeping them in the source tree
-means the docs can link straight to runnable files, and you copy the one you want as
-a starting point rather than importing it.
+`examples/` directory and run it in place. But make sure to be using the latest version
+of Antlrope when using the examples.
 
 ## Running them
 
