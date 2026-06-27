@@ -75,17 +75,12 @@ _RULE = struct.Struct("<3i")
 DEFAULT_CHANNEL = 0
 
 
-# Structural types for the stock ANTLR `<Grammar>Parser` / `<Grammar>Lexer`
-# classes — just the grammar metadata antlrope reads off them. A generated class
-# satisfies these without nominal inheritance: a `Protocol` matches by structure,
-# so the ANTLR runtime `Parser` / `Lexer` subclass the tool emits qualifies as-is.
-# (A `Protocol` *cannot* itself subclass `Parser` / `Lexer` — protocols may only
-# derive from other protocols — but it doesn't need to.) antlrope never
-# instantiates these classes; it only reads this metadata and drives the parse from
-# the serialized ATN in C++. Note `serializedATN()` is a *module*-level function
-# (resolved via the class's `__module__`), not a class member, so it isn't here.
+# Structural types for stock generated ANTLR `<Grammar>Parser` / `<Grammar>Lexer`
+# classes. The current standard ANTLR Parser and Lexer base classes do not declare
+# these members, but the generated classes do, so we use Protocol classes to record
+# the expected interface.
 class ParserProtocol(Protocol):
-    """The stock ANTLR `<Grammar>Parser` class surface that antlrope consumes."""
+    """The stock ANTLR `<Grammar>Parser` class interface that antlrope expects."""
 
     literalNames: ClassVar[Sequence[str]]
     symbolicNames: ClassVar[Sequence[str]]
@@ -94,7 +89,7 @@ class ParserProtocol(Protocol):
 
 
 class LexerProtocol(Protocol):
-    """The stock ANTLR `<Grammar>Lexer` class surface that antlrope consumes."""
+    """The stock ANTLR `<Grammar>Lexer` class interface that antlrope expects."""
 
     literalNames: ClassVar[Sequence[str]]
     symbolicNames: ClassVar[Sequence[str]]
