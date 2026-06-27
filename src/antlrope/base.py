@@ -48,8 +48,12 @@ from typing import ClassVar, NamedTuple, Protocol, Self, cast
 from . import _native
 from .location import LineCol, SourceMap
 
-# Type aliases (PEP 695). `type X = ...` is lazily evaluated, so these cost nothing
-# at import despite living at module scope — no `TYPE_CHECKING` guard needed.
+__all__ = [
+    "Chunk",
+    "FacadeListener",
+    "LexToken",
+]
+
 # A streaming text source: a filesystem path, an open text file object, or any
 # iterable of str pieces (a file object iterates as lines; a generator works).
 type TextSource = str | os.PathLike[str] | Iterable[str]
@@ -59,12 +63,6 @@ type TokenTypes = int | Iterable[int]
 type Pair = tuple[TokenTypes, TokenTypes]
 # A grammar rule name or index, or several of them.
 type RuleTypes = str | int | Iterable[str | int]
-
-__all__ = [
-    "Chunk",
-    "FacadeListener",
-    "LexToken",
-]
 
 EV_ENTER, EV_EXIT, EV_TERMINAL, EV_ERROR = 0, 1, 2, 3
 _REC = "<4i"
