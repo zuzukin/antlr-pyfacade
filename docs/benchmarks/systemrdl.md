@@ -1,6 +1,6 @@
 # Benchmark: SystemRDL
 
-A real-world check of `antlrope` against the two alternatives a Python ANTLR
+A real-world check of **Antlrope** against the two alternatives a Python ANTLR
 user actually has, on a real grammar:
 
 - the official **[antlr4-python3-runtime](https://pypi.org/project/antlr4-python3-runtime/)** (the pure-Python runtime), and
@@ -23,7 +23,7 @@ Parsing a 2.6 MB input (≈86k lines, ~77k [parse-tree][parse tree] nodes):
 | speedy-antlr | 1427 ms | 1381 MB | 2.6× | 1.0× |
 | **antlrope** | **179 ms** | **310 MB** | **20.8×** | **8.0×** |
 
-`antlrope` is the fastest **and** uses the least peak memory of the three. The
+Antlrope is the fastest **and** uses the least peak memory of the three. The
 gap holds [end to end](#end-to-end-parse-and-consume) once you also *consume* the
 result — and the consumer's output is identical to a pure-Python tree walk.
 
@@ -74,7 +74,7 @@ base, sub-millisecond parse); the differences appear once the input is non-trivi
 Parsing is only half the job — you have to consume the result. A representative
 consumer task: **collect every identifier (`ID` token) in the file**, implemented
 identically across all four (pure-Python and speedy-antlr walk the tree with a
-`ParseTreeListener`; `antlrope` uses an event listener). All four produce the
+`ParseTreeListener`; Antlrope uses an event listener). All four produce the
 **identical** list of identifiers (verified by hash; 32,000 ids on the large input).
 
 | input | tool | end-to-end time | peak memory |
@@ -88,7 +88,7 @@ identically across all four (pure-Python and speedy-antlr walk the tree with a
 | | antlrope (all terminals) | 197 ms | 242 MB |
 | | **antlrope (native `ID` filter)** | **174 ms** | **218 MB** |
 
-End-to-end, `antlrope` is **~21–23× faster than the pure-Python runtime and
+End-to-end, Antlrope is **~21–23× faster than the pure-Python runtime and
 ~8–9× faster than speedy-antlr**, at the lowest peak memory.
 
 Two effects compound here. First, the tree-walking tools must traverse *every* node
@@ -100,7 +100,7 @@ tree-walk approaches have no equivalent; they pay for the whole tree regardless.
 
 ## Why antlrope wins on both axes
 
-`antlrope` **never materializes a Python parse tree**. It parses in C++, walks
+Antlrope **never materializes a Python parse tree**. It parses in C++, walks
 the C++ tree once into a compact flat `int32` buffer, and hands Python a single
 transfer — so it pays neither the per-node Python object construction nor the memory
 of a Python tree.
@@ -119,7 +119,7 @@ tree-translation accelerator, on speed *and* on memory.
 
 The event stream reproduces the pure-Python parse tree exactly. On the medium input
 the pure-Python tree walk reports 50,201 rule contexts, 26,601 terminals, 0 errors;
-the `antlrope` event buffer contains exactly 50,201 rule-enter, 50,201
+the Antlrope event buffer contains exactly 50,201 rule-enter, 50,201
 rule-exit, 26,601 terminal, and 0 error events.
 
 ## What this does and does not show

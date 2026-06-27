@@ -1,6 +1,6 @@
 # Acknowledgements
 
-`antlrope` stands on excellent open-source work:
+**Antlrope** stands on excellent open-source work:
 
 - **[ANTLR](https://www.antlr.org/)** (Terence Parr and contributors) — the parser
   generator, its serialized-ATN format, and the **ANTLR4 C++ runtime** this package
@@ -14,7 +14,7 @@
   and site generator, with API pages rendered by
   [mkdocstrings](https://mkdocstrings.github.io/).
 
-Much of `antlrope`'s implementation, tests, and documentation was written in
+Much of Antlrope's implementation, tests, and documentation was written in
 close collaboration with **[Claude](https://www.anthropic.com/claude)** (Anthropic),
 via [Claude Code](https://www.anthropic.com/claude-code).
 

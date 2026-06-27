@@ -1,6 +1,6 @@
 # Migrating from antlr4-python3-runtime
 
-`antlrope` does not replace the official runtime — you still generate your
+**Antlrope** does not replace the official runtime — you still generate your
 parser with the stock tool, and the generated modules still import
 `antlr4-python3-runtime`. What changes is **how you consume the parse**. This
 page maps the official `ParseTreeListener` model onto the [facade].

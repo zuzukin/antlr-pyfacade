@@ -13,7 +13,7 @@ grammar and the steps are identical.
 
 !!! note "Before you start: will this work with your grammar?"
 
-    `antlrope` parses grammars that describe *structure* — data formats,
+    **Antlrope** parses grammars that describe *structure* — data formats,
     config languages, most DSLs and programming languages. It does **not** run
     **[semantic predicates][semantic predicate]** (`{...}?`) or **[embedded actions][embedded action]** (`{...}` code)
     that some grammars use, because those are target-language code this runtime
@@ -24,7 +24,7 @@ grammar and the steps are identical.
 ## 1. Generate a parser from your grammar
 
 Run the stock ANTLR tool with the **Python3** target. Nothing here is specific to
-`antlrope` — this is the ordinary ANTLR workflow:
+Antlrope — this is the ordinary ANTLR workflow:
 
 ```sh
 antlr4 -Dlanguage=Python3 JSON.g4 -o generated

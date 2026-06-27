@@ -12,7 +12,7 @@ node.
 
 ## The bulk filtered event stream
 
-`antlrope` removes the per-node crossing. After the C++ runtime finishes
+**Antlrope** removes the per-node crossing. After the C++ runtime finishes
 parsing, a native iterative depth-first traversal (mirroring ANTLR's
 `IterativeParseTreeWalker`: pre-order rule-enter and terminals, post-order
 rule-exit) appends one fixed record per visited item into a single contiguous
@@ -84,7 +84,7 @@ read off the generated Python classes.
 
 ## The vendored runtime and its patches
 
-`antlrope` builds against a **vendored copy of the official ANTLR4 C++ runtime**
+Antlrope builds against a **vendored copy of the official ANTLR4 C++ runtime**
 (BSD-3-Clause, carried verbatim under `vendor/antlr4-cpp/src`) rather than the
 system runtime, so the wheel is self-contained. On top of that pristine copy it
 carries two performance patches, both written to be contributed back upstream as
@@ -110,7 +110,7 @@ them once (if) they land upstream.
 
 ### How much do the patches contribute?
 
-Rebuilding `antlrope` against the **pristine** upstream runtime and against each
+Rebuilding Antlrope against the **pristine** upstream runtime and against each
 patch in turn isolates their effect (parsing a 4.7 MB JSON document on an Apple
 M5 Max; `scripts/bench_runtime_patches.py`):
 
@@ -123,10 +123,10 @@ M5 Max; `scripts/bench_runtime_patches.py`):
 Two distinct takeaways:
 
 - **The single-thread win is mostly architecture, not the runtime.** The lock-free
-  read path shaves ~12% off the parse; the rest of `antlrope`'s ~20× margin over
+  read path shaves ~12% off the parse; the rest of Antlrope's ~20× margin over
   the pure-Python runtime (see [the SystemRDL benchmark](benchmarks/systemrdl.md))
   comes from the bulk event stream, not the patched C++. Even on the stock runtime
-  `antlrope` would be ~18× faster than pure-Python here. (JSON is lexer-heavy, which
+  Antlrope would be ~18× faster than pure-Python here. (JSON is lexer-heavy, which
   flatters this patch — its win is in the lexer's per-character DFA hot path; a
   parser-heavy grammar shows less.)
 - **The parallel win is entirely the runtime.** On the stock runtime, parsing a

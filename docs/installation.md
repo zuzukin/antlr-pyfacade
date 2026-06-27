@@ -20,7 +20,7 @@ conda install -c conda-forge antlrope
 Either way pulls in the official `antlr4-python3-runtime` automatically — your
 generated parser modules import it.
 
-`antlrope` ships as a pre-compiled binary wheel (the C++ engine is built in),
+**Antlrope** ships as a pre-compiled binary wheel (the C++ engine is built in),
 so there is **nothing to compile** on install. A single CPython Stable ABI
 (`abi3`) wheel per platform covers **CPython 3.12 and newer** (3.12, 3.13, 3.14,
 …), published on:
@@ -33,7 +33,7 @@ The minimum supported Python is **3.12**.
 
 ## Type checking
 
-`antlrope` ships `py.typed` with full type information, so type checkers resolve its
+Antlrope ships `py.typed` with full type information, so type checkers resolve its
 public API and submodules out of the box — `from antlrope import Chunk,
 FacadeListener, SourceMap` and `import antlrope.cli` all check cleanly.
 
@@ -51,7 +51,7 @@ Note the command-line interface lives in the `antlrope.cli` *package* (e.g.
 
 ## Install the ANTLR tool (to generate parsers)
 
-To turn a `.g4` grammar into the Python parser modules `antlrope` drives, you
+To turn a `.g4` grammar into the Python parser modules Antlrope drives, you
 also need the **ANTLR tool** itself, which is a Java program. The easiest way is the
 `antlr4-tools` helper, which fetches the ANTLR jar (and a JDK on first use) for you:
 
@@ -61,7 +61,7 @@ pip install antlr4-tools     # provides the `antlr4` command
 
 You only need this at build time, to (re)generate parsers — not to run them. If you
 already have Java and the ANTLR jar, use those instead; nothing here is specific to
-`antlrope`.
+Antlrope.
 
 See [Getting started](getting-started.md) for the full generate → write a listener →
 run walkthrough.

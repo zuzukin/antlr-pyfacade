@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.26] - 2026-06-27
+
+### Changed
+- Documentation now styles the product name as **Antlrope** (capitalized, bold on
+  first mention per page), reserving the lowercase `antlrope` for the Python module,
+  the CLI command, and the package id. The convention is recorded in CONTRIBUTING.
+
 ## [0.2.25] - 2026-06-24
 
 ### Changed

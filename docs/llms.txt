@@ -2,7 +2,7 @@
 
 > Fast, C++-accelerated ANTLR runtime for Python. Parse text with an ANTLR grammar at C++ speed (typically 10–20× the official pure-Python runtime) while writing only plain-Python listener callbacks — no C or C++ to write or compile.
 
-antlrope drives the official ANTLR4 **C++** runtime's ATN interpreter directly from the serialized ATN that the stock `-Dlanguage=Python3` ANTLR tool already emits, so there is no per-grammar C++ codegen and nothing to compile. After parsing in C++, a single bulk, filtered event stream crosses into Python (one transfer, not one foreign-function call per parse-tree node) and drives named callbacks.
+**Antlrope** drives the official ANTLR4 **C++** runtime's ATN interpreter directly from the serialized ATN that the stock `-Dlanguage=Python3` ANTLR tool already emits, so there is no per-grammar C++ codegen and nothing to compile. After parsing in C++, a single bulk, filtered event stream crosses into Python (one transfer, not one foreign-function call per parse-tree node) and drives named callbacks.
 
 When to use it: throughput on large or many-record inputs. When NOT to use it (use the official `antlr4-python3-runtime` instead): the grammar relies on **semantic predicates** (`{...}?`) or **embedded actions** (`{...}` target-language code) — the interpreted ATN cannot execute those; or you need a **retained, randomly-accessible parse tree** rather than a single streaming pass.
 

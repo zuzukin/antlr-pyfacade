@@ -12,7 +12,7 @@ The usual escape hatch is to switch your whole toolchain to the C++ (or Java)
 target: generate a C++ parser, compile it, and write your application logic in C++.
 That's a large step, and it throws away the convenience of staying in Python.
 
-`antlrope` takes a different path. It drives the **official ANTLR4 C++
+**Antlrope** takes a different path. It drives the **official ANTLR4 C++
 runtime's [ATN interpreter]** directly from the *[serialized ATN][ATN]* that the stock
 `-Dlanguage=Python3` ANTLR tool already emits — so there is **no per-grammar C++
 codegen and nothing for you to compile**. The parse runs in C++, and instead of one
@@ -34,7 +34,7 @@ runtime does is hand Python the parse as one DFS-ordered stream of events
 
 ## When the official runtime is the right choice
 
-`antlrope` does not replace `antlr4-python3-runtime` — it targets the
+Antlrope does not replace `antlr4-python3-runtime` — it targets the
 throughput case. Prefer the official runtime when your grammar relies on **[semantic
 predicates][semantic predicate] or [embedded actions][embedded action]**, when you need the **retained [parse tree]** (random
 access, rewriting, re-walking) rather than a single streaming pass, or when the

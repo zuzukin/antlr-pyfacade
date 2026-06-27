@@ -62,6 +62,15 @@ then re-applies the edits nanobind cannot infer — the license header and the
 `parse_events` / `lex` return types — so the committed stub is produced directly.
 To change those edits, edit `scripts/stubgen.py`, not the `.pyi`.
 
+## Naming the product
+
+In prose, the product is **Antlrope** (capitalized). Render it **bold on the first
+mention in a page or section** and plain capitalized (`Antlrope`) afterwards. Reserve
+the lowercase, backticked `` `antlrope` `` form for the literal Python module
+(`from antlrope import …`), the CLI command (`antlrope gen`), or the package id in an
+install command (`pip install antlrope`). Headings, the site/README title, URLs, the
+logo wordmark, and code stay lowercase.
+
 ## Docstrings
 
 Docstrings are rendered into the API docs by mkdocstrings, which resolves
