@@ -514,7 +514,7 @@ class FacadeListener:
     def depth(self) -> int:
         """Return the current nesting depth: the number of open rule scopes.
 
-        The scope stack holds exactly the rules whose enter/exit events cross into
+        The [rule_stack][antlrope.FacadeListener.rule_stack] holds exactly the rules whose enter/exit events cross into
         Python — the rules you subscribe to (so this is the depth of the constructs
         *you* track). Override
         [enterEveryRule][antlrope.FacadeListener.enterEveryRule] /
@@ -883,7 +883,7 @@ class FacadeListener:
 
         # enterEveryRule / exitEveryRule fire on every rule; overriding either
         # forces all rule events (mask -> None) so the hooks see them all and the
-        # scope stack tracks the full parse tree.
+        # rule_stack tracks the full parse tree.
         every_enter = None
         if cls.enterEveryRule is not base_cls.enterEveryRule:
             every_enter = self.enterEveryRule
