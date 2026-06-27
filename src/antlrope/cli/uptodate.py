@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from textwrap import dedent
 
 from antlrope import __version__
 from antlrope.cli import metadata
@@ -35,9 +36,13 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     parser = subparsers.add_parser(
         "up-to-date",
         help="Check whether a generated facade is current with its inputs.",
-        description="Compare the input SHA256 hashes and antlrope version recorded in "
-        "a generated facade against the current files. Exit status 0 = up to date, "
-        "1 = stale.",
+        description=dedent(
+            """
+            Compare the input SHA256 hashes and antlrope version recorded in
+            a generated facade against the current files. Zero exit status
+            if up-to-date.
+            """
+        ),
     )
     parser.add_argument(
         "file", metavar="<file>", help="A facade previously written by `antlrope gen`."

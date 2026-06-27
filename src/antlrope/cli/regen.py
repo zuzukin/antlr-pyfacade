@@ -27,6 +27,7 @@ import contextlib
 import os
 import shlex
 import sys
+from textwrap import dedent
 
 from antlrope.cli import generate, metadata
 
@@ -37,8 +38,12 @@ def register(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         "regen",
         aliases=["regenerate"],
         help="Regenerate a facade in place from its embedded metadata.",
-        description="Re-run the `gen` command recorded in a generated facade's "
-        "metadata header, from the recorded run directory, overwriting the file.",
+        description=dedent(
+            """
+            Re-run the `gen` command recorded in a generated facade's
+            metadata header, from the recorded run directory, overwriting the file.
+            """
+        ),
     )
     parser.add_argument(
         "file", metavar="<file>", help="A facade previously written by `antlrope gen`."
