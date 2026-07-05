@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """Parse-error collection: the default ANTLR console error listener is replaced
-by a collecting one, so parse diagnostics surface as structured `ParseError`
-records (on the raw `parse_events` tuple and as `listener.syntax_errors`)
-instead of being written to stderr."""
+by a collecting one, so parse diagnostics surface as structured records instead of
+being written to stderr — raw `SyntaxError` records on the `parse_events` tuple,
+wrapped into `ParseError` exceptions on `listener.syntax_errors`."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def test_parse_events_returns_events_and_errors():
     assert isinstance(events, bytes)
     assert len(errors) == 1
     err = errors[0]
-    assert isinstance(err, ap.ParseError)
+    assert isinstance(err, ap._native.SyntaxError)
     assert (err.line, err.column) == (1, 3)
     assert (err.start, err.stop) == (3, 3)
     assert "extraneous input '2'" in err.message
@@ -56,6 +56,10 @@ def test_facade_collects_syntax_errors():
     listener.walk("[1 2]")
     assert len(listener.syntax_errors) == 1
     err = listener.syntax_errors[0]
+    # syntax_errors carries ParseError exceptions (raisable), not raw native records.
+    assert isinstance(err, ap.ParseError)
+    assert isinstance(err, Exception)
+    assert str(err) == err.message
     assert (err.line, err.column) == (1, 3)
     assert "extraneous input '2'" in err.message
 

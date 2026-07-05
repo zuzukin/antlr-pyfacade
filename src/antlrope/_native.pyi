@@ -38,12 +38,11 @@ class AtnShape:
 def atn_shape(serialized: Sequence[int]) -> AtnShape:
     """Deserialize a serialized ATN int list and return its shape."""
 
-class ParseError:
+class SyntaxError:
     """
-    A collected parse diagnostic, as found on a listener's
-    [syntax_errors][antlrope.FacadeListener.syntax_errors]. The default
-    ANTLR console error listener is suppressed, so these are the only report
-    of a parse failure.
+    A raw parse diagnostic produced by the native parser. The Python layer
+    wraps these into [ParseError][antlrope.ParseError] exceptions on a
+    listener's [syntax_errors][antlrope.FacadeListener.syntax_errors].
     """
 
     @property
@@ -204,7 +203,7 @@ def parse_events(
     start_rule: int,
     rule_mask: Sequence[int] | None = None,
     token_mask: Sequence[int] | None = None,
-) -> tuple[bytes, list[ParseError]]:
+) -> tuple[bytes, list[SyntaxError]]:
     """
     Parse and return (events, errors): a bulk flat int32 event buffer of
     4*N values (kind, payload, start, stop) as bytes, and a list of
@@ -223,11 +222,11 @@ def parse_stage_times(
 
 def lex(
     lexer_spec: LexerSpec, text: str, token_mask: Sequence[int] | None = None
-) -> tuple[bytes, list[ParseError]]:
+) -> tuple[bytes, list[SyntaxError]]:
     """
     Run only the lexer and return (tokens, errors): a flat int32 buffer
     of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and
-    a list of ParseError diagnostics. Optional token_mask (list of token
+    a list of SyntaxError diagnostics. Optional token_mask (list of token
     types to keep) drops the rest natively. The cheap stage used to chunk
     input for walk_parallel without a full parse.
     """
@@ -239,11 +238,11 @@ def rule_spans(
     start_rule: int,
     rule_mask: Sequence[int] | None = None,
     outermost: bool = True,
-) -> tuple[bytes, list[ParseError]]:
+) -> tuple[bytes, list[SyntaxError]]:
     """
     Parse (entirely in C++) and return (spans, errors): a flat int32
     buffer of 3*N values (rule_index, start, stop) for each parse-tree
-    rule kept by rule_mask (None = all), plus a list of ParseError
+    rule kept by rule_mask (None = all), plus a list of SyntaxError
     diagnostics. With outermost=True a matched rule's subtree is skipped.
     Used for rule-based chunking.
     """

@@ -891,11 +891,10 @@ NB_MODULE(_native, m) {
           "Deserialize a serialized ATN int list and return its shape.");
 
     nb::class_<SyntaxError>(
-        m, "ParseError",
-        "A collected parse diagnostic, as found on a listener's\n"
-        "[syntax_errors][antlrope.FacadeListener.syntax_errors]. The default\n"
-        "ANTLR console error listener is suppressed, so these are the only report\n"
-        "of a parse failure.")
+        m, "SyntaxError",
+        "A raw parse diagnostic produced by the native parser. The Python layer\n"
+        "wraps these into [ParseError][antlrope.ParseError] exceptions on a\n"
+        "listener's [syntax_errors][antlrope.FacadeListener.syntax_errors].")
         .def_ro("line", &SyntaxError::line,
                 "1-based line of the offending token.")
         .def_ro("column", &SyntaxError::column,
@@ -910,7 +909,7 @@ NB_MODULE(_native, m) {
         .def_ro("message", &SyntaxError::message,
                 "ANTLR's human-readable error message.")
         .def("__repr__", [](const SyntaxError &e) {
-            return "ParseError(line=" + std::to_string(e.line) +
+            return "SyntaxError(line=" + std::to_string(e.line) +
                    ", column=" + std::to_string(e.column) +
                    ", start=" + std::to_string(e.start) +
                    ", stop=" + std::to_string(e.stop) + ", message=" +
@@ -1020,7 +1019,7 @@ NB_MODULE(_native, m) {
           nb::arg("token_mask") = nb::none(),
           "Run only the lexer and return (tokens, errors): a flat int32 buffer\n"
           "of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and\n"
-          "a list of ParseError diagnostics. Optional token_mask (list of token\n"
+          "a list of SyntaxError diagnostics. Optional token_mask (list of token\n"
           "types to keep) drops the rest natively. The cheap stage used to chunk\n"
           "input for walk_parallel without a full parse.");
     m.def("rule_spans", &rule_spans, nb::arg("parser_spec"),
@@ -1028,7 +1027,7 @@ NB_MODULE(_native, m) {
           nb::arg("rule_mask") = nb::none(), nb::arg("outermost") = true,
           "Parse (entirely in C++) and return (spans, errors): a flat int32\n"
           "buffer of 3*N values (rule_index, start, stop) for each parse-tree\n"
-          "rule kept by rule_mask (None = all), plus a list of ParseError\n"
+          "rule kept by rule_mask (None = all), plus a list of SyntaxError\n"
           "diagnostics. With outermost=True a matched rule's subtree is skipped.\n"
           "Used for rule-based chunking.");
 }

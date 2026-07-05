@@ -52,6 +52,7 @@ __all__ = [
     "Chunk",
     "FacadeListener",
     "LexToken",
+    "ParseError",
 ]
 
 # A streaming text source: a filesystem path, an open text file object, or any
@@ -229,6 +230,48 @@ def _read_increments(
             if not piece:
                 return
             yield piece
+
+
+class ParseError(Exception):
+    """A parse diagnostic: one syntax error collected during a `walk`.
+
+    Antlrope replaces ANTLR's default console error listener with a collecting
+    one, so parse failures are gathered into
+    [syntax_errors][antlrope.FacadeListener.syntax_errors] rather than written to
+    stderr. Each carries the position of the offending token and ANTLR's message.
+
+    It subclasses `Exception`, so `str(err)` is the message and you can `raise` it
+    (e.g. to turn the first collected error into a hard failure).
+    """
+
+    line: int
+    """1-based line of the offending token."""
+    column: int
+    """0-based column of the offending token."""
+    start: int
+    """0-based codepoint offset of the offending token's first character (matching
+    the event-stream offsets), or -1 when there is no token (e.g. a lexer error)."""
+    stop: int
+    """0-based codepoint offset of the offending token's last character, inclusive,
+    or -1 when there is no token."""
+    message: str
+    """ANTLR's human-readable error message."""
+
+    def __init__(
+        self, line: int, column: int, start: int, stop: int, message: str
+    ) -> None:
+        super().__init__(message)
+        self.line = line
+        self.column = column
+        self.start = start
+        self.stop = stop
+        self.message = message
+
+    def __repr__(self) -> str:
+        return (
+            f"ParseError(line={self.line}, column={self.column}, "
+            f"start={self.start}, stop={self.stop}, message={self.message!r})"
+        )
 
 
 class LexToken(NamedTuple):
@@ -444,10 +487,10 @@ class FacadeListener:
 
     # Reassigned to a fresh list by `drive` on every walk (never mutated in
     # place), so the shared class-level default is safe — hence the RUF012 waiver.
-    syntax_errors: list[_native.ParseError] = []  # noqa: RUF012
+    syntax_errors: list[ParseError] = []  # noqa: RUF012
     """Parse diagnostics collected during the most recent `walk`.
 
-    A list of [ParseError][antlrope.ParseError] records, empty when the
+    A list of [ParseError][antlrope.ParseError] exceptions, empty when the
     parse had no errors. The default ANTLR console error listener is suppressed, so
     these are the only report of a parse failure — inspect them instead of watching
     stderr.
@@ -899,7 +942,11 @@ class FacadeListener:
         raw, errors = _native.parse_events(
             parser_spec, lexer_spec, text, start_rule, r_mask, t_mask
         )
-        self.syntax_errors = errors
+        # Wrap the raw native diagnostics into ParseError exceptions (rare error
+        # path, so the per-error allocation is negligible).
+        self.syntax_errors = [
+            ParseError(e.line, e.column, e.start, e.stop, e.message) for e in errors
+        ]
 
         # Source-location state read by span / line_col. Reset the cached map so a
         # reused listener re-derives it for this text.

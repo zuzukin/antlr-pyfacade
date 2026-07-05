@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.27] - 2026-06-28
+
+### Changed
+- `ParseError` is now an `Exception` subclass, so a collected diagnostic can be
+  raised and matches `except Exception`. It keeps its `line` / `column` / `start` /
+  `stop` / `message` fields and `str(err)` is the message. `FacadeListener.syntax_errors`
+  now holds these `ParseError` exceptions; the raw native record is internal.
+
 ## [0.2.26] - 2026-06-27
 
 ### Changed

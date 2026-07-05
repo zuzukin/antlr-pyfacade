@@ -62,7 +62,7 @@ subscribe to errors alone without receiving every token.
 The official runtime also installs a `ConsoleErrorListener` that prints
 `line X:Y ...` to **stderr** unless you call `removeErrorListeners()`. The facade
 does this for you: nothing is printed, and after `walk` the diagnostics are
-available as `self.syntax_errors` — a list of `ParseError` records carrying
+available as `self.syntax_errors` — a list of `ParseError` exceptions carrying
 ANTLR's message plus `line`/`column`/`start`/`stop`:
 
 ```python

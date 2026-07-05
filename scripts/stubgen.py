@@ -37,9 +37,9 @@ STUB = ROOT / "src" / "antlrope" / "_native.pyi"
 # Functions whose return nanobind reports as `object` (it can't infer
 # `nb::make_tuple(...)`), with the real type to substitute.
 RETURN_TYPES = {
-    "parse_events": "tuple[bytes, list[ParseError]]",
-    "lex": "tuple[bytes, list[ParseError]]",
-    "rule_spans": "tuple[bytes, list[ParseError]]",
+    "parse_events": "tuple[bytes, list[SyntaxError]]",
+    "lex": "tuple[bytes, list[SyntaxError]]",
+    "rule_spans": "tuple[bytes, list[SyntaxError]]",
     # next_batch — a method on both StreamChunker and StreamRuleChunker (so it
     # matches more than once); the regex below is indentation-agnostic.
     "next_batch": "tuple[list[tuple[int, int, int, str]], bool]",
