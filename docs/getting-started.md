@@ -1,8 +1,7 @@
 # Getting started
 
 This walks you from a grammar to a working parser in three steps: **generate a
-parser** from your grammar, **generate a [facade]**, and **write a listener**. The
-whole thing is plain Python — no C/C++ to write or compile.
+parser** from your grammar, **generate a Python [facade]**, and **write a listener** subclass.
 
 First, [install `antlrope` and the ANTLR tool](installation.md).
 
@@ -17,13 +16,13 @@ grammar and the steps are identical.
     config languages, most DSLs and programming languages. It does **not** run
     **[semantic predicates][semantic predicate]** (`{...}?`) or **[embedded actions][embedded action]** (`{...}` code)
     that some grammars use, because those are target-language code this runtime
-    will not execute. If your grammar depends on them, use the official
-    `antlr4-python3-runtime`. See
+    will not execute. If your grammar depends on them, either create a version of your grammar
+    that does not need them, or stick to the official `antlr4-python3-runtime`. See
     [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions).
 
 ## 1. Generate a parser from your grammar
 
-Run the stock ANTLR tool with the **Python3** target. Nothing here is specific to
+Run the stock ANTLR tool with the Python3 target. Nothing here is specific to
 Antlrope — this is the ordinary ANTLR workflow:
 
 ```sh
@@ -41,7 +40,7 @@ rule. Point `antlrope` at your generated **parser module** (an importable
 dotted path) and give it a name prefix:
 
 ```sh
-antlrope gen generated.JSONParser JSON -o json_listener.py
+antlrope gen generated/JSONParser JSON -o json_listener.py
 ```
 
 That emits `json_listener.py` containing a `JsonEventListener` class with:
@@ -52,10 +51,9 @@ That emits `json_listener.py` containing a `JsonEventListener` class with:
 - token-type constants like `STRING = 10`, `NUMBER = 11`, and
 - a `walk(text)` method that runs everything.
 
-The facade imports your lexer and parser and bakes them in, so `walk` needs no
-class arguments. It finds the lexer by ANTLR's `<Grammar>Lexer` / `<Grammar>Parser`
-naming (here `generated.JSONLexer` next to `generated.JSONParser`); pass `--lexer`
-to `antlrope` if your lexer module is named differently.
+The facade imports your lexer and parser and bakes them in. It finds the lexer by ANTLR's 
+`<Grammar>Lexer` / `<Grammar>Parser` naming (here `generated.JSONLexer` next to 
+`generated.JSONParser`); pass `--lexer` to `antlrope` if your lexer module is named differently.
 
 You don't edit this file — you subclass it.
 

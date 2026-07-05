@@ -41,8 +41,8 @@ nav = [
     { "Glossary" = "glossary.md" },
   ] },
   { "About" = [
-    { "Release notes" = "about/changelog.md" },
     { "Motivation" = "about/motivation.md" },
+    { "Release notes" = "about/changelog.md" },
     { "License" = "about/license.md" },
     { "Acknowledgements" = "about/acknowledgements.md" },
   ] },
