@@ -166,8 +166,6 @@ ruff = ">=0.15.16"
 # environments never pull in a JDK.
 [tool.pixi.feature.gen.dependencies]
 openjdk = ">=11"
-
-[tool.pixi.feature.gen.pypi-dependencies]
 antlr4-tools = "*"
 
 # Documentation toolchain, all from conda-forge (except mike, below). Isolated and
@@ -199,7 +197,7 @@ rattler-build = "*"
 # Local conda packaging via whl2conda (convert a built wheel to a .conda). Layered
 # on top of `dev` (the `pack` env below = dev + this) so `build_conda.py` can both
 # build the wheel and convert it in one environment.
-[tool.pixi.feature.pack.pypi-dependencies]
+[tool.pixi.feature.pack.dependencies]
 whl2conda = "*"
 
 [tool.pixi.environments]
