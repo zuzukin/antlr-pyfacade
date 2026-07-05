@@ -88,8 +88,8 @@ other rule/token — the fewer node kinds you subscribe to, the faster the walk.
 
 - The C++ extension deserializes the ATN from your generated lexer/parser and
   drives `LexerInterpreter` / `ParserInterpreter` — no generated C++ parser.
-- A native iterative DFS over the finished parse tree appends fixed
-  `(kind, payload, start, stop)` int32 records to one buffer (`parse_events`).
+- A native iterative depth-first traversal over the finished parse tree appends
+  fixed `(kind, payload, start, stop)` int32 records to one buffer (`parse_events`).
 - `kind`: `0=ENTER_RULE, 1=EXIT_RULE, 2=TERMINAL, 3=ERROR`; `payload` is the rule
   index or token type; `start`/`stop` are char indices into the source (`-1` for
   rule events). Token text is recovered Python-side by slicing
