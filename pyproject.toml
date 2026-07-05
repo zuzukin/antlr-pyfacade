@@ -285,7 +285,7 @@ cmd = "python scripts/asan_pytest.py"
 
 [tool.pixi.feature.gen.tasks.gen-json]
 description = "Regenerate the example's Python parser/lexer from the grammar (ANTLR tool)."
-cmd = "antlr4 -Dlanguage=Python3 JSON.g4 -o generated"
+cmd = "antlr4 -Dlanguage=Python3 -no-listener JSON.g4 -o generated"
 cwd = "examples/json"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 inputs = ["examples/json/JSON.g4"]
@@ -301,7 +301,7 @@ outputs = ["examples/json/json_listener.py"]
 
 [tool.pixi.feature.gen.tasks.gen-pred]
 description = "Regenerate the predicate-limitation fixture's parser/lexer (tests/test_predicate_limitation.py)."
-cmd = "antlr4 -Dlanguage=Python3 Pred.g4 -o generated"
+cmd = "antlr4 -Dlanguage=Python3 -no-listener Pred.g4 -o generated"
 cwd = "examples/predicate"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 inputs = ["examples/predicate/Pred.g4"]
@@ -309,7 +309,7 @@ outputs = ["examples/predicate/generated/*.py"]
 
 [tool.pixi.feature.gen.tasks.gen-schema]
 description = "Regenerate the schema example's Python parser/lexer from the grammar (ANTLR tool)."
-cmd = "antlr4 -Dlanguage=Python3 Schema.g4 -o generated"
+cmd = "antlr4 -Dlanguage=Python3 -no-listener Schema.g4 -o generated"
 cwd = "examples/schema"
 env = { ANTLR4_TOOLS_ANTLR_VERSION = "4.13.2" }
 inputs = ["examples/schema/Schema.g4"]

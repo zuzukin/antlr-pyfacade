@@ -62,14 +62,6 @@ class PredParser ( Parser ):
         def getRuleIndex(self):
             return PredParser.RULE_s
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterS" ):
-                listener.enterS(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitS" ):
-                listener.exitS(self)
-
 
 
 

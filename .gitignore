@@ -20,6 +20,11 @@ __pycache__/
 /build-asan/
 /tests/asan/build/
 
+# ANTLR tool side outputs (the gen-* tasks): token maps and IDE/TestRig
+# interpreter data the examples never use (no ANTLR flag suppresses them).
+examples/*/generated/*.tokens
+examples/*/generated/*.interp
+
 # Editors
 .idea/
 .vscode/

@@ -95,14 +95,6 @@ class JSONParser ( Parser ):
         def getRuleIndex(self):
             return JSONParser.RULE_json
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterJson" ):
-                listener.enterJson(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitJson" ):
-                listener.exitJson(self)
-
 
 
 
@@ -141,14 +133,6 @@ class JSONParser ( Parser ):
 
         def getRuleIndex(self):
             return JSONParser.RULE_obj
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterObj" ):
-                listener.enterObj(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitObj" ):
-                listener.exitObj(self)
 
 
 
@@ -219,14 +203,6 @@ class JSONParser ( Parser ):
         def getRuleIndex(self):
             return JSONParser.RULE_pair
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterPair" ):
-                listener.enterPair(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitPair" ):
-                listener.exitPair(self)
-
 
 
 
@@ -267,14 +243,6 @@ class JSONParser ( Parser ):
 
         def getRuleIndex(self):
             return JSONParser.RULE_arr
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArr" ):
-                listener.enterArr(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArr" ):
-                listener.exitArr(self)
 
 
 
@@ -351,14 +319,6 @@ class JSONParser ( Parser ):
 
         def getRuleIndex(self):
             return JSONParser.RULE_value
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterValue" ):
-                listener.enterValue(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitValue" ):
-                listener.exitValue(self)
 
 
 

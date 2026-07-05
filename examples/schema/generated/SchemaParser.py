@@ -98,14 +98,6 @@ class SchemaParser ( Parser ):
         def getRuleIndex(self):
             return SchemaParser.RULE_schema
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterSchema" ):
-                listener.enterSchema(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitSchema" ):
-                listener.exitSchema(self)
-
 
 
 
@@ -154,14 +146,6 @@ class SchemaParser ( Parser ):
 
         def getRuleIndex(self):
             return SchemaParser.RULE_definition
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDefinition" ):
-                listener.enterDefinition(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDefinition" ):
-                listener.exitDefinition(self)
 
 
 
@@ -225,14 +209,6 @@ class SchemaParser ( Parser ):
         def getRuleIndex(self):
             return SchemaParser.RULE_messageDef
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterMessageDef" ):
-                listener.enterMessageDef(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitMessageDef" ):
-                listener.exitMessageDef(self)
-
 
 
 
@@ -290,14 +266,6 @@ class SchemaParser ( Parser ):
         def getRuleIndex(self):
             return SchemaParser.RULE_field
 
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterField" ):
-                listener.enterField(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitField" ):
-                listener.exitField(self)
-
 
 
 
@@ -343,14 +311,6 @@ class SchemaParser ( Parser ):
 
         def getRuleIndex(self):
             return SchemaParser.RULE_fieldType
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFieldType" ):
-                listener.enterFieldType(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFieldType" ):
-                listener.exitFieldType(self)
 
 
 
@@ -408,14 +368,6 @@ class SchemaParser ( Parser ):
 
         def getRuleIndex(self):
             return SchemaParser.RULE_enumDef
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterEnumDef" ):
-                listener.enterEnumDef(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitEnumDef" ):
-                listener.exitEnumDef(self)
 
 
 
