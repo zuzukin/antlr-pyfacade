@@ -12,7 +12,7 @@ Two costs dominate consuming a large parse from Python:
    workload that touches most nodes — you can only shrink it by *receiving fewer
    events*, which is what native filtering does.
 
-So the honest framing: batching removes the call overhead; filtering reduces the
+Batching removes the call overhead, and filtering reduces the
 iteration count. Neither makes a "reserialize everything" workload free, because
 something in Python still iterates the kept events.
 

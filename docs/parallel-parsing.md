@@ -4,7 +4,7 @@ When your input is many independent pieces that each parse on their own — reco
 log entries, top-level definitions —
 [`walk_parallel`](reference/api.md#antlrope.FacadeListener.walk_parallel)
 parses them across a thread pool. The native parse releases the [GIL], so the parses
-overlap across cores; one listener is produced per chunk, **in input order**.
+overlap across cores; one listener is produced per chunk, *in input order*.
 
 ```python
 from my_listener import MyGrammarEventListener
@@ -38,7 +38,7 @@ in.
 
 ## Bounded, lazy, in order
 
-The result is a **lazy iterator**: chunks are pulled and parsed on demand with at
+The result is a *lazy iterator*: chunks are pulled and parsed on demand with at
 most `max_workers` parses in flight (also the ordering window), so neither the whole
 input nor all results need to be held in memory — consume it incrementally, or
 `list(...)` it if you want them all. Combined with a streaming chunker
@@ -46,7 +46,7 @@ input nor all results need to be held in memory — consume it incrementally, or
 [`stream_on_pattern`](reference/api.md#antlrope.FacadeListener.stream_on_pattern)), the whole
 pipeline — read, chunk, parse — stays bounded in the input size.
 
-`max_workers` defaults to `os.cpu_count()`; pass `1` to run inline without a pool.
+`max_workers` defaults to [os.cpu_count()]; pass `1` to run inline without a pool.
 
 For an end-to-end pipeline over a file too large to hold in memory — streaming
 chunker into `walk_parallel`, plus preamble handling, terminator preservation, and
@@ -61,3 +61,4 @@ with how parse-heavy the work is relative to per-callback Python work. See the
 limitations for the scaling details and measured numbers.
 
 [GIL]: glossary.md#gil
+[os.cpu_count()]: https://docs.python.org/3/library/os.html#os.cpu_count

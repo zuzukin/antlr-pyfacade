@@ -4,8 +4,8 @@
 
 The classic ANTLR consumption model builds a [parse tree] and walks it, calling
 `enterEveryRule` / `exitEveryRule` / `visitTerminal` once per node. With a
-Python listener over a C++ parse, **every one of those calls is a
-[foreign-function crossing][FFI]**. For a document that produces tens of millions of
+Python listener over a C++ parse, every one of those calls is a
+[foreign-function crossing][FFI]. For a document that produces tens of millions of
 tree nodes, the per-node crossing — not the parse itself — dominates the
 runtime. Moving the parse to C++ barely helps if Python is still poked once per
 node.
@@ -73,7 +73,8 @@ this against per-record chunks.
 ## What runs where
 
 - **C++**: [ATN] deserialization, `LexerInterpreter` + `ParserInterpreter`, the
-  full parse to a tree, and the masked DFS that builds the event buffer.
+  full parse to a tree, and the masked depth-first traversal that builds the
+  event buffer.
 - **Python**: one loop over the buffer (`struct.iter_unpack("<4i", raw)`),
   dispatching your overridden callbacks and slicing token text as needed.
 

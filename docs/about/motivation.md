@@ -29,7 +29,7 @@ parse quickly.
 
 *antl**rope*** is a pun on *antelope* that extends ANTLR's antler imagery — where
 **ope** stands for **O**rdered **P**arse **E**vents: the distinctive thing this
-runtime does is hand Python the parse as one DFS-ordered stream of events
+runtime does is hand Python the parse as one depth-first-ordered stream of events
 (rule-enter, rule-exit, terminal, error) rather than a per-node parse-tree walk.
 
 ## When the official runtime is the right choice

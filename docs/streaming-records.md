@@ -1,6 +1,6 @@
 # Recipe: stream a file of records
 
-When a file is a long **sequence of independent records** — log lines, NDJSON,
+When a file is a long sequence of independent records — log lines, NDJSON,
 sensor readings, the top-level definitions of a source file — and is too large to
 hold in memory, you can read, cut, and parse it as one bounded-memory pipeline: peak
 memory is about one record plus the parses in flight, flat in the file size. This
@@ -31,8 +31,8 @@ bounded number of parses in flight. Nothing holds the whole file.
 
 ## Keep the terminator: `trim=False`
 
-By default every chunker **trims** surrounding whitespace from each chunk and drops
-whitespace-only regions. That is wrong here: a `record` rule that ends in `EOL`
+By default every chunker trims surrounding whitespace from each chunk and drops
+whitespace-only regions. That is not what we want in this case: a `record` rule that ends in `EOL`
 needs the trailing newline, and the default would strip it, so the parse fails on a
 missing `EOL`. Pass `trim=False` to keep each region verbatim (only truly empty,
 zero-length regions are dropped):
@@ -70,7 +70,7 @@ with the in-memory `split_*` chunkers; see [Chunking](chunking.md#source-positio
 ## Absolute positions
 
 Each [`Chunk`](reference/api.md#antlrope.Chunk) pins its `offset` / `line` / `column`
-against the **whole file**, not the chunk, and `walk_parallel` carries that through.
+against the whole file, not the chunk, and `walk_parallel` carries that through.
 So inside a callback,
 [`span`](reference/api.md#antlrope.FacadeListener.span) and
 [`line_col`](reference/api.md#antlrope.FacadeListener.line_col) report whole-file
@@ -80,7 +80,7 @@ you had parsed the file in one piece.
 
 ## Recover off-channel metadata
 
-The walk is **channel-blind**: `walk_parallel` walks the *parse tree*, which contains
+The walk is channel-blind: `walk_parallel` walks the *parse tree*, which contains
 only the tokens the parser consumed — the default channel. Tokens the lexer routed to
 a hidden [channel][token channel] (comments, directives, alignment metadata) are never
 in the tree, so they never reach `visitTerminal`. To recover them, lex the chunk text
@@ -99,19 +99,17 @@ for chunk in R.stream_on_pattern("big.log", r"\n", where="after", trim=False):
 ```
 
 This trades the thread pool for the chunk text; to keep both, lex inside a wrapper
-generator that yields `(chunk, comments)` and parse the chunks in parallel separately.
-(A first-class channel-aware callback during the walk is
-[tracked in #2](https://github.com/zuzukin/antlrope/issues/2).)
+generator that yields `(chunk, comments)` and parse the chunks in parallel separately.[^1]
 
-## When records aren't delimiter-marked
+## When records are not delimiter-marked
 
 If records are defined by grammar structure rather than a delimiter — and the file is
 a directly-adjacent top-level sequence of them — use
 [`stream_by_rule`](reference/api.md#antlrope.FacadeListener.stream_by_rule), which
 parses one record at a time and needs no delimiter. It requires the *whole* input to
 be that sequence (only lexer-skipped whitespace/comments may separate records) and
-**raises** a clear error if an on-channel token begins no candidate rule — an
-unsupported header or separator surfaces as an error, not a silently truncated
+raises a clear error if an on-channel token begins no candidate rule — an
+unsupported header or separator results in an error, not a silently truncated
 stream. For comma-separated or otherwise on-channel-delimited records, stay with
 `stream_on_token` / `stream_on_pattern`.
 
@@ -125,3 +123,6 @@ only the rules/tokens you need (the facade emits just those from C++), or aggreg
 a rule so fewer events cross into Python at all.
 
 [token channel]: glossary.md#token-channel
+
+[^1]: The need for a first-class channel-aware callback during the walk is
+[tracked in issue #2](https://github.com/zuzukin/antlrope/issues/2).)

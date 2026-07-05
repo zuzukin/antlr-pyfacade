@@ -2,7 +2,7 @@
 
 **Antlrope** does not replace the official runtime — you still generate your
 parser with the stock tool, and the generated modules still import
-`antlr4-python3-runtime`. What changes is **how you consume the parse**. This
+`antlr4-python3-runtime`. What changes is how you consume the parse. This
 page maps the official `ParseTreeListener` model onto the [facade].
 
 ## Callback shape
@@ -60,7 +60,7 @@ Error nodes always cross into Python even when you filter terminals, so you can
 subscribe to errors alone without receiving every token.
 
 The official runtime also installs a `ConsoleErrorListener` that prints
-`line X:Y ...` to **stderr** unless you call `removeErrorListeners()`. The facade
+`line X:Y ...` to `stderr` unless you call `removeErrorListeners()`. The facade
 does this for you: nothing is printed, and after `walk` the diagnostics are
 available as `self.syntax_errors` — a list of `ParseError` exceptions carrying
 ANTLR's message plus `line`/`column`/`start`/`stop`:
