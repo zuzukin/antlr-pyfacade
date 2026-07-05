@@ -12,15 +12,15 @@ without writing or compiling any C or C++ yourself.
 *antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — the parse is handed to you
 as one ordered stream of events, not a per-node [parse-tree][parse tree] walk.
 
-You bring an ANTLR grammar (`.g4`). You generate a parser with the ordinary ANTLR
-tool, `pip install antlrope`, generate a small *[facade]* from that parser,
+Bring an ANTLR grammar (`.g4`), generate a parser with the ordinary ANTLR
+tool, [install antlrope](installation.md), generate a small *[facade]* from that parser,
 and write a plain-Python class with named callbacks like `enterFunction` /
-`visitTerminal`. The parsing itself runs in the official ANTLR4 **C++** runtime
+`visitTerminal`. The parsing itself runs in the official ANTLR4 C++ runtime
 and the results stream into your callbacks in a single batch — typically
 **10–20× faster** than the official pure-Python runtime, and faster still when you
 subscribe to only part of the grammar.
 
-You do **not** need to understand the internals to use it. If you can write an
+You do not need to understand the internals to use it. If you can write an
 ANTLR grammar and a Python class, you have everything you need.
 
 > **[Get started →](getting-started.md)** — install to first result in a few minutes.
@@ -58,14 +58,14 @@ for the details and how to tell.
 
 ## Where to go next
 
-- [Installation](installation.md) — `pip install`, supported Pythons/platforms, and
+- [Installation](installation.md) — `pip/conda install`, supported Pythons/platforms, and
   the ANTLR tool you need to generate parsers.
 - **[Getting started](getting-started.md)** — the full generate → write a listener →
   run walkthrough. Start here.
 - [Chunking](chunking.md) and [Parallel parsing](parallel-parsing.md) — split large
   or many-record input and parse the pieces across cores.
 - [Migrating from antlr4-python3-runtime](migrating.md) — if you already use the
-  official runtime's `ParseTreeListener`, this maps it onto the facade.
+  official runtime's `ParseTreeListener`, this maps it onto the Antlrope facade.
 - [API reference](reference/api.md) — every callback, option, and helper.
 - [How it works](concepts.md) — optional background on *why* it's fast.
 - [Performance & limitations](performance.md) — the speed ceiling and the
