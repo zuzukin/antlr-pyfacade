@@ -10,9 +10,12 @@ description = "Fast, C++-accelerated ANTLR Python runtime for target-agnostic gr
 readme = "README.md"
 requires-python = ">=3.12"
 license = { file = "LICENSE" }
-authors = [{ name = "Christopher Barber" }]
+authors = [
+  { name = "Christopher Barber", email = "analog.cbarber@gmail.com" },
+]
 keywords = ["antlr", "antlr4", "parser", "parsing", "grammar", "python"]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -32,6 +35,9 @@ dependencies = ["antlr4-python3-runtime>=4.13"]
 [project.urls]
 Homepage = "https://github.com/zuzukin/antlrope"
 Source = "https://github.com/zuzukin/antlrope"
+Documentation = "https://zuzukin.github.io/antlrope/"
+Changelog = "https://zuzukin.github.io/antlrope/about/changelog/"
+Issues = "https://github.com/zuzukin/antlrope/issues"
 
 [project.scripts]
 antlrope = "antlrope.cli.main:main"

@@ -146,3 +146,9 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 - If you changed the docs, confirm `pixi run docs-build` succeeds.
 - If you changed the public API, the workflow, or the doc page set, update
   `docs/llms.txt` to match (it's hand-maintained and not flagged by `docs-build`).
+
+## Releasing
+
+Releases are cut from `main` via a `vX.Y.Z` tag; see [RELEASING.md](RELEASING.md)
+for the full procedure (CHANGELOG, version bump, wheels/PyPI, docs deploy,
+conda-forge).

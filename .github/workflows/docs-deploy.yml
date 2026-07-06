@@ -1,0 +1,33 @@
+name: docs
+
+# Deploy the versioned documentation site to gh-pages when a release tag is
+# pushed (the same trigger that publishes wheels to PyPI), or on demand via
+# workflow_dispatch. `pixi run docs-deploy` runs mike, which builds the site
+# with zensical and commits it to gh-pages under the release's major.minor
+# with the `latest` alias — patch releases overwrite their minor in place.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # mike pushes to the gh-pages branch
+
+jobs:
+  deploy:
+    name: deploy versioned docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # mike needs the gh-pages branch history
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          environments: docs
+          cache: true
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - run: pixi run docs-deploy

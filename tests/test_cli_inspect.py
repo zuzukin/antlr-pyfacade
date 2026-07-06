@@ -47,6 +47,21 @@ def test_check_reports_interpreter_compatibility(capsys: pytest.CaptureFixture[s
     capsys.readouterr()
 
 
+def test_bad_input_prints_clean_error(capsys: pytest.CaptureFixture[str]):
+    """A missing/bad module gives one clean stderr line and exit 2 — no traceback."""
+    for argv in (
+        ["rules", "no.such.module"],
+        ["tokens", "no.such.module"],
+        ["check", "no.such.module.Parser"],
+        ["gen", "no.such.module.Parser", "Nope"],
+    ):
+        assert main(argv) == 2
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err.startswith(f"antlrope {argv[0]}: ")
+        assert "Traceback" not in captured.err
+
+
 def test_rules_and_tokens_list_grammar_names(capsys: pytest.CaptureFixture[str]):
     assert main(["rules", "generated.JSONParser"]) == 0
     out = capsys.readouterr().out

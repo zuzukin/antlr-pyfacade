@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sys
 from typing import Any
 
 from antlrope import __version__
@@ -72,7 +73,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command is None:  # bare `antlrope`: show help and exit cleanly
         parser.print_help()
         return 0
-    return args.main(args)
+    try:
+        return args.main(args)
+    except (ImportError, AttributeError, OSError, ValueError) as e:
+        # Backstop for expected user-input failures — an unimportable module, a
+        # module that isn't a generated parser, an unreadable/unwritable file —
+        # so the CLI prints one clean line instead of a traceback. Genuine bugs
+        # (any other exception type) still traceback.
+        print(f"antlrope {args.command}: {e}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

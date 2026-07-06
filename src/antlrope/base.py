@@ -624,7 +624,14 @@ class FacadeListener:
 
     @classmethod
     def rule_name(cls, index: int) -> str:
-        """Return the grammar rule name for a rule index (e.g. from `enterEveryRule`)."""
+        """Return the grammar rule name for a rule index (e.g. from `enterEveryRule`).
+
+        Raises:
+            IndexError: If `index` is not a valid rule index (negative indices are
+                not treated as from-the-end positions).
+        """
+        if not 0 <= index < len(cls.ruleNames):
+            raise IndexError(f"rule index out of range: {index}")
         return cls.ruleNames[index]
 
     @classmethod
@@ -1237,6 +1244,8 @@ class FacadeListener:
                 dropping only truly empty (zero-length) regions.
             batch: How many chunk records to pull from C++ per call — a throughput knob,
                 not observable in the output.
+            _block_bytes: Internal test hook: the file read-block size in bytes
+                (0 = the default). Not part of the public API.
 
         Yields:
             One [Chunk][antlrope.Chunk] per region between delimiters, carrying its
@@ -1693,6 +1702,8 @@ class FacadeListener:
             encoding: The source encoding. Only UTF-8 is supported today (Python codec
                 aliases are accepted); the keyword is reserved for future encodings.
             batch: How many records to pull from C++ per call — a throughput knob.
+            _block_bytes: Internal test hook: the file read-block size in bytes
+                (0 = the default). Not part of the public API.
 
         Yields:
             One [Chunk][antlrope.Chunk] per record, in source order, carrying its

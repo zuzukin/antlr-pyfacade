@@ -37,6 +37,25 @@ jobs:
           pixi run example
           pixi run example-schema
 
+  # The pixi workspace covers linux/macOS only, but wheels.yml ships Windows
+  # (amd64) wheels — so run the suite on Windows via a plain pip build: MSVC on
+  # the runner compiles the extension, scikit-build-core pulls cmake/ninja from
+  # PyPI. This is what validates the Windows wheels beyond an import smoke test.
+  test-windows:
+    name: tests (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and install
+        run: pip install . pytest
+      # Run from the repo (tests/ + examples/ fixtures), against the installed
+      # package (no src layout conflict: the extension lives in site-packages).
+      - name: Test
+        run: python -m pytest tests -x -q
+
   asan:
     name: addresssanitizer (linux)
     runs-on: ubuntu-latest

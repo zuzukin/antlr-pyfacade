@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 
+import pytest
 from json_listener import JsonEventListener
 from to_python import JsonValueBuilder
 
@@ -82,6 +83,11 @@ def test_scope_text_and_name_helpers():
     assert Listener.token_name(Listener.NUMBER) == "NUMBER"
     assert Listener.token_name(1) == "'{'"  # anonymous literal
     assert Listener.token_name(9999) == "9999"  # unknown type -> its number
+    # rule_name is strict: out-of-range (including negative) raises IndexError.
+    with pytest.raises(IndexError):
+        Listener.rule_name(9999)
+    with pytest.raises(IndexError):
+        Listener.rule_name(-1)
 
 
 def test_every_rule_hooks_track_full_depth():

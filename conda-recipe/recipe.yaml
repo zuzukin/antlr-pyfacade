@@ -1,17 +1,18 @@
 schema_version: 1
 
-# rattler-build recipe for conda-forge. To submit: copy this directory to
-# conda-forge/staged-recipes under recipes/antlrope/, fill in the real
-# sdist sha256 (from the PyPI release), and open a PR. Once merged it becomes a
-# feedstock. Builds the C++ extension from the vendored ANTLR4 runtime carried in
-# the sdist, so no external runtime is fetched.
+# rattler-build recipe for conda-forge — NOT YET SUBMITTED. At the first PyPI
+# release (see RELEASING.md): copy this directory to conda-forge/staged-recipes
+# under recipes/antlrope/, set `version` to the released version and `sha256` to
+# the real sdist hash, and open a PR. Once merged it becomes a feedstock and the
+# autotick bot handles later releases. Builds the C++ extension from the vendored
+# ANTLR4 runtime carried in the sdist, so no external runtime is fetched.
 
 context:
   name: antlrope
   # Pinned to the PUBLISHED release this recipe packages (it builds from the PyPI
   # sdist below) — not read from the repo's src/antlrope/VERSION, which is
-  # the dev version and may be ahead of the latest release. On conda-forge the
-  # autotick bot bumps this on each PyPI release.
+  # the dev version and may be ahead of the latest release. Placeholder until the
+  # first PyPI release; on conda-forge the autotick bot bumps it per release.
   version: "0.1.0"
 
 package:

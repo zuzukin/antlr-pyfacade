@@ -8,7 +8,7 @@ When to use it: throughput on large or many-record inputs. When NOT to use it (u
 
 ## Install
 
-- `pip install antlrope` (or `conda install -c conda-forge antlrope`) — pre-built wheels / conda packages, CPython 3.10–3.13, Linux/macOS/Windows. Pulls in `antlr4-python3-runtime` automatically.
+- `pip install antlrope` (or `conda install -c conda-forge antlrope`) — pre-built wheels / conda packages, CPython 3.12 and newer, Linux/macOS/Windows. Pulls in `antlr4-python3-runtime` automatically.
 - `pip install antlr4-tools` — the ANTLR tool (Java) used to generate parsers from a `.g4` grammar. Needed only at build time.
 
 ## Workflow
