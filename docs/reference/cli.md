@@ -1,13 +1,15 @@
 # Command line
 
 Installing the package provides the `antlrope` command — a **command group** with the
-subcommands `gen`, `regen`, and `up-to-date`. `antlrope` with no subcommand prints
+subcommands `gen`, `regen`, and `up-to-date`. Invoking `antlrope` with no subcommand prints
 help; `antlrope --version` prints the version. See
 [Getting started](../getting-started.md) for the full generate → subclass → walk
 workflow.
 
-The reference below is generated from the live `--help` output (by
-`scripts/gen_cli_docs.py` / `pixi run gen-cli-docs`), so it always matches the CLI.
+!!! Note ""
+
+    *The reference below is generated from the live `--help` output (by
+    `scripts/gen_cli_docs.py` / `pixi run gen-cli-docs`), so it always matches the CLI.*
 
 <!-- gen-cli-help: start (managed by scripts/gen_cli_docs.py — do not edit) -->
 
@@ -110,7 +112,7 @@ against the current files. Zero exit status if up-to-date.
 
 ## Provenance header
 
-When generating to a file (`-o`), `gen` writes a machine-readable comment header
+When generating to a file (`-o`), the `gen` subcommand writes a machine-readable comment header
 recording the antlrope version, the exact command, the run directory (relative to the
 output file), and a base64-encoded SHA256 of each input module:
 

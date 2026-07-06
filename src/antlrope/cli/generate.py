@@ -18,11 +18,11 @@ Reads `ruleNames` + token name lists from an already-generated ANTLR Python pars
 module (no annotated grammar, no extra inputs) and emits a `<Grammar>EventListener`
 base class: named `enter<Rule>` / `exit<Rule>` no-op stubs, `visitTerminal` /
 `visitError` stubs, token-type constants, and a `walk` method that runs the bulk
-native event stream. The base subclasses
+native event stream. The base is a subclass of
 [FacadeListener][antlrope.FacadeListener], so callbacks can call
 `self.line_col()` for the current event's source position.
 
-The generated surface mirrors the stock ANTLR listener so consumers write the same
+The generated interface mirrors the stock ANTLR listener so consumers write the same
 code; the difference is that callbacks are driven by a flat event buffer rather
 than a Python parse-tree walk. Usage (console script or module):
 
@@ -42,7 +42,8 @@ from antlrope import __version__
 from antlrope.cli.metadata import BANNER, Metadata, input_digests, render
 
 
-def _ident(name: str) -> str:
+def _cap_first(name: str) -> str:
+    """Capitalizes first character of name (leaving the rest the same)"""
     return name[0].upper() + name[1:]
 
 
@@ -151,7 +152,7 @@ def generate(
         pass
 
 """
-        for cap in map(_ident, rule_names)
+        for cap in map(_cap_first, rule_names)
     )
 
     rule_names_block = _rule_names_block(rule_names)
