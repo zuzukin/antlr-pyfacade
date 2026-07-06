@@ -20,6 +20,11 @@ grammar and the steps are identical.
     that does not need them, or stick to the official `antlr4-python3-runtime`. See
     [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions).
 
+    Not sure? Once you have generated a parser (step 1),
+    **`antlrope check <parser-module>`** scans it and reports every semantic
+    predicate and embedded action by rule — a clean grammar passes with exit
+    status 0. See [Command line](reference/cli.md#antlrope-check).
+
 ## 1. Generate a parser from your grammar
 
 Run the stock ANTLR tool with the Python3 target. Nothing here is specific to
@@ -56,6 +61,13 @@ The facade imports your lexer and parser and bakes them in. It finds the lexer b
 `generated.JSONParser`); pass `--lexer` to `antlrope` if your lexer module is named differently.
 
 You don't edit this file — you subclass it.
+
+!!! tip
+
+    `antlrope rules <parser-module>` and `antlrope tokens <parser-module>` list
+    the grammar's rule names (as accepted by `walk(start_rule=...)` and the rule
+    chunkers) and the facade's token-type constants without opening the
+    generated file — see [Command line](reference/cli.md).
 
 ## 3. Write a listener
 

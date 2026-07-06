@@ -15,7 +15,7 @@
   [mkdocstrings](https://mkdocstrings.github.io/).
 
 Much of Antlrope's implementation, tests, and documentation was written in
-close collaboration with **[Claude](https://www.anthropic.com/claude)** (Anthropic),
+close collaboration with **[Claude Opus 4.8](https://www.anthropic.com/claude/opus)** (Anthropic),
 via [Claude Code](https://www.anthropic.com/claude-code).
 
 ## Links

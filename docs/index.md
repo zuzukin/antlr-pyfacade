@@ -54,7 +54,9 @@ box.
 target-language code snippets that this runtime does not execute. If your grammar
 needs them, use the official `antlr4-python3-runtime` instead. See
 [Performance & limitations](performance.md#limitation-semantic-predicates-and-embedded-actions)
-for the details and how to tell.
+for the details and how to tell — or just ask:
+[`antlrope check <parser-module>`](reference/cli.md#antlrope-check) scans a
+generated parser and reports every predicate and action by rule.
 
 ## Where to go next
 

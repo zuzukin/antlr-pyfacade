@@ -73,6 +73,13 @@ restructure the grammar to be predicate-free.
 Grammars that are purely structural — most data and config formats, many DSLs —
 are unaffected.
 
+To find out where your grammar stands, run
+[`antlrope check <parser-module>`](reference/cli.md#antlrope-check) on the
+generated parser: it scans the serialized ATNs and reports every semantic
+predicate and embedded action by rule (exit status 0 when there are none).
+Precedence predicates from left-recursive rules and the built-in lexer commands
+(`-> skip`, `-> channel(...)`, ...) are fine and are not flagged.
+
 ## Other notes
 
 - **Single streaming pass.** You get one ordered traversal, not a retained tree.
