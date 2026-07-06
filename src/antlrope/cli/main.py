@@ -16,7 +16,8 @@
 
 `antlrope` is a command group. Each subcommand lives in its own module under
 `antlrope.cli` and exposes a `register(subparsers)` function; add new commands to
-`_SUBCOMMANDS` below. Today these are `gen`, `regen`, and `up-to-date`.
+`_SUBCOMMANDS` below. Today these are `gen`, `regen`, `up-to-date`, `check`,
+`rules`, and `tokens`.
 """
 
 from __future__ import annotations
@@ -26,10 +27,10 @@ import shutil
 from typing import Any
 
 from antlrope import __version__
-from antlrope.cli import generate, regen, uptodate
+from antlrope.cli import check, generate, regen, rules, tokens, uptodate
 
 # Each entry is a subcommand module exposing `register(subparsers)`.
-_SUBCOMMANDS = (generate, regen, uptodate)
+_SUBCOMMANDS = (generate, regen, uptodate, check, rules, tokens)
 
 # Cap help text at ~90 columns (never wider than the terminal) instead of letting it
 # stretch across a wide window.

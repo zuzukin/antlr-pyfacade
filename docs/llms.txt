@@ -54,7 +54,7 @@ Key model facts for writing listeners:
 - `Chunk(text, offset=0, line=1, column=0, sourcename="")` — a source piece plus its position and optional source name; a bare `str` may be passed to `walk_parallel` instead (positioned contiguously).
 - `SourceMap(text)` — `.line_col(offset)` / `.offset(line, column)` between char offsets and `(line, column)`.
 - `ParseError` — a parse diagnostic; an `Exception` subclass (so it can be raised): `line`, `column`, `start`, `stop`, `message`.
-- CLI (`antlrope` is a command group): `antlrope gen <parser-module> <name> [-o <file>]` generates a facade (writing a provenance header — version, command, rundir, input SHA256s — when `-o` is used); `antlrope regen <file>` regenerates it from that header; `antlrope up-to-date <file>` exits non-zero if its inputs changed.
+- CLI (`antlrope` is a command group): `antlrope gen <parser-module> <name> [-o <file>]` generates a facade (writing a provenance header — version, command, rundir, input SHA256s — when `-o` is used); `antlrope regen <file>` regenerates it from that header; `antlrope up-to-date <file>` exits non-zero if its inputs changed; `antlrope check <parser-module>` exits non-zero if the grammar uses semantic predicates or embedded actions (which antlrope cannot run); `antlrope rules <parser-module>` / `antlrope tokens <parser-module>` list the rule names and token-type constants (`--json` for tooling).
 
 Character offsets throughout are 0-based **codepoint** indices; `line` is 1-based, `column` 0-based (matching ANTLR's `line:column`).
 

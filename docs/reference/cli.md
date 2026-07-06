@@ -1,7 +1,8 @@
 # Command line
 
 Installing the package provides the `antlrope` command — a **command group** with the
-subcommands `gen`, `regen`, and `up-to-date`. Invoking `antlrope` with no subcommand prints
+subcommands `gen`, `regen`, `up-to-date`, `check`, `rules`, and `tokens`. Invoking
+`antlrope` with no subcommand prints
 help; `antlrope --version` prints the version. See
 [Getting started](../getting-started.md) for the full generate → subclass → walk
 workflow.
@@ -28,6 +29,10 @@ Command-line tools for the antlrope ANTLR runtime.
     gen (generate)      Generate a <Grammar>EventListener facade from a parser module.
     regen (regenerate)  Regenerate a facade in place from its embedded metadata.
     up-to-date          Check whether a generated facade is current with its inputs.
+    check               Check a grammar for semantic predicates / embedded actions.
+    rules               List a parser's rule names (for start_rule= and the rule
+                        chunkers).
+    tokens              List a parser's token types and names (the facade's constants).
 ```
 
 ### options
@@ -106,6 +111,79 @@ against the current files. Zero exit status if up-to-date.
 
 ```text
   -h, --help  show this help message and exit
+```
+
+## antlrope check
+
+```text
+usage: antlrope check [-h] [--lexer <lexer-module>] <parser-module>
+
+Scan a generated parser/lexer pair for semantic predicates and embedded actions, which the
+interpreted ATN cannot execute — a grammar whose parse depends on them mis-parses silently
+under antlrope. Zero exit status if the grammar is free of them.
+```
+
+### positional arguments
+
+```text
+  <parser-module>       Importable dotted path to the generated parser module (e.g.
+                        mypkg.generated.MyParser).
+```
+
+### options
+
+```text
+  -h, --help            show this help message and exit
+  --lexer <lexer-module>
+                        Importable dotted path to the generated lexer module. Defaults to
+                        the parser path with a trailing 'Parser' replaced by 'Lexer'.
+```
+
+## antlrope rules
+
+```text
+usage: antlrope rules [-h] [--json] <parser-module>
+
+List the parser rule names of a generated parser module, as accepted by
+walk(start_rule=...), chunk_by_rule, and stream_by_rule.
+```
+
+### positional arguments
+
+```text
+  <parser-module>  Importable dotted path to the generated parser module (e.g.
+                   mypkg.generated.MyParser).
+```
+
+### options
+
+```text
+  -h, --help       show this help message and exit
+  --json           Emit a JSON array of rule names (the index is the position).
+```
+
+## antlrope tokens
+
+```text
+usage: antlrope tokens [-h] [--json] <parser-module>
+
+List the token type -> name map of a generated parser module: symbolic names plus the
+positional T__n names of anonymous literals, matching the generated facade's token-type
+constants.
+```
+
+### positional arguments
+
+```text
+  <parser-module>  Importable dotted path to the generated parser module (e.g.
+                   mypkg.generated.MyParser).
+```
+
+### options
+
+```text
+  -h, --help       show this help message and exit
+  --json           Emit a JSON object mapping token name to token type.
 ```
 
 <!-- gen-cli-help: end -->

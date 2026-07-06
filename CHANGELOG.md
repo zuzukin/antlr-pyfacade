@@ -17,6 +17,15 @@ development notes and may be pruned before the first release.
   serialized-ATN format (e.g. from a future ANTLR tool) or a class missing the
   stock generated-module surface now raises a message naming the class, the
   cause, and the fix, instead of a raw deserializer error or `AttributeError`.
+- **`antlrope check <parser-module>`** (#5): scans a generated parser/lexer
+  pair's serialized ATNs for semantic predicates and embedded actions — which
+  the interpreted ATN cannot execute — naming the offending rules and exiting
+  non-zero. Precedence predicates and built-in lexer commands (`-> skip`,
+  `-> channel(...)`, ...) are correctly not flagged.
+- **`antlrope rules <parser-module>`** and **`antlrope tokens <parser-module>`**
+  (#6): list a grammar's rule names (as accepted by `start_rule=` and the rule
+  chunkers) and its token-type constants (symbolic plus positional `T__n`
+  names, matching the generated facade); `--json` for tooling.
 
 ### Changed
 - **Breaking:** the `cached` keyword is removed from the public methods that had
