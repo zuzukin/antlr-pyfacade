@@ -73,8 +73,7 @@ for the details and how to tell.
 
 ## Using an AI coding assistant
 
-These docs are summarized for LLMs at
-[llms.txt](https://zuzukin.github.io/antlrope/llms.txt) (see
+These docs are summarized for LLMs at [llms.txt](llms.txt) (see
 [llmstxt.org](https://llmstxt.org/)). To have an AI assistant write a listener —
 or port an existing `ParseTreeListener` — give it that URL (or paste the file),
 your grammar, and, when porting, your existing listener. It covers the event
