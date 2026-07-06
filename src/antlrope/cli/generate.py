@@ -39,7 +39,13 @@ import sys
 from textwrap import dedent
 
 from antlrope import __version__
-from antlrope.cli.metadata import BANNER, Metadata, input_digests, render
+from antlrope.cli.metadata import (
+    BANNER,
+    Metadata,
+    input_digests,
+    relpath_or_abs,
+    render,
+)
 
 
 def _cap_first(name: str) -> str:
@@ -271,7 +277,8 @@ def _build_metadata(
     command = " ".join(shlex.quote(part) for part in command_parts)
     rundir = None
     if output:
-        rundir = os.path.relpath(os.getcwd(), os.path.dirname(os.path.abspath(output)))
+        # No relative form across Windows drives: record the cwd absolute then.
+        rundir = relpath_or_abs(os.getcwd(), os.path.dirname(os.path.abspath(output)))
     inputs = input_digests(parser_module, lexer_qualname)
     return render(
         Metadata(version=__version__, command=command, rundir=rundir, inputs=inputs)

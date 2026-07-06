@@ -57,17 +57,32 @@ def sha256_file(path: str | os.PathLike[str]) -> str:
     return base64.urlsafe_b64encode(h.digest()).decode("ascii").rstrip("=")
 
 
+def relpath_or_abs(path: str, start: str) -> str:
+    """`os.path.relpath`, falling back to the absolute path when there isn't one.
+
+    On Windows there is no relative path between different drives (relpath
+    raises `ValueError`); an absolute path keeps the provenance header usable —
+    `regen` / `up-to-date` join recorded paths with `os.path.join`, which yields
+    the absolute path unchanged.
+    """
+    try:
+        return os.path.relpath(path, start)
+    except ValueError:
+        return os.path.abspath(path)
+
+
 def input_digests(*qualnames: str) -> list[tuple[str, str]]:
     """For each importable module path, return (cwd-relative file path, SHA256).
 
-    Modules without a `__file__` (namespace/frozen) are skipped.
+    Modules without a `__file__` (namespace/frozen) are skipped. A path with no
+    relative form from the cwd (another Windows drive) is recorded absolute.
     """
     cwd = os.getcwd()
     out: list[tuple[str, str]] = []
     for qualname in qualnames:
         path = getattr(importlib.import_module(qualname), "__file__", None)
         if path:
-            out.append((os.path.relpath(path, cwd), sha256_file(path)))
+            out.append((relpath_or_abs(path, cwd), sha256_file(path)))
     return out
 
 

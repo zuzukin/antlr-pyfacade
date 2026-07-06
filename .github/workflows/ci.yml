@@ -46,9 +46,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      # 3.14 matches the pixi dev env, so version-sensitive argparse help
+      # rendering (tests/test_cli_docs.py compares against the committed
+      # reference) agrees. The 3.12 abi3 floor is covered by cibuildwheel's
+      # per-wheel import test.
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Build and install
         run: pip install . pytest
       # Run from the repo (tests/ + examples/ fixtures), against the installed
