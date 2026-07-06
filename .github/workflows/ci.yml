@@ -54,7 +54,7 @@ jobs:
       # Run from the repo (tests/ + examples/ fixtures), against the installed
       # package (no src layout conflict: the extension lives in site-packages).
       - name: Test
-        run: python -m pytest tests -x -q
+        run: python -m pytest tests -q
 
   asan:
     name: addresssanitizer (linux)

@@ -1,2 +1,7 @@
+# Check out text files with LF everywhere (overrides Windows autocrlf): tests
+# and the streaming chunkers treat file contents verbatim, so CRLF working
+# copies would shift every character offset the fixtures assert.
+* text=auto eol=lf
+
 # SCM syntax highlighting & preventing 3-way merges
 pixi.lock merge=binary linguist-language=YAML linguist-generated=true -diff

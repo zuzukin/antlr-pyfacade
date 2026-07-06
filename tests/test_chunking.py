@@ -135,7 +135,7 @@ def test_stream_on_token(tmp_path):
     # tiny reads; 0 is the production 64 KiB block).
     for i, (text, delim, where) in enumerate(_STREAM_CASES):
         path = tmp_path / f"case{i}.json"
-        path.write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8", newline="\n")
         want = [
             (c.text, c.offset, c.line, c.column)
             for c in JsonValueBuilder.split_on_token(text, delim, where=where)
@@ -150,7 +150,7 @@ def test_stream_on_token(tmp_path):
             assert got == want, (text, where, block)
 
     path = tmp_path / "values.json"
-    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8", newline="\n")
 
     # channel=None considers all channels (here all default-channel, so unchanged).
     assert [
@@ -173,7 +173,7 @@ def test_stream_on_token(tmp_path):
 
 def test_stream_on_token_encoding_and_errors(tmp_path):
     path = tmp_path / "ok.json"
-    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8", newline="\n")
 
     # Python codec aliases for UTF-8 are accepted; any other encoding is rejected
     # (decode in Python and use split_on_token for those).
@@ -226,7 +226,7 @@ def test_stream_on_pattern(tmp_path):
     # window sizes small enough that multi-character delimiters straddle reads.
     for i, (text, pat, flags, where) in enumerate(_PATTERN_CASES):
         path = tmp_path / f"p{i}.txt"
-        path.write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8", newline="\n")
         want = [
             (c.text, c.offset, c.line, c.column)
             for c in JsonValueBuilder.split_on_pattern(
@@ -250,7 +250,7 @@ def test_stream_on_pattern(tmp_path):
 
     # The streamed chunks feed walk_parallel like any other chunker.
     path = tmp_path / "values.txt"
-    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8", newline="\n")
     results = [
         b.result
         for b in JsonValueBuilder.walk_parallel(
@@ -272,7 +272,7 @@ def test_stream_on_pattern_encoding(tmp_path):
     text = '{"café": 1}\n{"naïve": 2}\n{"x": 3}'
     for enc in ("latin-1", "utf-16", "cp1252"):
         path = tmp_path / f"{enc}.txt"
-        path.write_text(text, encoding=enc)
+        path.write_text(text, encoding=enc, newline="\n")
         want = [
             (c.text, c.offset, c.line, c.column)
             for c in JsonValueBuilder.split_on_pattern(text, r"\{", where="before")
@@ -293,7 +293,7 @@ def test_trim(tmp_path):
     # The native streamers must honor trim= identically to their in-memory oracles.
     text = '{"a":1}  \n  {"b":2}  \n '  # '}' at offsets 6 and 18
     path = tmp_path / "v.json"
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
 
     # token-based, where="after": each chunk ends just past a '}'.
     assert [
@@ -355,7 +355,7 @@ def test_sourcename(tmp_path):
     # default it to the file path; an explicit `sourcename` overrides (and is the
     # only way to name a path-less stream).
     path = tmp_path / "data.json"
-    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8")
+    path.write_text('{"a": 1}\n{"b": 2}', encoding="utf-8", newline="\n")
     text = path.read_text(encoding="utf-8")
 
     assert next(JsonValueBuilder.stream_on_pattern(path, r"\{")).sourcename == str(path)
@@ -549,7 +549,7 @@ def test_stream_by_rule(tmp_path):
     # is a valid sequence of `value` records.
     text = '{"a": 1}\n{"b": 2}\n[1, 2, 3]'
     path = tmp_path / "seq.json"
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
 
     expect = ['{"a": 1}', '{"b": 2}', "[1, 2, 3]"]
     # Parse one record at a time; identical across read-block sizes (the streaming
@@ -570,7 +570,7 @@ def test_stream_by_rule(tmp_path):
     # Multibyte records: offsets are codepoints, positions stay exact.
     mb = '{"café": 1}\n{"emoji": "😀🚀"}'
     mbpath = tmp_path / "mb.json"
-    mbpath.write_text(mb, encoding="utf-8")
+    mbpath.write_text(mb, encoding="utf-8", newline="\n")
     mbchunks = list(JsonValueBuilder.stream_by_rule(mbpath, "value", _block_bytes=2))
     assert [c.text for c in mbchunks] == ['{"café": 1}', '{"emoji": "😀🚀"}']
     _positions_ok(mb, mbchunks)
@@ -594,7 +594,7 @@ def test_stream_by_rule_stop_and_errors(tmp_path):
     # begins no candidate rule fails loudly — naming the token and the candidates —
     # rather than silently truncating. Records parsed before it are yielded first.
     path = tmp_path / "loose.json"
-    path.write_text('{"a": 1} "loose" {"b": 2}', encoding="utf-8")
+    path.write_text('{"a": 1} "loose" {"b": 2}', encoding="utf-8", newline="\n")
     got = []
     with pytest.raises(RuntimeError, match=r"STRING.*begins no candidate.*obj, arr"):
         for c in JsonValueBuilder.stream_by_rule(path, ["obj", "arr"]):
@@ -604,18 +604,18 @@ def test_stream_by_rule_stop_and_errors(tmp_path):
     # The same failure on the very first token yields nothing, then raises — the old
     # behavior here was a silent empty result that hid the malformed input.
     head = tmp_path / "head.json"
-    head.write_text('"header"\n{"a": 1}', encoding="utf-8")
+    head.write_text('"header"\n{"a": 1}', encoding="utf-8", newline="\n")
     with pytest.raises(RuntimeError, match="begins no candidate record rule"):
         list(JsonValueBuilder.stream_by_rule(head, ["obj", "arr"]))
 
     # A truly empty input is zero records, not an error.
     empty = tmp_path / "empty.json"
-    empty.write_text("", encoding="utf-8")
+    empty.write_text("", encoding="utf-8", newline="\n")
     assert list(JsonValueBuilder.stream_by_rule(empty, "value")) == []
 
     # sourcename defaults to the path and is overridable.
     seq = tmp_path / "s.json"
-    seq.write_text('{"a": 1} {"b": 2}', encoding="utf-8")
+    seq.write_text('{"a": 1} {"b": 2}', encoding="utf-8", newline="\n")
     assert next(JsonValueBuilder.stream_by_rule(seq, "value")).sourcename == str(seq)
     assert (
         next(JsonValueBuilder.stream_by_rule(seq, "value", sourcename="x")).sourcename
