@@ -18,6 +18,14 @@ development notes and may be pruned before the first release.
   stock generated-module surface now raises a message naming the class, the
   cause, and the fix, instead of a raw deserializer error or `AttributeError`.
 
+### Changed
+- **Breaking:** the `cached` keyword is removed from the public methods that had
+  it (`lex`, `stream_on_token`, `chunk_by_rule`, `stream_by_rule`); the
+  deserialized parser/lexer state is now always cached per generated class. A new
+  `FacadeListener.clear_cache()` classmethod releases a grammar's cached state
+  (never needed for correctness — regenerating a parser yields new classes and so
+  fresh cache entries).
+
 ## [0.2.27] - 2026-06-28
 
 ### Changed

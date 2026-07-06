@@ -761,6 +761,27 @@ class FacadeListener:
             _LEXER_SPEC_CACHE[cls._LEXER] = spec
         return spec
 
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Release this grammar's cached parser/lexer state.
+
+        Repeated walks reuse deserialized parser/lexer state cached per generated
+        class, so `clear_cache` is never needed for correctness — the caches are
+        keyed by the generated lexer/parser classes, and regenerating a parser
+        means re-importing its module, which yields new classes (and so fresh
+        cache entries) anyway. Call it to release the memory of a grammar you are
+        done with. The per-thread copies built by
+        [walk_parallel][antlrope.FacadeListener.walk_parallel] are thread-local
+        and released with their worker threads, not from here.
+        """
+        parser = getattr(cls, "_PARSER", None)
+        if parser is not None:
+            _PARSER_SPEC_CACHE.pop(parser, None)
+            _TOKEN_NAME_CACHE.pop(parser, None)
+        lexer = getattr(cls, "_LEXER", None)
+        if lexer is not None:
+            _LEXER_SPEC_CACHE.pop(lexer, None)
+
     def walk(
         self,
         text: str,
@@ -806,7 +827,7 @@ class FacadeListener:
         """Parse independent `chunks` across a thread pool, one listener each.
 
         The native parse releases the GIL, so the parses overlap across cores. Each
-        worker thread uses its own copy of the parser state (built once via `cached=False`), so they
+        worker thread uses its own copy of the parser state (built once per thread), so they
         never contend on a shared ATN. The per-event Python dispatch still holds
         the GIL, so parallel speedup scales with how parse-heavy the work is
         relative to per-callback Python work — see the "Parallel parsing" section
@@ -1038,7 +1059,6 @@ class FacadeListener:
         text: str,
         *,
         keep: Iterable[int] | None = None,
-        cached: bool = True,
     ) -> Iterator[LexToken]:
         """Tokenize `text` with the grammar's lexer (no parsing).
 
@@ -1058,7 +1078,6 @@ class FacadeListener:
             text: The source to tokenize.
             keep: Optional set of token types to return; the lexer drops every other token in
                 C++ so only these cross into Python. `None` returns all tokens.
-            cached: Reuse the cached lexer state.
 
         Yields:
             Every token the lexer produces, in source order, on all channels: the
@@ -1074,7 +1093,7 @@ class FacadeListener:
             Those lexer error diagnostics are not surfaced by `lex`; parse with
             `walk` if you need `syntax_errors`.
         """
-        spec = cls._lexer_spec(cached=cached)
+        spec = cls._lexer_spec()
         mask = None if keep is None else list(keep)
         raw, _errors = _native.lex(spec, text, mask)
         for rec in _TOK.iter_unpack(raw):
@@ -1171,7 +1190,6 @@ class FacadeListener:
         sourcename: str = "",
         trim: bool = True,
         batch: int = 256,
-        cached: bool = True,
         _block_bytes: int = 0,
     ) -> Iterator[Chunk]:
         """Stream chunks from a file at each delimiter token, without holding it all.
@@ -1209,7 +1227,6 @@ class FacadeListener:
                 dropping only truly empty (zero-length) regions.
             batch: How many chunk records to pull from C++ per call — a throughput knob,
                 not observable in the output.
-            cached: Reuse the cached lexer spec.
 
         Yields:
             One [Chunk][antlrope.Chunk] per region between delimiters, carrying its
@@ -1233,7 +1250,7 @@ class FacadeListener:
         src_path = os.fspath(path)
         if not sourcename:
             sourcename = src_path
-        spec = cls._lexer_spec(cached=cached)
+        spec = cls._lexer_spec()
         chunker = _native.StreamChunker(
             spec,
             src_path,
@@ -1576,7 +1593,6 @@ class FacadeListener:
         *,
         start_rule: str | int | None = None,
         outermost: bool = True,
-        cached: bool = True,
         sourcename: str = "",
     ) -> Iterator[Chunk]:
         """Yield each occurrence of a grammar `rule` as a chunk.
@@ -1598,7 +1614,6 @@ class FacadeListener:
             outermost: When `True` (default), only top-level occurrences are emitted;
                 a matched rule nested inside another match is skipped. `False` emits
                 every occurrence (which would overlap).
-            cached: Reuse the cached specs.
             sourcename: Optional source name (e.g. a filename) recorded on each
                 [Chunk][antlrope.Chunk], surfaced during a walk as
                 [sourcename][antlrope.FacadeListener.sourcename].
@@ -1608,8 +1623,8 @@ class FacadeListener:
             order, trimmed of surrounding whitespace and carrying its position. An
             empty occurrence (a rule that consumed no token) is skipped.
         """
-        parser_spec = cls._parser_spec(cached=cached)
-        lexer_spec = cls._lexer_spec(cached=cached)
+        parser_spec = cls._parser_spec()
+        lexer_spec = cls._lexer_spec()
         if isinstance(rule, (int, str)):
             rule_mask = [cls._resolve_rule(rule)]
         else:
@@ -1636,7 +1651,6 @@ class FacadeListener:
         sourcename: str = "",
         encoding: str = "utf-8",
         batch: int = 256,
-        cached: bool = True,
         _block_bytes: int = 0,
     ) -> Iterator[Chunk]:
         """Stream chunks from a file that is a sequence of a grammar `rule`.
@@ -1669,7 +1683,6 @@ class FacadeListener:
             encoding: The source encoding. Only UTF-8 is supported today (Python codec
                 aliases are accepted); the keyword is reserved for future encodings.
             batch: How many records to pull from C++ per call — a throughput knob.
-            cached: Reuse the cached specs.
 
         Yields:
             One [Chunk][antlrope.Chunk] per record, in source order, carrying its
@@ -1699,8 +1712,8 @@ class FacadeListener:
         src_path = os.fspath(path)
         if not sourcename:
             sourcename = src_path
-        parser_spec = cls._parser_spec(cached=cached)
-        lexer_spec = cls._lexer_spec(cached=cached)
+        parser_spec = cls._parser_spec()
+        lexer_spec = cls._lexer_spec()
         chunker = _native.StreamRuleChunker(
             parser_spec,
             lexer_spec,

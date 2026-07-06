@@ -41,6 +41,17 @@ def test_specs_build_and_cache():
         is not JsonEventListener._parser_spec()
     )
 
+    # clear_cache releases this grammar's cached specs: the next call rebuilds.
+    pspec = JsonEventListener._parser_spec()
+    lspec = JsonEventListener._lexer_spec()
+    JsonEventListener.clear_cache()
+    assert JsonEventListener._parser_spec() is not pspec
+    assert JsonEventListener._lexer_spec() is not lspec
+    # Idempotent, and a no-op on a facade with nothing cached (incl. the bare base).
+    JsonEventListener.clear_cache()
+    JsonEventListener.clear_cache()
+    ap.FacadeListener.clear_cache()
+
 
 def test_atn_shape_matches_generated_metadata():
     shape = ap._native.atn_shape(parser_mod.serializedATN())
