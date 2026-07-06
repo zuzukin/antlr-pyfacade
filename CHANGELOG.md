@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 user-facing docs (see [CONTRIBUTING.md](CONTRIBUTING.md)). These early entries are
 development notes and may be pruned before the first release.
 
+## [0.2.28] - 2026-06-28
+
+### Added
+- The README and docs landing page now point AI coding assistants at the
+  published [llms.txt](https://zuzukin.github.io/antlrope/llms.txt) summary, with
+  a short recipe for writing a listener or porting a `ParseTreeListener` with an
+  AI assistant.
+
 ## [0.2.27] - 2026-06-28
 
 ### Changed

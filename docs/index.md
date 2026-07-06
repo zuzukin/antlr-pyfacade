@@ -71,6 +71,15 @@ for the details and how to tell.
 - [Performance & limitations](performance.md) — the speed ceiling and the
   predicate/action boundary, in full.
 
+## Using an AI coding assistant
+
+These docs are summarized for LLMs at
+[llms.txt](https://zuzukin.github.io/antlrope/llms.txt) (see
+[llmstxt.org](https://llmstxt.org/)). To have an AI assistant write a listener —
+or port an existing `ParseTreeListener` — give it that URL (or paste the file),
+your grammar, and, when porting, your existing listener. It covers the event
+model, the callback shapes, and the porting mapping.
+
 [parse tree]: glossary.md#parse-tree
 [facade]: glossary.md#facade
 [semantic predicate]: glossary.md#semantic-predicate

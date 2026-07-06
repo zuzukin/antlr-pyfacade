@@ -121,6 +121,11 @@ In the repo, see [`docs/`](docs/index.md): [getting started](docs/getting-starte
 [how it works](docs/concepts.md), and the
 [SystemRDL benchmark](docs/benchmarks/systemrdl.md).
 
+Using an **AI coding assistant** to write a listener (or port a
+`ParseTreeListener`)? Give it the LLM-oriented docs summary at
+[zuzukin.github.io/antlrope/llms.txt](https://zuzukin.github.io/antlrope/llms.txt)
+plus your grammar — and, when porting, your existing listener.
+
 ## License
 
 Apache-2.0. Bundles the ANTLR4 C++ runtime (BSD-3-Clause) under
