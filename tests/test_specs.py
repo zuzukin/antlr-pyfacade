@@ -16,11 +16,17 @@
 
 from __future__ import annotations
 
+import sys
+import types
+from typing import ClassVar
+
+import pytest
 from generated import JSONParser as parser_mod
 from generated.JSONParser import JSONParser
 from json_listener import JsonEventListener
 
 import antlrope as ap
+from antlrope.base import _build_parser_spec
 
 
 def test_specs_build_and_cache():
@@ -42,3 +48,40 @@ def test_atn_shape_matches_generated_metadata():
     assert shape.num_rules == len(JSONParser.ruleNames) == 5
     # maxTokenType corresponds to the last symbolic token (WS=12).
     assert shape.max_token_type == 12
+
+
+def test_incompatible_antlr_errors_are_actionable():
+    """Spec building fails with a cause and a fix, not a raw low-level error.
+
+    Antlrope sets no upper bound on ANTLR versions; if a future ANTLR changes
+    the serialized-ATN format or the generated-module surface, these are the
+    errors a user sees.
+    """
+    # An unsupported serialized-ATN format version (the leading int): the C++
+    # deserializer rejection is re-raised naming the class and the fix.
+    tampered = list(parser_mod.serializedATN())
+    tampered[0] = 99
+    mod = types.ModuleType("_fake_future_parser")
+    mod.serializedATN = lambda: tampered  # type: ignore[attr-defined]
+    sys.modules[mod.__name__] = mod
+    try:
+
+        class FutureParser:
+            literalNames: ClassVar[list[str]] = list(JSONParser.literalNames)
+            symbolicNames: ClassVar[list[str]] = list(JSONParser.symbolicNames)
+            ruleNames: ClassVar[list[str]] = list(JSONParser.ruleNames)
+
+        FutureParser.__module__ = mod.__name__
+        with pytest.raises(RuntimeError, match=r"FutureParser.*Regenerate"):
+            _build_parser_spec(FutureParser)  # type: ignore[arg-type]
+    finally:
+        del sys.modules[mod.__name__]
+
+    # A class missing the generated-module surface antlrope reads.
+    class NotAParser:
+        literalNames: ClassVar[list[str]] = ["<INVALID>"]
+        symbolicNames: ClassVar[list[str]] = ["<INVALID>"]
+        # no ruleNames
+
+    with pytest.raises(TypeError, match=r"NotAParser.*`ruleNames`"):
+        _build_parser_spec(NotAParser)  # type: ignore[arg-type]

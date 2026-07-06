@@ -13,6 +13,10 @@ development notes and may be pruned before the first release.
   published [llms.txt](https://zuzukin.github.io/antlrope/llms.txt) summary, with
   a short recipe for writing a listener or porting a `ParseTreeListener` with an
   AI assistant.
+- Clearer errors when a generated parser is incompatible: an unsupported
+  serialized-ATN format (e.g. from a future ANTLR tool) or a class missing the
+  stock generated-module surface now raises a message naming the class, the
+  cause, and the fix, instead of a raw deserializer error or `AttributeError`.
 
 ## [0.2.27] - 2026-06-28
 
