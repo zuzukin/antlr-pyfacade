@@ -136,6 +136,8 @@ The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 ## Before submitting
 
 - If you changed C++ (`cpp/` or `vendor/antlr4-cpp/`), run `pixi run build` first.
+- If you changed `cpp/`, run `pixi run format-cpp` (clang-format; config in
+  `.clang-format` — one argument per line when a call/declaration doesn't fit).
 - Run `pixi run test` and make sure the suite is green.
 - If you changed `cpp/binding.cpp`'s public interface, run `pixi run stubgen` (it
   re-applies the hand edits automatically).

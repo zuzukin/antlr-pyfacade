@@ -19,17 +19,18 @@
 // std::wistream of *pre-decoded* wide characters and uses an in-band 0xFFFF EOF
 // marker — both tied to wchar_t, which is 16-bit (UTF-16) on Windows and would
 // corrupt astral codepoints. So this is a standalone char32_t stream that owns
-// the UTF-8 decode (via the runtime's own incremental antlrcpp::Utf8::decode) and
-// a random-access window over the codepoints it has decoded.
+// the UTF-8 decode (via the runtime's own incremental antlrcpp::Utf8::decode)
+// and a random-access window over the codepoints it has decoded.
 //
-// Unlike UnbufferedCharStream, the window is NOT auto-compacted on consume(): the
-// lexer over-consumes during prediction and then seek()s back (see
+// Unlike UnbufferedCharStream, the window is NOT auto-compacted on consume():
+// the lexer over-consumes during prediction and then seek()s back (see
 // LexerATNSimulator::accept), so the buffer is kept and only dropped explicitly
 // via dropThrough() at chunk boundaries. The chunker holds the window from the
 // current chunk's start (which is <= every lexer mark inside the chunk), so the
-// lexer's own mark/seek lookahead is always satisfied and getText() over a whole
-// chunk span — many tokens plus the whitespace between them — works by absolute
-// index. Peak memory is one chunk plus the lexer's bounded prediction overshoot.
+// lexer's own mark/seek lookahead is always satisfied and getText() over a
+// whole chunk span — many tokens plus the whitespace between them — works by
+// absolute index. Peak memory is one chunk plus the lexer's bounded prediction
+// overshoot.
 
 #pragma once
 
@@ -49,9 +50,11 @@ namespace antlrope {
 class Utf8FileCharStream : public antlr4::CharStream {
 public:
     // Opens `path` (UTF-8 bytes). `lenient` substitutes U+FFFD for malformed
-    // input (strict throws). `block` is the byte read size (0 => 64 KiB; a small
-    // value is a test hook to exercise multi-byte sequences split across reads).
-    explicit Utf8FileCharStream(const std::string &path, bool lenient,
+    // input (strict throws). `block` is the byte read size (0 => 64 KiB; a
+    // small value is a test hook to exercise multi-byte sequences split across
+    // reads).
+    explicit Utf8FileCharStream(const std::string &path,
+                                bool lenient,
                                 size_t block)
         : _name(path), _lenient(lenient), _block(block != 0 ? block : 65536) {
         _in.open(path, std::ios::binary);
@@ -62,6 +65,7 @@ public:
 
     // --- IntStream / CharStream interface ----------------------------------
 
+    // Advance past LA(1). Throws (per the interface) if already at EOF.
     void consume() override {
         if (LA(1) == antlr4::IntStream::EOF) {
             throw antlr4::IllegalStateException("cannot consume EOF");
@@ -69,6 +73,9 @@ public:
         _pos++;
     }
 
+    // Lookahead: the codepoint `i` positions ahead (LA(1) = next), decoding
+    // more input on demand; EOF past the end. Negative `i` looks back into the
+    // retained window (0 when the position was dropped).
     size_t LA(ssize_t i) override {
         if (i == 0) {
             return 0;  // undefined per IntStream; the lexer never calls LA(0).
@@ -105,8 +112,12 @@ public:
         _mark_depth--;
     }
 
+    // Absolute codepoint index of LA(1).
     size_t index() override { return _pos; }
 
+    // Reposition within the retained window (the lexer seeks back after
+    // prediction overshoot), decoding forward as needed; seeking past EOF
+    // lands on the EOF position, seeking before the window throws.
     void seek(size_t index) override {
         ensure_loaded(index);
         size_t hi = _buf_start + _buf.size();
@@ -120,19 +131,26 @@ public:
         _pos = index;
     }
 
+    // Unsupported by design: a streaming source has no known total size, and
+    // the only runtime path that asks for it is whole-input error recovery.
     size_t size() override {
         throw antlr4::UnsupportedOperationException(
-            "streaming char source has no known total size: size() requires the "
-            "whole input. This usually means the parser fell back to whole-input "
-            "error recovery on a malformed record. Give stream_by_rule / stream_on_* "
-            "a clean sequence of records, or use the in-memory chunkers "
-            "(chunk_by_rule, split_*) for input that needs a full parse.");
+            "streaming char source has no known total size: size() requires "
+            "the whole input. This usually means the parser fell back to "
+            "whole-input error recovery on a malformed record. Give "
+            "stream_by_rule / stream_on_* a clean sequence of records, or "
+            "use the in-memory chunkers (chunk_by_rule, split_*) for input "
+            "that needs a full parse.");
     }
 
+    // The file path, or ANTLR's unknown-source placeholder when empty.
     std::string getSourceName() const override {
         return _name.empty() ? antlr4::IntStream::UNKNOWN_SOURCE_NAME : _name;
     }
 
+    // UTF-8 text for an inclusive absolute-index interval. The interval must
+    // lie within the retained window (the chunkers only ask for spans they
+    // have not yet dropped); throws if part of it was already freed.
     std::string getText(const antlr4::misc::Interval &interval) override {
         if (interval.a < 0 || interval.b < interval.a - 1) {
             throw antlr4::IllegalArgumentException("invalid interval");
@@ -151,8 +169,9 @@ public:
             std::u32string_view(_buf).substr(a - _buf_start, b - a + 1));
     }
 
-    // Best-effort: the runtime occasionally stringifies the stream for messages;
-    // return the current window rather than throw (it never needs the whole input).
+    // Best-effort: the runtime occasionally stringifies the stream for
+    // messages; return the current window rather than throw (it never needs the
+    // whole input).
     std::string toString() const override {
         return antlrcpp::Utf8::lenientEncode(_buf);
     }
@@ -163,6 +182,7 @@ public:
     // bufStart(). The chunker scans this directly for whitespace trimming and
     // incremental line/column, and slices chunk text via getText().
     const std::u32string &buffer() const { return _buf; }
+    // Absolute codepoint index of buffer()[0].
     size_t bufStart() const { return _buf_start; }
 
     // Drop everything before absolute codepoint `index`, freeing the emitted
@@ -197,8 +217,8 @@ private:
             _stream_eof = true;
             return false;
         }
-        std::pair<char32_t, size_t> r = antlrcpp::Utf8::decode(
-            std::string_view(_bytes).substr(_byte_pos));
+        std::pair<char32_t, size_t> r =
+            antlrcpp::Utf8::decode(std::string_view(_bytes).substr(_byte_pos));
         if (r.second == 0) {
             _stream_eof = true;  // defensive: never advance by zero
             return false;
@@ -214,8 +234,8 @@ private:
     }
 
     // Make >= 4 bytes (the max UTF-8 sequence length) available from _byte_pos,
-    // or read to EOF trying. Looping matters for small blocks: a single read may
-    // not cover a multi-byte sequence. Compacting before each read makes a
+    // or read to EOF trying. Looping matters for small blocks: a single read
+    // may not cover a multi-byte sequence. Compacting before each read makes a
     // sequence straddling a block boundary contiguous.
     bool ensure_bytes() {
         while (_bytes.size() - _byte_pos < 4 && !_file_eof) {

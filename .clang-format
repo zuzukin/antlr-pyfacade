@@ -1,0 +1,12 @@
+# C++ formatting for cpp/ (run `pixi run format-cpp`). Matches the code's
+# existing LLVM-ish style (attached braces, right-aligned pointers, 80 columns)
+# with a 4-space indent, and puts one argument per line for any call or
+# declaration whose arguments do not fit on a single line.
+BasedOnStyle: LLVM
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 80
+BinPackArguments: false
+BinPackParameters: false
+# The existing code separates trailing comments with two spaces.
+SpacesBeforeTrailingComments: 2

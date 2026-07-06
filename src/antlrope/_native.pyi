@@ -40,9 +40,10 @@ def atn_shape(serialized: Sequence[int]) -> AtnShape:
 
 class SyntaxError:
     """
-    A raw parse diagnostic produced by the native parser. The Python layer
-    wraps these into [ParseError][antlrope.ParseError] exceptions on a
-    listener's [syntax_errors][antlrope.FacadeListener.syntax_errors].
+    A raw parse diagnostic produced by the native parser. The Python
+    layer wraps these into [ParseError][antlrope.ParseError]
+    exceptions on a listener's
+    [syntax_errors][antlrope.FacadeListener.syntax_errors].
     """
 
     @property
@@ -64,8 +65,8 @@ class SyntaxError:
     @property
     def stop(self) -> int:
         """
-        0-based codepoint offset of the offending token's last character,
-        inclusive, or -1 when there is no token.
+        0-based codepoint offset of the offending token's last
+        character, inclusive, or -1 when there is no token.
         """
 
     @property
@@ -77,9 +78,9 @@ class SyntaxError:
 class LexerSpec:
     """
     A deserialized lexer specification — the grammar's vocabulary, name
-    lists, and ATN — that the native lex/parse entry points run on. Build one
-    with [lexer_spec][antlrope.FacadeListener.lexer_spec] from a generated
-    <Grammar>EventListener rather than constructing it directly.
+    lists, and ATN — that the native lex/parse entry points run on.
+    Build one from a generated <Grammar>EventListener rather than
+    constructing it directly.
     """
 
     def __init__(
@@ -95,10 +96,10 @@ class LexerSpec:
 
 class ParserSpec:
     """
-    A deserialized parser specification — the grammar's vocabulary, rule
-    names, and ATN — that the native parse entry points run on. Build one
-    with [parser_spec][antlrope.FacadeListener.parser_spec] from a generated
-    <Grammar>EventListener rather than constructing it directly.
+    A deserialized parser specification — the grammar's vocabulary,
+    rule names, and ATN — that the native parse entry points run on.
+    Build one from a generated <Grammar>EventListener rather than
+    constructing it directly.
     """
 
     def __init__(
@@ -124,10 +125,11 @@ class StreamChunker:
     ) -> None: ...
     def next_batch(self, n: int) -> tuple[list[tuple[int, int, int, str]], bool]:
         """
-        Pull up to n chunk records from the streaming token chunker. Returns
-        (rows, more): rows is a list of (offset, line, column, text) tuples
-        (whitespace trimmed unless trim=False; empty regions skipped) and more
-        is False once the final region at EOF has been emitted.
+        Pull up to n chunk records from the streaming token chunker.
+        Returns (rows, more): rows is a list of (offset, line, column,
+        text) tuples (whitespace trimmed unless trim=False; empty
+        regions skipped) and more is False once the final region at
+        EOF has been emitted.
         """
 
 class StreamRuleChunker:
@@ -225,10 +227,10 @@ def lex(
 ) -> tuple[bytes, list[SyntaxError]]:
     """
     Run only the lexer and return (tokens, errors): a flat int32 buffer
-    of 4*N values (type, channel, start, stop) as bytes (EOF omitted), and
-    a list of SyntaxError diagnostics. Optional token_mask (list of token
-    types to keep) drops the rest natively. The cheap stage used to chunk
-    input for walk_parallel without a full parse.
+    of 4*N values (type, channel, start, stop) as bytes (EOF omitted),
+    and a list of SyntaxError diagnostics. Optional token_mask (list of
+    token types to keep) drops the rest natively. The cheap stage used
+    to chunk input for walk_parallel without a full parse.
     """
 
 def rule_spans(
@@ -243,6 +245,6 @@ def rule_spans(
     Parse (entirely in C++) and return (spans, errors): a flat int32
     buffer of 3*N values (rule_index, start, stop) for each parse-tree
     rule kept by rule_mask (None = all), plus a list of SyntaxError
-    diagnostics. With outermost=True a matched rule's subtree is skipped.
-    Used for rule-based chunking.
+    diagnostics. With outermost=True a matched rule's subtree is
+    skipped. Used for rule-based chunking.
     """

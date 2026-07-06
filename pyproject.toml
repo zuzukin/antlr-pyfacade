@@ -161,6 +161,10 @@ pyright = ">=1.1.409"
 pytest = ">=7"
 pytest-cov = ">=4"
 ruff = ">=0.15.16"
+# Formats cpp/ (the `format-cpp` task; config in .clang-format). Pinned to a
+# major version: output differs across majors, so an open range would let two
+# environments format the same code differently.
+clang-format = "22.*"
 
 # Java + the ANTLR tool, isolated in a dedicated feature so the Python build/test
 # environments never pull in a JDK.
@@ -229,6 +233,10 @@ cmd = "ruff check ."
 [tool.pixi.tasks.format]
 description = "Format the code with ruff (also sorts imports via `lint --fix`)."
 cmd = "ruff format ."
+
+[tool.pixi.tasks.format-cpp]
+description = "Format the C++ sources with clang-format (config in .clang-format)."
+cmd = "clang-format -i cpp/*.cpp cpp/*.h"
 
 [tool.pixi.tasks.typecheck]
 description = "Static type-check the package and scripts with pyright."
