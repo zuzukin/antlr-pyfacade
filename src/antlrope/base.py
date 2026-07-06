@@ -655,12 +655,22 @@ class FacadeListener:
         tree. `rule_index` is the rule's index;
         [rule_name][antlrope.FacadeListener.rule_name] or
         [current_rule][antlrope.FacadeListener.current_rule] gives its name.
+
+        Warning:
+            Useful for debugging and tracing, but at a performance cost:
+            subscribing to all rule events disables the native rule filtering, so
+            every rule enter/exit crosses into Python and dispatches a callback —
+            on a large input, often the difference between iterating a few events
+            and iterating millions. For production listeners, override the named
+            `enter<Rule>` / `exit<Rule>` callbacks you need instead.
         """
 
     def exitEveryRule(self, rule_index: int) -> None:
         """No-op hook called on exit from *every* rule; override to use.
 
-        See [enterEveryRule][antlrope.FacadeListener.enterEveryRule].
+        See [enterEveryRule][antlrope.FacadeListener.enterEveryRule] — including
+        its warning: useful for debugging and tracing, but overriding disables
+        the native rule filtering, so every rule event crosses into Python.
         """
 
     @classmethod
