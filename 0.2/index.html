@@ -58,6 +58,8 @@
       
     
     
+      <link rel="stylesheet" href="./stylesheets/extra.css">
+    
     <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -343,7 +345,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="./about/changelog/" class="md-tabs__link">
+        <a href="./about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1076,14 +1078,14 @@
   
   
     <li class="md-nav__item">
-      <a href="./about/changelog/" class="md-nav__link">
+      <a href="./about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1103,14 +1105,14 @@
   
   
     <li class="md-nav__item">
-      <a href="./about/motivation/" class="md-nav__link">
+      <a href="./about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1257,6 +1259,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#using-an-ai-coding-assistant" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Using an AI coding assistant
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1293,14 +1306,14 @@
 without writing or compiling any C or C++ yourself.</p>
 <p><em>antl<strong>rope</strong></em> = ANTLR + <strong>O</strong>rdered <strong>P</strong>arse <strong>E</strong>vents — the parse is handed to you
 as one ordered stream of events, not a per-node <a href="glossary/#parse-tree">parse-tree</a> walk.</p>
-<p>You bring an ANTLR grammar (<code>.g4</code>). You generate a parser with the ordinary ANTLR
-tool, <code>pip install antlrope</code>, generate a small <em><a href="glossary/#facade">facade</a></em> from that parser,
+<p>Bring an ANTLR grammar (<code>.g4</code>), generate a parser with the ordinary ANTLR
+tool, <a href="installation/">install antlrope</a>, generate a small <em><a href="glossary/#facade">facade</a></em> from that parser,
 and write a plain-Python class with named callbacks like <code>enterFunction</code> /
-<code>visitTerminal</code>. The parsing itself runs in the official ANTLR4 <strong>C++</strong> runtime
+<code>visitTerminal</code>. The parsing itself runs in the official ANTLR4 C++ runtime
 and the results stream into your callbacks in a single batch — typically
 <strong>10–20× faster</strong> than the official pure-Python runtime, and faster still when you
 subscribe to only part of the grammar.</p>
-<p>You do <strong>not</strong> need to understand the internals to use it. If you can write an
+<p>You do not need to understand the internals to use it. If you can write an
 ANTLR grammar and a Python class, you have everything you need.</p>
 <blockquote>
 <p><strong><a href="getting-started/">Get started →</a></strong> — install to first result in a few minutes.</p>
@@ -1328,22 +1341,30 @@ box.</p>
 target-language code snippets that this runtime does not execute. If your grammar
 needs them, use the official <code>antlr4-python3-runtime</code> instead. See
 <a href="performance/#limitation-semantic-predicates-and-embedded-actions">Performance &amp; limitations</a>
-for the details and how to tell.</p>
+for the details and how to tell — or just ask:
+<a href="reference/cli/#antlrope-check"><code>antlrope check &lt;parser-module&gt;</code></a> scans a
+generated parser and reports every predicate and action by rule.</p>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="installation/">Installation</a> — <code>pip install</code>, supported Pythons/platforms, and
+<li><a href="installation/">Installation</a> — <code>pip/conda install</code>, supported Pythons/platforms, and
   the ANTLR tool you need to generate parsers.</li>
 <li><strong><a href="getting-started/">Getting started</a></strong> — the full generate → write a listener →
   run walkthrough. Start here.</li>
 <li><a href="chunking/">Chunking</a> and <a href="parallel-parsing/">Parallel parsing</a> — split large
   or many-record input and parse the pieces across cores.</li>
 <li><a href="migrating/">Migrating from antlr4-python3-runtime</a> — if you already use the
-  official runtime's <code>ParseTreeListener</code>, this maps it onto the facade.</li>
+  official runtime's <code>ParseTreeListener</code>, this maps it onto the Antlrope facade.</li>
 <li><a href="reference/api/">API reference</a> — every callback, option, and helper.</li>
 <li><a href="concepts/">How it works</a> — optional background on <em>why</em> it's fast.</li>
 <li><a href="performance/">Performance &amp; limitations</a> — the speed ceiling and the
   predicate/action boundary, in full.</li>
 </ul>
+<h2 id="using-an-ai-coding-assistant">Using an AI coding assistant<a class="headerlink" href="#using-an-ai-coding-assistant" title="Permanent link">&para;</a></h2>
+<p>These docs are summarized for LLMs at <a href="llms.txt">llms.txt</a> (see
+<a href="https://llmstxt.org/">llmstxt.org</a>). To have an AI assistant write a listener —
+or port an existing <code>ParseTreeListener</code> — give it that URL (or paste the file),
+your grammar, and, when porting, your existing listener. It covers the event
+model, the callback shapes, and the porting mapping.</p>
 
 
 

@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://zuzukin.github.io/antlrope/0.2/about/motivation/">
       
       
-        <link rel="prev" href="../changelog/">
+        <link rel="prev" href="../../glossary/">
       
       
-        <link rel="next" href="../license/">
+        <link rel="next" href="../changelog/">
       
       
         
@@ -59,6 +59,8 @@
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../changelog/" class="md-tabs__link">
+        <a href="././" class="md-tabs__link">
           
   
   About
@@ -1075,33 +1077,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Release notes
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1189,6 +1164,33 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release notes
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1342,20 +1344,20 @@
 
 
 <h1 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link">&para;</a></h1>
-<p>ANTLR is an excellent parser generator, and its Python target is convenient — you
-write a <code>.g4</code> grammar, generate Python, and consume the parse with a listener or
-visitor. But the generated parser <em>runs</em> in pure Python, and for large inputs that
-is slow: the official <code>antlr4-python3-runtime</code> is typically an order of magnitude
-slower than the C++ runtime, and a Python <code>ParseTreeListener</code> over the parse pays a
-<a href="../../glossary/#ffi">foreign-function crossing</a> <strong>per tree node</strong> — which, for documents with millions of
-nodes, dominates everything else.</p>
+<p>ANTLR is an excellent parser generator supporting multiple programming languages,
+and its Python target is convenient — you write a <code>.g4</code> grammar, generate Python,
+and consume the parse with a listener or visitor. But the generated parser <em>runs</em> in
+pure Python, and for large inputs that is slow: the official <code>antlr4-python3-runtime</code>
+is typically an order of magnitude slower than the C++ runtime, and a Python <code>ParseTreeListener</code>
+over the parse pays a <a href="../../glossary/#ffi">foreign-function crossing</a> per tree node — which, for 
+documents with millions of nodes, dominates everything else.</p>
 <p>The usual escape hatch is to switch your whole toolchain to the C++ (or Java)
 target: generate a C++ parser, compile it, and write your application logic in C++.
 That's a large step, and it throws away the convenience of staying in Python.</p>
-<p><code>antlrope</code> takes a different path. It drives the <strong>official ANTLR4 C++
-runtime's <a href="../../glossary/#atn-interpreter">ATN interpreter</a></strong> directly from the <em><a href="../../glossary/#atn">serialized ATN</a></em> that the stock
-<code>-Dlanguage=Python3</code> ANTLR tool already emits — so there is <strong>no per-grammar C++
-codegen and nothing for you to compile</strong>. The parse runs in C++, and instead of one
+<p><strong>Antlrope</strong> takes a different path. It drives the official ANTLR4 C++
+runtime's <a href="../../glossary/#atn-interpreter">ATN interpreter</a> directly from the <em><a href="../../glossary/#atn">serialized ATN</a></em> that the stock
+<code>-Dlanguage=Python3</code> ANTLR tool already emits — so there is no per-grammar C++
+codegen and nothing for you to compile. The parse runs in C++, and instead of one
 Python call per node, a single bulk, filtered event stream crosses into Python in
 one batch. You keep writing plain-Python listeners; you just get C++ parsing speed
 under them (typically <strong>10–20×</strong> the pure-Python runtime, and more when you
@@ -1364,13 +1366,13 @@ subscribe to only part of the grammar).</p>
 grammar and a Python class, you shouldn't have to learn C++ or change your build to
 parse quickly.</p>
 <h2 id="the-name">The name<a class="headerlink" href="#the-name" title="Permanent link">&para;</a></h2>
-<p><em>antl<strong>rope</strong></em> is a pun on <em>antelope</em> that extends ANTLR's antler imagery — and
-<strong>OPE</strong> stands for <strong>O</strong>rdered <strong>P</strong>arse <strong>E</strong>vents: the distinctive thing this
-runtime does is hand Python the parse as one DFS-ordered stream of events
+<p><em>antl<strong>rope</strong></em> is a pun on <em>antelope</em> that extends ANTLR's antler imagery — where
+<strong>ope</strong> stands for <strong>O</strong>rdered <strong>P</strong>arse <strong>E</strong>vents: the distinctive thing this
+runtime does is hand Python the parse as one depth-first-ordered stream of events
 (rule-enter, rule-exit, terminal, error) rather than a per-node parse-tree walk.</p>
 <h2 id="when-the-official-runtime-is-the-right-choice">When the official runtime is the right choice<a class="headerlink" href="#when-the-official-runtime-is-the-right-choice" title="Permanent link">&para;</a></h2>
-<p><code>antlrope</code> does not replace <code>antlr4-python3-runtime</code> — it targets the
-throughput case. Prefer the official runtime when your grammar relies on <strong><a href="../../glossary/#semantic-predicate">semantic
+<p>Antlrope does not replace <code>antlr4-python3-runtime</code> — it targets the
+throughput case. Prefer the official runtime when your grammar strongly relies on <strong><a href="../../glossary/#semantic-predicate">semantic
 predicates</a> or <a href="../../glossary/#embedded-action">embedded actions</a></strong>, when you need the <strong>retained <a href="../../glossary/#parse-tree">parse tree</a></strong> (random
 access, rewriting, re-walking) rather than a single streaming pass, or when the
 input is small enough that per-node cost doesn't matter. See
@@ -1413,7 +1415,7 @@ input is small enough that per-node cost doesn't matter. See
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../changelog/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Release notes">
+          <a href="../../glossary/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Glossary">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -1423,20 +1425,20 @@ input is small enough that per-node cost doesn't matter. See
                 Previous
               </span>
               <div class="md-ellipsis">
-                Release notes
+                Glossary
               </div>
             </div>
           </a>
         
         
           
-          <a href="../license/" class="md-footer__link md-footer__link--next" aria-label="Next: License">
+          <a href="../changelog/" class="md-footer__link md-footer__link--next" aria-label="Next: Release notes">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                License
+                Release notes
               </div>
             </div>
             <div class="md-footer__button md-icon">

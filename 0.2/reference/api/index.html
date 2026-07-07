@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../about/changelog/" class="md-tabs__link">
+        <a href="../../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1034,6 +1036,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#antlrope.FacadeListener.clear_cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        clear_cache
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#antlrope.FacadeListener.current_rule" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1049,17 +1062,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         depth
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.drive" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        drive
       </span>
     </span>
   </a>
@@ -1100,32 +1102,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.lexer_spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        lexer_spec
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#antlrope.FacadeListener.line_col" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
         line_col
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.parser_spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        parser_spec
       </span>
     </span>
   </a>
@@ -1447,6 +1427,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#antlrope.LineCol" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        LineCol
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LineCol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.column" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        column
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        line
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.add" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        add
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#antlrope.ParseError" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1515,61 +1545,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.LexerSpec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        LexerSpec
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.ParserSpec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ParserSpec
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.LexerProtocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        LexerProtocol
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.ParserProtocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ParserProtocol
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.parse_events" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        parse_events
-      </span>
-    </span>
-  </a>
   
 </li>
       
@@ -1710,14 +1685,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/changelog/" class="md-nav__link">
+      <a href="../../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1737,14 +1712,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/motivation/" class="md-nav__link">
+      <a href="../../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1904,6 +1879,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#antlrope.FacadeListener.clear_cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        clear_cache
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#antlrope.FacadeListener.current_rule" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1919,17 +1905,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         depth
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.drive" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        drive
       </span>
     </span>
   </a>
@@ -1970,32 +1945,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.lexer_spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        lexer_spec
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#antlrope.FacadeListener.line_col" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
         line_col
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#antlrope.FacadeListener.parser_spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        parser_spec
       </span>
     </span>
   </a>
@@ -2317,6 +2270,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#antlrope.LineCol" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        LineCol
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LineCol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.column" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        column
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        line
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#antlrope.LineCol.add" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        add
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#antlrope.ParseError" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2388,61 +2391,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#antlrope.LexerSpec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        LexerSpec
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.ParserSpec" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ParserSpec
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.LexerProtocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        LexerProtocol
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.ParserProtocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ParserProtocol
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antlrope.parse_events" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        parse_events
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2468,9 +2416,11 @@
 
 
 <h1 id="api-reference">API reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
-<p>The public API of <code>antlrope</code>, generated from the package docstrings. For
-task-oriented guidance see the <a href="../../getting-started/">User Guide</a>; the
+<div class="admonition note">
+<p>This section contains the public API of the <strong>antlrope</strong> package, generated from docstrings.
+[For task-oriented guidance see the <a href="../../getting-started/">User Guide</a>; the
 <code>antlrope</code> generator command is documented under <a href="../cli/">Command line</a>.</p>
+</div>
 
 
 <div class="doc doc-object doc-module">
@@ -2480,12 +2430,16 @@ task-oriented guidance see the <a href="../../getting-started/">User Guide</a>; 
 
     <div class="doc doc-contents first">
 
-        <p>antlrope: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.</p>
-<p>Generate your parser with the stock ANTLR tool (<code>-Dlanguage=Python3</code>), generate a
-facade with <code>antlrope</code>, subclass the <code>&lt;Grammar&gt;EventListener</code> it emits, and
-call <code>.walk(text)</code> (the lexer/parser are baked in). Parsing runs in the official
-ANTLR4 C++ runtime; a single bulk, filtered event stream crosses into Python instead
-of a per-node parse-tree walk.</p>
+        <p><strong>antlrope</strong>: a fast, C++-accelerated ANTLR Python runtime for target-agnostic grammars.</p>
+<p>Lexing and parsing runs in the ANTLR4 C++ runtime; a single bulk, filtered event stream crosses
+into Python instead of a per-node parse-tree walk.</p>
+<p>Basic usage:</p>
+<ol>
+<li>Generate your parser with the stock ANTLR tool (<code>-Dlanguage=Python3</code>)</li>
+<li>Generate a facade class with <code>antlrope</code></li>
+<li>Subclass the <code>&lt;Grammar&gt;EventListener</code> it emits</li>
+<li>Call <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;walk&lt;/span&gt;" href="./#antlrope.FacadeListener.walk">listener.walk(...)</a> (the lexer/parser are baked in).</li>
+</ol>
 
 
 
@@ -2526,7 +2480,7 @@ of a per-node parse-tree walk.</p>
 running, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;span&lt;/span&gt;" href="./#antlrope.FacadeListener.span">span</a> returns its
 <code>(start, stop)</code> character offsets and
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;line_col&lt;/span&gt;" href="./#antlrope.FacadeListener.line_col">line_col</a> the 1-based line / 0-based
-column of its start. <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;drive&lt;/span&gt;" href="./#antlrope.FacadeListener.drive">drive</a> populates this state per
+column of its start. <code>walk</code> populates this state per
 dispatched callback; outside a callback it reflects the most recent one.</p>
 
 
@@ -2567,7 +2521,7 @@ dispatched callback; outside a callback it reflects the most recent one.</p>
     <div class="doc doc-contents ">
 
         <p>Parse diagnostics collected during the most recent <code>walk</code>.</p>
-<p>A list of <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParseError&lt;/span&gt;" href="./#antlrope.ParseError">ParseError</a> records, empty when the
+<p>A list of <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParseError&lt;/span&gt;" href="./#antlrope.ParseError">ParseError</a> exceptions, empty when the
 parse had no errors. The default ANTLR console error listener is suppressed, so
 these are the only report of a parse failure — inspect them instead of watching
 stderr.</p>
@@ -2710,9 +2664,8 @@ skipped (see <code>trim</code>).</p>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">start_rule</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">outermost</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">sourcename</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">sourcename</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2770,22 +2723,6 @@ every occurrence (which would overlap).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Reuse the cached specs (see
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;parser_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.parser_spec">parser_spec</a>).</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
             <b><code>sourcename</code></b>
               (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>, default:
                   <code>&#39;&#39;</code>
@@ -2812,6 +2749,43 @@ empty occurrence (a rule that consumed no token) is skipped.</p>
           </div>
         </li>
     </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="antlrope.FacadeListener.clear_cache" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clear_cache</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#antlrope.FacadeListener.clear_cache" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clear_cache</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Release this grammar's cached parser/lexer state.</p>
+<p>Repeated walks reuse deserialized parser/lexer state cached per generated
+class, so <code>clear_cache</code> is never needed for correctness — the caches are
+keyed by the generated lexer/parser classes, and regenerating a parser
+means re-importing its module, which yields new classes (and so fresh
+cache entries) anyway. Call it to release the memory of a grammar you are
+done with. The per-thread copies built by
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;walk_parallel&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="./#antlrope.FacadeListener.walk_parallel">walk_parallel</a> are thread-local
+and released with their worker threads, not from here.</p>
 
 
     </div>
@@ -2854,128 +2828,12 @@ empty occurrence (a rule that consumed no token) is skipped.</p>
     <div class="doc doc-contents ">
 
         <p>Return the current nesting depth: the number of open rule scopes.</p>
-<p>The scope stack holds exactly the rules whose enter/exit events cross into
+<p>The <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;rule_stack&lt;/span&gt;" href="./#antlrope.FacadeListener.rule_stack">rule_stack</a> holds exactly the rules whose enter/exit events cross into
 Python — the rules you subscribe to (so this is the depth of the constructs
 <em>you</em> track). Override
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;enterEveryRule&lt;/span&gt;" href="./#antlrope.FacadeListener.enterEveryRule">enterEveryRule</a> /
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;exitEveryRule&lt;/span&gt;" href="./#antlrope.FacadeListener.exitEveryRule">exitEveryRule</a> to track every rule
 (true full parse-tree depth).</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="antlrope.FacadeListener.drive" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">drive</span>
-
-
-<a href="#antlrope.FacadeListener.drive" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">drive</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">parser_spec</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParserSpec&lt;/span&gt;" href="./#antlrope.ParserSpec">ParserSpec</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">lexer_spec</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexerSpec&lt;/span&gt;" href="./#antlrope.LexerSpec">LexerSpec</a></span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">text</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">start_rule</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">filtered</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">origin</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">sourcename</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Run the native parse and dispatch this listener's overridden callbacks.</p>
-<p>Usually invoked for you by the generated <code>walk</code> /
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;walk_parallel&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.walk_parallel">walk_parallel</a>; call it
-directly to drive a listener from already-loaded specs.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>parser_spec</code></b>
-              (<code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParserSpec&lt;/span&gt;" href="./#antlrope.ParserSpec">ParserSpec</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The native parser spec (see
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;parser_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.parser_spec">parser_spec</a>).</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>lexer_spec</code></b>
-              (<code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexerSpec&lt;/span&gt;" href="./#antlrope.LexerSpec">LexerSpec</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The native lexer spec.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>text</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The source to parse.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>start_rule</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The index of the rule to start parsing at.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>filtered</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>When <code>True</code> (default), only overridden rules/tokens are
-emitted by C++; <code>False</code> forces a faithful full event stream
-regardless of overrides.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>origin</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>, default:
-                  <code>(0, 1, 0)</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>The <code>(offset, line, column)</code> of <code>text</code>'s first character, so
-callbacks report positions against the whole source. Defaults to
-the start of the source, <code>(0, 1, 0)</code>.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>sourcename</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>, default:
-                  <code>&#39;&#39;</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Optional name of the source (e.g. a filename), returned by
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;sourcename&lt;/span&gt;" href="./#antlrope.FacadeListener.sourcename">sourcename</a> during the
-walk.</p>
-          </div>
-        </li>
-    </ul>
 
 
     </div>
@@ -3009,6 +2867,16 @@ tree. <code>rule_index</code> is the rule's index;
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;current_rule&lt;/span&gt;" href="./#antlrope.FacadeListener.current_rule">current_rule</a> gives its name.</p>
 
 
+<details class="warning" open>
+  <summary>Warning</summary>
+  <p>Useful for debugging and tracing, but at a performance cost:
+subscribing to all rule events disables the native rule filtering, so
+every rule enter/exit crosses into Python and dispatches a callback —
+on a large input, often the difference between iterating a few events
+and iterating millions. For production listeners, override the named
+<code>enter&lt;Rule&gt;</code> / <code>exit&lt;Rule&gt;</code> callbacks you need instead.</p>
+</details>
+
     </div>
 
 </div>
@@ -3027,7 +2895,9 @@ tree. <code>rule_index</code> is the rule's index;
     <div class="doc doc-contents ">
 
         <p>No-op hook called on exit from <em>every</em> rule; override to use.</p>
-<p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;enterEveryRule&lt;/span&gt;" href="./#antlrope.FacadeListener.enterEveryRule">enterEveryRule</a>.</p>
+<p>See <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;enterEveryRule&lt;/span&gt;" href="./#antlrope.FacadeListener.enterEveryRule">enterEveryRule</a> — including
+its warning: useful for debugging and tracing, but overriding disables
+the native rule filtering, so every rule event crosses into Python.</p>
 
 
     </div>
@@ -3046,16 +2916,21 @@ tree. <code>rule_index</code> is the rule's index;
   </span>
 
 <a href="#antlrope.FacadeListener.lex" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">lex</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">text</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">keep</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterable" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable">Iterable</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexToken&lt;/span&gt;" href="./#antlrope.LexToken">LexToken</a></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">lex</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">keep</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterable" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable">Iterable</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexToken&lt;/span&gt;" href="./#antlrope.LexToken">LexToken</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Tokenize <code>text</code> with the grammar's lexer (no parsing).</p>
-<p>Lazy: the work runs as the result is iterated. Wrap in <code>list(...)</code> for random
-access. The native lexer streams tokens rather than buffering the whole stream.</p>
+<p>This efficiently generates a stream of tokens on all channels.</p>
+<p>Use it to inspect the token stream directly: to recover off-channel tokens
+such as comments that the parser drops and so never reach <code>visitTerminal</code>,
+to gather token statistics or run a cheap pre-scan, or to build a custom
+token-aware splitter. It is also the pass the built-in <code>split_on_token</code> /
+<code>split_between_tokens</code> chunkers run on.</p>
+<p><code>lex</code> works in memory and has no streaming variant: for a large file, chunk
+it with the <code>stream_*</code> methods and <code>lex</code> each chunk's <code>text</code> (see the
+"streaming records" recipe in the docs).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3075,24 +2950,8 @@ access. The native lexer streams tokens rather than buffering the whole stream.<
 )
           –
           <div class="doc-md-description">
-            <p>Optional token types to return; the lexer drops every other token in
+            <p>Optional set of token types to return; the lexer drops every other token in
 C++ so only these cross into Python. <code>None</code> returns all tokens.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Reuse the cached lexer spec (see
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;lexer_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.lexer_spec">lexer_spec</a>).</p>
           </div>
         </li>
     </ul>
@@ -3101,78 +2960,20 @@ C++ so only these cross into Python. <code>None</code> returns all tokens.</p>
 <p><span class="doc-section-title">Yields:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexToken&lt;/span&gt;" href="./#antlrope.LexToken">LexToken</a></code>
+              <code>Every token the lexer produces, in source order, on all channels</code>
           –
           <div class="doc-md-description">
-            <p>The kept tokens in source order (the EOF sentinel omitted). Tokens the
-lexer drops via <code>-&gt; skip</code> do not appear; tokens routed to a non-default
-channel (<code>-&gt; channel(...)</code>) appear with that <code>channel</code>. Lexer errors are
-recovered from and not reported here.</p>
-          </div>
-        </li>
-    </ul>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="antlrope.FacadeListener.lexer_spec" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">lexer_spec</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
-  </span>
-
-<a href="#antlrope.FacadeListener.lexer_spec" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">lexer_spec</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexerSpec&lt;/span&gt;" href="./#antlrope.LexerSpec">LexerSpec</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Return the native <code>lexer_spec</code> built from this grammar's <code>LEXER</code> class.</p>
-<p>The lexer-only counterpart of
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;parser_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.parser_spec">parser_spec</a>, for the token-based
-chunkers (and <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;lex&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.lex">lex</a>) that lex without parsing.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>When <code>True</code> (default), reuse/store the result in the per-lexer
-cache; <code>False</code> forces a fresh, uncached spec.</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexerSpec&lt;/span&gt;" href="./#antlrope.LexerSpec">LexerSpec</a></code>
-          –
-          <div class="doc-md-description">
-            <p>The <code>lexer_spec</code> for the grammar.</p>
+            <p>the
+default channel plus any hidden or custom channel a rule routes to with
+<code>-&gt; channel(...)</code> (each token carries its own <code>channel</code>). Excluded are
+tokens the lexer discards via <code>-&gt; skip</code> (and the partials merged by
+<code>-&gt; more</code>, which never become standalone tokens), the EOF sentinel, and
+— when <code>keep</code> is given — any token type not listed.</p>
+<p>On illegal input the lexer applies ANTLR's default recovery — discard
+the offending character and continue — rather than raising or stopping,
+so malformed input still yields a token stream for the rest of the text.
+Those lexer error diagnostics are not surfaced by <code>lex</code>; parse with
+<code>walk</code> if you need <code>syntax_errors</code>.</p>
           </div>
         </li>
     </ul>
@@ -3190,7 +2991,7 @@ cache; <code>False</code> forces a fresh, uncached spec.</p>
 
 
 <a href="#antlrope.FacadeListener.line_col" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">line_col</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="antlrope.location.LineCol">LineCol</span></span> <span class="o">|</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">line_col</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a></span> <span class="o">|</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3201,7 +3002,7 @@ cache; <code>False</code> forces a fresh, uncached spec.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="antlrope.location.LineCol">LineCol</span> | None</code>
+              <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a> | None</code>
           –
           <div class="doc-md-description">
             <p>The 1-based line and 0-based column of the current event's start, or
@@ -3210,78 +3011,6 @@ cache; <code>False</code> forces a fresh, uncached spec.</p>
 source via the chunk's start. The
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SourceMap&lt;/span&gt;" href="./#antlrope.SourceMap">SourceMap</a> is built once per walk on first
 use.</p>
-          </div>
-        </li>
-    </ul>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="antlrope.FacadeListener.parser_spec" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">parser_spec</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
-  </span>
-
-<a href="#antlrope.FacadeListener.parser_spec" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">parser_spec</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParserSpec&lt;/span&gt;" href="./#antlrope.ParserSpec">ParserSpec</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Return the native <code>parser_spec</code> built from this grammar's <code>PARSER</code> class.</p>
-<p>Reads the serialized ATN + name/vocabulary metadata off the baked-in stock
-<code>&lt;Grammar&gt;Parser</code> and hands it to the C++ runtime — the bridge that makes the
-runtime grammar-agnostic, with no codegen of our own. Pair it with
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;lexer_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.lexer_spec">lexer_spec</a> to feed
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;drive&lt;/span&gt;" href="./#antlrope.FacadeListener.drive">drive</a> directly.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>When <code>True</code> (default), reuse/store the result in the per-parser
-cache. Pass <code>False</code> to force a fresh, independent spec — neither read
-from nor written to the cache — to avoid sharing entirely (e.g. one
-spec per worker thread).</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParserSpec&lt;/span&gt;" href="./#antlrope.ParserSpec">ParserSpec</a></code>
-          –
-          <div class="doc-md-description">
-            <p>The <code>parser_spec</code> for the grammar. A spec owns a mutable ATN; with the
-vendored runtime's per-DFA locks sharing one across threads is correct and
-scales, so most parallel code can share a cached spec (or use
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;walk_parallel&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.walk_parallel">walk_parallel</a>).</p>
           </div>
         </li>
     </ul>
@@ -3309,6 +3038,19 @@ scales, so most parallel code can share a cached spec (or use
     <div class="doc doc-contents ">
 
         <p>Return the grammar rule name for a rule index (e.g. from <code>enterEveryRule</code>).</p>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#IndexError">IndexError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>index</code> is not a valid rule index (negative indices are
+not treated as from-the-end positions).</p>
+          </div>
+        </li>
+    </ul>
 
 
     </div>
@@ -3354,7 +3096,7 @@ inside an <code>obj</code>?".</p>
         <p>Return the name of the source being parsed (empty if none was set).</p>
 <p>This is the <code>sourcename</code> of the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a> being parsed
 (the chunkers can set it; the streaming ones default it to their file path),
-or whatever was passed to <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;drive&lt;/span&gt;" href="./#antlrope.FacadeListener.drive">drive</a>. Use
+or whatever was passed to <code>walk</code>. Use
 it with <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;line_col&lt;/span&gt;" href="./#antlrope.FacadeListener.line_col">line_col</a> to report a
 position as <code>sourcename:line:column</code>.</p>
 
@@ -3789,9 +3531,8 @@ whitespace-only regions skipped (see <code>trim</code>).</p>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">sourcename</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">batch</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">_block_bytes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">_block_bytes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3883,18 +3624,14 @@ aliases are accepted); the keyword is reserved for future encodings.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
+            <b><code>_block_bytes</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>, default:
+                  <code>0</code>
 )
           –
           <div class="doc-md-description">
-            <p>Reuse the cached specs (see <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;parser_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.parser_spec">parser_spec</a>).</p>
+            <p>Internal test hook: the file read-block size in bytes
+(0 = the default). Not part of the public API.</p>
           </div>
         </li>
     </ul>
@@ -4162,9 +3899,8 @@ whitespace-only regions skipped (see <code>trim</code>). Equivalent to
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">sourcename</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">trim</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">batch</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">cached</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">_block_bytes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">_block_bytes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Iterator" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Chunk&lt;/span&gt;" href="./#antlrope.Chunk">Chunk</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4294,19 +4030,14 @@ not observable in the output.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>cached</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
-                  <code>True</code>
+            <b><code>_block_bytes</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>, default:
+                  <code>0</code>
 )
           –
           <div class="doc-md-description">
-            <p>Reuse the cached lexer spec (see
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;lexer_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.lexer_spec">lexer_spec</a>).</p>
+            <p>Internal test hook: the file read-block size in bytes
+(0 = the default). Not part of the public API.</p>
           </div>
         </li>
     </ul>
@@ -4452,8 +4183,8 @@ debugging and generic <code>visitTerminal</code> handlers.</p>
 
         <p>Parse <code>text</code> with this listener's baked-in lexer/parser and return <code>self</code>.</p>
 <p>Runs the parse in C++ and dispatches the event stream to this listener's
-callbacks. The lexer/parser come from the generated subclass's <code>LEXER</code> /
-<code>PARSER</code>, so no class arguments are needed.</p>
+callbacks. The lexer/parser are baked into the generated subclass, so no
+class arguments are needed.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4466,7 +4197,7 @@ callbacks. The lexer/parser come from the generated subclass's <code>LEXER</code
           –
           <div class="doc-md-description">
             <p>The rule to parse as — a rule name, a rule index, or <code>None</code>
-for the grammar's start rule.</p>
+for the grammar's default start rule.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -4538,7 +4269,7 @@ emitted by C++; <code>False</code> forces the full event stream.</p>
 
         <p>Parse independent <code>chunks</code> across a thread pool, one listener each.</p>
 <p>The native parse releases the GIL, so the parses overlap across cores. Each
-worker thread uses its own specs (built once via <code>cached=False</code>), so they
+worker thread uses its own copy of the parser state (built once per thread), so they
 never contend on a shared ATN. The per-event Python dispatch still holds
 the GIL, so parallel speedup scales with how parse-heavy the work is
 relative to per-callback Python work — see the "Parallel parsing" section
@@ -4642,7 +4373,7 @@ listener carries its accumulated state plus its
             –
           <div class="doc-md-description">
             <p>If called on a class that is not a generated
-<code>&lt;Grammar&gt;EventListener</code> subclass (no baked-in <code>LEXER</code> / <code>PARSER</code>).</p>
+<code>&lt;Grammar&gt;EventListener</code> subclass (no baked-in lexer/parser).</p>
           </div>
         </li>
     </ul>
@@ -4939,7 +4670,7 @@ a full-stream <code>lex()</code> light.</p>
 
 
 
-        <p>Maps character offsets in a source string to <code>(line, column)</code>.</p>
+        <p>Translates between character offsets and line/columns for source text</p>
 <p>Line numbers are numbered from 1 and columns numbered from 0.</p>
 
 
@@ -4971,7 +4702,7 @@ a full-stream <code>lex()</code> light.</p>
 
 
 <a href="#antlrope.SourceMap.line_col" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">line_col</span><span class="p">(</span><span class="n">offset</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="antlrope.location.LineCol">LineCol</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">line_col</span><span class="p">(</span><span class="n">offset</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4995,7 +4726,7 @@ a full-stream <code>lex()</code> light.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="antlrope.location.LineCol">LineCol</span></code>
+              <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a></code>
           –
           <div class="doc-md-description">
             <p>The 1-based line and 0-based column of <code>offset</code>.</p>
@@ -5104,6 +4835,129 @@ line.</p>
 
 
 
+<h2 id="antlrope.LineCol" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">LineCol</span>
+
+
+<a href="#antlrope.LineCol" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-external" title="typing.NamedTuple" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple">NamedTuple</a></code></p>
+
+
+
+        <p>A line/column tuple for tracking source locations.</p>
+<p>Returned by <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;line_col&lt;/span&gt;" href="./#antlrope.SourceMap.line_col">SourceMap.line_col</a> and
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;line_col&lt;/span&gt;" href="./#antlrope.FacadeListener.line_col">FacadeListener.line_col</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="antlrope.LineCol.column" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">column</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#antlrope.LineCol.column" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">column</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">0</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Column number (0-based)</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="antlrope.LineCol.line" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">line</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#antlrope.LineCol.line" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">line</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">1</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Line number (1-based)</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="antlrope.LineCol.add" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">add</span>
+
+
+<a href="#antlrope.LineCol.add" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add</span><span class="p">(</span><span class="n">offset</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LineCol&lt;/span&gt;" href="./#antlrope.LineCol">LineCol</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Adds other line/column offsets to this <code>LineCol</code>.</p>
+<p>If offset line is 1, this simply adds the
+column, otherwise it adds the line and sets the column
+from offset.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="antlrope.ParseError" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">ParseError</span>
 
@@ -5112,16 +4966,24 @@ line.</p>
 
 
     <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#Exception">Exception</a></code></p>
 
 
 
-        <p>A collected parse diagnostic, as found on a listener's <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;syntax_errors&lt;/span&gt;
+        <p>A parse diagnostic: one syntax error collected during a <code>walk</code>.</p>
+<p>Antlrope replaces ANTLR's default console error listener with a collecting
+one, so parse failures are gathered into
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;syntax_errors&lt;/span&gt;
 
 
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-class-attribute&quot;&gt;&lt;code&gt;class-attribute&lt;/code&gt;&lt;/small&gt;
       &lt;small class=&quot;doc doc-label doc-label-instance-attribute&quot;&gt;&lt;code&gt;instance-attribute&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.syntax_errors">syntax_errors</a>. The default ANTLR console error listener is suppressed, so these are the only report of a parse failure.</p>
+  &lt;/span&gt;" href="./#antlrope.FacadeListener.syntax_errors">syntax_errors</a> rather than written to
+stderr. Each carries the position of the offending token and ANTLR's message.</p>
+<p>It subclasses <code>Exception</code>, so <code>str(err)</code> is the message and you can <code>raise</code> it
+(e.g. to turn the first collected error into a hard failure).</p>
 
 
 
@@ -5150,11 +5012,11 @@ line.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
   </span>
 
 <a href="#antlrope.ParseError.column" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">column</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">column</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="antlrope.base.ParseError(column)">column</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5174,11 +5036,11 @@ line.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
   </span>
 
 <a href="#antlrope.ParseError.line" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">line</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">line</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="antlrope.base.ParseError(line)">line</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5198,11 +5060,11 @@ line.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
   </span>
 
 <a href="#antlrope.ParseError.message" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">message</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">message</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="n"><span title="antlrope.base.ParseError(message)">message</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5222,16 +5084,17 @@ line.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
   </span>
 
 <a href="#antlrope.ParseError.start" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">start</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">start</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="antlrope.base.ParseError(start)">start</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>0-based codepoint offset of the offending token's first character (matching the event-stream offsets), or -1 when there is no token (e.g. a lexer error).</p>
+        <p>0-based codepoint offset of the offending token's first character (matching
+the event-stream offsets), or -1 when there is no token (e.g. a lexer error).</p>
 
     </div>
 
@@ -5246,16 +5109,17 @@ line.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
   </span>
 
 <a href="#antlrope.ParseError.stop" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">stop</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">stop</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="n"><span title="antlrope.base.ParseError(stop)">stop</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>0-based codepoint offset of the offending token's last character, inclusive, or -1 when there is no token.</p>
+        <p>0-based codepoint offset of the offending token's last character, inclusive,
+or -1 when there is no token.</p>
 
     </div>
 
@@ -5272,231 +5136,6 @@ line.</p>
 
 </div>
 
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="antlrope.LexerSpec" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">LexerSpec</span>
-
-
-<a href="#antlrope.LexerSpec" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-
-
-        <p>A deserialized lexer specification — the grammar's vocabulary, name lists, and ATN — that the native lex/parse entry points run on. Build one with <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;lexer_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.lexer_spec">lexer_spec</a> from a generated <Grammar>EventListener rather than constructing it directly.</p>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="antlrope.ParserSpec" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">ParserSpec</span>
-
-
-<a href="#antlrope.ParserSpec" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-
-
-
-        <p>A deserialized parser specification — the grammar's vocabulary, rule names, and ATN — that the native parse entry points run on. Build one with <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;parser_spec&lt;/span&gt;
-
-
-  &lt;span class=&quot;doc doc-labels&quot;&gt;
-      &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt;" href="./#antlrope.FacadeListener.parser_spec">parser_spec</a> from a generated <Grammar>EventListener rather than constructing it directly.</p>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="antlrope.LexerProtocol" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">LexerProtocol</span>
-
-
-<a href="#antlrope.LexerProtocol" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-            <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-external" title="typing.Protocol" href="https://docs.python.org/3/library/typing.html#typing.Protocol">Protocol</a></code></p>
-
-
-
-        <p>The stock ANTLR <code>&lt;Grammar&gt;Lexer</code> class surface that antlrope consumes.</p>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="antlrope.ParserProtocol" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">ParserProtocol</span>
-
-
-<a href="#antlrope.ParserProtocol" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-            <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-external" title="typing.Protocol" href="https://docs.python.org/3/library/typing.html#typing.Protocol">Protocol</a></code></p>
-
-
-
-        <p>The stock ANTLR <code>&lt;Grammar&gt;Parser</code> class surface that antlrope consumes.</p>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="antlrope.parse_events" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">parse_events</span>
-
-
-<a href="#antlrope.parse_events" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">parse_events</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">parser_spec</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParserSpec&lt;/span&gt;" href="./#antlrope.ParserSpec">ParserSpec</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">lexer_spec</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LexerSpec&lt;/span&gt;" href="./#antlrope.LexerSpec">LexerSpec</a></span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">text</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">start_rule</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">rule_mask</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">token_mask</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Sequence" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;ParseError&lt;/span&gt;" href="./#antlrope.ParseError">ParseError</a></span><span class="p">]]</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Parse and return (events, errors): a bulk flat int32 event buffer of 4*N values (kind, payload, start, stop) as bytes, and a list of SyntaxError diagnostics collected during the parse. Optional rule_mask/token_mask (lists of indices to keep) filter events natively. The default stderr error listener is suppressed.</p>
-
-
-    </div>
-
-</div>
 
 
 

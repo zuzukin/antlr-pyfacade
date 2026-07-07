@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../about/changelog/" class="md-tabs__link">
+        <a href="../../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1158,14 +1160,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/changelog/" class="md-nav__link">
+      <a href="../../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1185,14 +1187,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/motivation/" class="md-nav__link">
+      <a href="../../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1383,7 +1385,7 @@ faithfully. The rules that matter to the consumer are <code>obj</code>, <code>ar
 </span></code></pre></div>
 <p>Generate the parser and the <a href="../../glossary/#facade">facade</a> (already checked in):</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>antlr4<span class="w"> </span>-Dlanguage<span class="o">=</span>Python3<span class="w"> </span>JSON.g4<span class="w"> </span>-o<span class="w"> </span>generated
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>antlrope<span class="w"> </span>generated.JSONParser<span class="w"> </span>JSON<span class="w"> </span>-o<span class="w"> </span>json_listener.py
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>antlrope<span class="w"> </span>gen<span class="w"> </span>generated.JSONParser<span class="w"> </span>JSON<span class="w"> </span>-o<span class="w"> </span>json_listener.py
 </span></code></pre></div>
 <p>The facade, <code>JsonEventListener</code>, has an <code>enter</code>/<code>exit</code> pair per rule, a
 <code>visitTerminal</code>, and token-type constants. The literal tokens <code>'true'</code> / <code>'false'</code> /

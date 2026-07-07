@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1208,14 +1210,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1235,14 +1237,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1467,13 +1469,13 @@
 <h2 id="the-problem-with-a-per-node-listener">The problem with a per-node listener<a class="headerlink" href="#the-problem-with-a-per-node-listener" title="Permanent link">&para;</a></h2>
 <p>The classic ANTLR consumption model builds a <a href="../glossary/#parse-tree">parse tree</a> and walks it, calling
 <code>enterEveryRule</code> / <code>exitEveryRule</code> / <code>visitTerminal</code> once per node. With a
-Python listener over a C++ parse, <strong>every one of those calls is a
-<a href="../glossary/#ffi">foreign-function crossing</a></strong>. For a document that produces tens of millions of
+Python listener over a C++ parse, every one of those calls is a
+<a href="../glossary/#ffi">foreign-function crossing</a>. For a document that produces tens of millions of
 tree nodes, the per-node crossing — not the parse itself — dominates the
 runtime. Moving the parse to C++ barely helps if Python is still poked once per
 node.</p>
 <h2 id="the-bulk-filtered-event-stream">The bulk filtered event stream<a class="headerlink" href="#the-bulk-filtered-event-stream" title="Permanent link">&para;</a></h2>
-<p><code>antlrope</code> removes the per-node crossing. After the C++ runtime finishes
+<p><strong>Antlrope</strong> removes the per-node crossing. After the C++ runtime finishes
 parsing, a native iterative depth-first traversal (mirroring ANTLR's
 <code>IterativeParseTreeWalker</code>: pre-order rule-enter and terminals, post-order
 rule-exit) appends one fixed record per visited item into a single contiguous
@@ -1514,12 +1516,12 @@ original source string, <code>text[start : stop + 1]</code>. Most consumers only
 text of a few token kinds, so most slices never happen.</p>
 <h2 id="native-filtering-via-masks">Native filtering via masks<a class="headerlink" href="#native-filtering-via-masks" title="Permanent link">&para;</a></h2>
 <p>The second lever is <strong>filtering in C++</strong>. A consumer usually cares about a
-subset of rules and tokens. <code>parse_events</code> accepts a <code>rule_mask</code> and a
+subset of rules and tokens. The native event builder takes a <code>rule_mask</code> and a
 <code>token_mask</code> (lists of indices to keep); events that fail the mask are dropped
 <em>before</em> they are appended to the buffer. This cuts the number of records Python
 must iterate, not merely the per-call cost.</p>
-<p>The generated <a href="../glossary/#facade">facade</a> wires this up automatically. <code>drive</code> (the engine behind the
-facade's <code>walk</code>) inspects <strong>which callbacks your subclass actually overrides</strong> —
+<p>The generated <a href="../glossary/#facade">facade</a> wires this up automatically. <code>walk</code> inspects <strong>which
+callbacks your subclass actually overrides</strong> —
 comparing each <code>enter&lt;Rule&gt;</code> / <code>exit&lt;Rule&gt;</code> / <code>visitTerminal</code> against the
 generated base class's no-op stub — and builds the masks from exactly those.
 Subscribe to three rules and one token type, and the C++ side emits only those
@@ -1542,18 +1544,17 @@ this against per-record chunks.</p>
 <h2 id="what-runs-where">What runs where<a class="headerlink" href="#what-runs-where" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>C++</strong>: <a href="../glossary/#atn">ATN</a> deserialization, <code>LexerInterpreter</code> + <code>ParserInterpreter</code>, the
-  full parse to a tree, and the masked DFS that builds the event buffer.</li>
+  full parse to a tree, and the masked depth-first traversal that builds the
+  event buffer.</li>
 <li><strong>Python</strong>: one loop over the buffer (<code>struct.iter_unpack("&lt;4i", raw)</code>),
   dispatching your overridden callbacks and slicing token text as needed.</li>
 </ul>
 <p>There is no generated C++ parser and no compilation of your grammar. The C++
 runtime is driven entirely from the <strong>serialized ATN</strong> that the stock
 <code>-Dlanguage=Python3</code> ANTLR tool already emits, plus the rule/token name metadata
-read off the generated Python classes (see
-<a href="../reference/api/#antlrope.FacadeListener.parser_spec"><code>parser_spec</code></a> /
-<a href="../reference/api/#antlrope.FacadeListener.lexer_spec"><code>lexer_spec</code></a>).</p>
+read off the generated Python classes.</p>
 <h2 id="the-vendored-runtime-and-its-patches">The vendored runtime and its patches<a class="headerlink" href="#the-vendored-runtime-and-its-patches" title="Permanent link">&para;</a></h2>
-<p><code>antlrope</code> builds against a <strong>vendored copy of the official ANTLR4 C++ runtime</strong>
+<p>Antlrope builds against a <strong>vendored copy of the official ANTLR4 C++ runtime</strong>
 (BSD-3-Clause, carried verbatim under <code>vendor/antlr4-cpp/src</code>) rather than the
 system runtime, so the wheel is self-contained. On top of that pristine copy it
 carries two performance patches, both written to be contributed back upstream as
@@ -1577,7 +1578,7 @@ pull requests (tracked on the <code>zuzukin/antlr4</code> fork; see
 improvements — and both are kept as small, isolated diffs so the snapshot can drop
 them once (if) they land upstream.</p>
 <h3 id="how-much-do-the-patches-contribute">How much do the patches contribute?<a class="headerlink" href="#how-much-do-the-patches-contribute" title="Permanent link">&para;</a></h3>
-<p>Rebuilding <code>antlrope</code> against the <strong>pristine</strong> upstream runtime and against each
+<p>Rebuilding Antlrope against the <strong>pristine</strong> upstream runtime and against each
 patch in turn isolates their effect (parsing a 4.7 MB JSON document on an Apple
 M5 Max; <code>scripts/bench_runtime_patches.py</code>):</p>
 <table>
@@ -1609,10 +1610,10 @@ M5 Max; <code>scripts/bench_runtime_patches.py</code>):</p>
 <p>Two distinct takeaways:</p>
 <ul>
 <li><strong>The single-thread win is mostly architecture, not the runtime.</strong> The lock-free
-  read path shaves ~12% off the parse; the rest of <code>antlrope</code>'s ~20× margin over
+  read path shaves ~12% off the parse; the rest of Antlrope's ~20× margin over
   the pure-Python runtime (see <a href="../benchmarks/systemrdl/">the SystemRDL benchmark</a>)
   comes from the bulk event stream, not the patched C++. Even on the stock runtime
-  <code>antlrope</code> would be ~18× faster than pure-Python here. (JSON is lexer-heavy, which
+  Antlrope would be ~18× faster than pure-Python here. (JSON is lexer-heavy, which
   flatters this patch — its win is in the lexer's per-character DFA hot path; a
   parser-heavy grammar shows less.)</li>
 <li><strong>The parallel win is entirely the runtime.</strong> On the stock runtime, parsing a

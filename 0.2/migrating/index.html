@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1191,14 +1193,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1218,14 +1220,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1430,9 +1432,9 @@
 
 
 <h1 id="migrating-from-antlr4-python3-runtime">Migrating from antlr4-python3-runtime<a class="headerlink" href="#migrating-from-antlr4-python3-runtime" title="Permanent link">&para;</a></h1>
-<p><code>antlrope</code> does not replace the official runtime — you still generate your
+<p><strong>Antlrope</strong> does not replace the official runtime — you still generate your
 parser with the stock tool, and the generated modules still import
-<code>antlr4-python3-runtime</code>. What changes is <strong>how you consume the parse</strong>. This
+<code>antlr4-python3-runtime</code>. What changes is how you consume the parse. This
 page maps the official <code>ParseTreeListener</code> model onto the <a href="../glossary/#facade">facade</a>.</p>
 <h2 id="callback-shape">Callback shape<a class="headerlink" href="#callback-shape" title="Permanent link">&para;</a></h2>
 <table>
@@ -1493,9 +1495,9 @@ report a parse failure:</p>
 <p>Error nodes always cross into Python even when you filter terminals, so you can
 subscribe to errors alone without receiving every token.</p>
 <p>The official runtime also installs a <code>ConsoleErrorListener</code> that prints
-<code>line X:Y ...</code> to <strong>stderr</strong> unless you call <code>removeErrorListeners()</code>. The facade
+<code>line X:Y ...</code> to <code>stderr</code> unless you call <code>removeErrorListeners()</code>. The facade
 does this for you: nothing is printed, and after <code>walk</code> the diagnostics are
-available as <code>self.syntax_errors</code> — a list of <code>ParseError</code> records carrying
+available as <code>self.syntax_errors</code> — a list of <code>ParseError</code> exceptions carrying
 ANTLR's message plus <code>line</code>/<code>column</code>/<code>start</code>/<code>stop</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">listener</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source_text</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">for</span> <span class="n">err</span> <span class="ow">in</span> <span class="n">listener</span><span class="o">.</span><span class="n">syntax_errors</span><span class="p">:</span>

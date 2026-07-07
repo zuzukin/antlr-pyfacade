@@ -18,7 +18,7 @@
         <link rel="prev" href="../reference/cli/">
       
       
-        <link rel="next" href="../about/changelog/">
+        <link rel="next" href="../about/motivation/">
       
       
         
@@ -59,6 +59,8 @@
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1246,14 +1248,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1273,14 +1275,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1546,13 +1548,13 @@ throughout these docs.</p>
 <p><strong>Augmented Transition Network</strong> — the state machine ANTLR compiles a grammar into,
 with one sub-network per rule, that drives the parser's and lexer's decisions. ANTLR
 emits it as a compact <strong>serialized ATN</strong> (an integer array) inside the generated
-parser and lexer modules. <code>antlrope</code> deserializes that array and runs it directly
+parser and lexer modules. <strong>Antlrope</strong> deserializes that array and runs it directly
 with the official C++ runtime — which is why there is no per-grammar C++ codegen.
 See <a href="../concepts/">How it works</a>.</p>
 <h2 id="atn-interpreter">ATN interpreter<a class="headerlink" href="#atn-interpreter" title="Permanent link">&para;</a></h2>
 <p>ANTLR's <code>ParserInterpreter</code> / <code>LexerInterpreter</code> — the runtime components that
 <em>execute</em> the <a href="#atn">ATN</a> directly to parse input, instead of running code generated
-for one specific grammar. <code>antlrope</code> drives the C++ runtime's interpreters from the
+for one specific grammar. Antlrope drives the C++ runtime's interpreters from the
 serialized ATN, so it works for any grammar with no code-generation step of its own.</p>
 <h2 id="dfa">DFA<a class="headerlink" href="#dfa" title="Permanent link">&para;</a></h2>
 <p><strong>Deterministic Finite Automaton</strong> — the lookahead automaton ANTLR builds and caches
@@ -1563,7 +1565,7 @@ lock-free so parses can run concurrently. See
 <h2 id="embedded-action">embedded action<a class="headerlink" href="#embedded-action" title="Permanent link">&para;</a></h2>
 <p>Target-language code written inline in a grammar between <code>{</code> and <code>}</code> — e.g.
 <code>{ count += 1; }</code> — that ANTLR copies into the generated parser to run during a
-parse. Because <code>antlrope</code> interprets the <a href="#atn">ATN</a> rather than running
+parse. Because Antlrope interprets the <a href="#atn">ATN</a> rather than running
 grammar-specific generated code, it <strong>cannot</strong> execute embedded actions; grammars
 that depend on them won't parse correctly. See
 <a href="../performance/">Performance &amp; limitations</a>.</p>
@@ -1576,29 +1578,29 @@ stock ANTLR listener interface so consumer code looks familiar. See
 <h2 id="ffi">FFI<a class="headerlink" href="#ffi" title="Permanent link">&para;</a></h2>
 <p><strong>Foreign Function Interface</strong> — the boundary across which Python calls into native
 (C/C++) code and back. Every crossing has overhead, so a per-node parse-tree walk
-pays an FFI cost <em>per tree node</em>. <code>antlrope</code> instead crosses once per parse, handing
+pays an FFI cost <em>per tree node</em>. Antlrope instead crosses once per parse, handing
 Python a single bulk event buffer. See <a href="../concepts/">How it works</a>.</p>
 <h2 id="gil">GIL<a class="headerlink" href="#gil" title="Permanent link">&para;</a></h2>
 <p><strong>Global Interpreter Lock</strong> — CPython's lock that lets only one thread run Python
-bytecode at a time. <code>antlrope</code>'s native parse releases the GIL, so the parses
+bytecode at a time. Antlrope's native parse releases the GIL, so the parses
 themselves overlap across threads; the per-event Python dispatch still holds it, so
 <a href="../parallel-parsing/"><code>walk_parallel</code></a>'s speedup scales with how parse-heavy the
 work is. On a <strong>free-threaded</strong> (no-GIL) CPython build the dispatch parallelizes too.</p>
 <h2 id="manylinux">manylinux<a class="headerlink" href="#manylinux" title="Permanent link">&para;</a></h2>
 <p>A packaging standard for Linux Python wheels that are portable across many
-distributions. <code>antlrope</code>'s Linux wheels target a manylinux baseline, so
+distributions. Antlrope's Linux wheels target a manylinux baseline, so
 <code>pip install</code> fetches a working pre-compiled binary on most systems without a local
 compiler. See <a href="../installation/">Installation</a>.</p>
 <h2 id="parse-tree">parse tree<a class="headerlink" href="#parse-tree" title="Permanent link">&para;</a></h2>
 <p>The tree of rule and token nodes a traditional parser builds to represent the
 structure of the input; ANTLR's listeners and visitors walk it node by node.
-<code>antlrope</code> does <strong>not</strong> materialize a parse tree — it delivers the same information
+Antlrope does <strong>not</strong> materialize a parse tree — it delivers the same information
 as a flat, ordered stream of events — so reach for the official runtime when you
 need a retained, randomly-accessible tree. See <a href="../concepts/">How it works</a>.</p>
 <h2 id="semantic-predicate">semantic predicate<a class="headerlink" href="#semantic-predicate" title="Permanent link">&para;</a></h2>
 <p>A grammar condition written in target-language code, <code>{ ... }?</code> — e.g.
 <code>{ version &gt;= 3 }?</code> — that ANTLR evaluates during a parse to choose between
-alternatives. Like <a href="#embedded-action">embedded actions</a>, <code>antlrope</code> cannot evaluate
+alternatives. Like <a href="#embedded-action">embedded actions</a>, Antlrope cannot evaluate
 them, so predicate-dependent grammars won't parse correctly. See
 <a href="../performance/">Performance &amp; limitations</a>.</p>
 <h2 id="token-channel">token channel<a class="headerlink" href="#token-channel" title="Permanent link">&para;</a></h2>
@@ -1660,13 +1662,13 @@ preserving them. The default channel carries ordinary tokens; the token-based
         
         
           
-          <a href="../about/changelog/" class="md-footer__link md-footer__link--next" aria-label="Next: Release notes">
+          <a href="../about/motivation/" class="md-footer__link md-footer__link--next" aria-label="Next: Motivation">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Release notes
+                Motivation
               </div>
             </div>
             <div class="md-footer__button md-icon">

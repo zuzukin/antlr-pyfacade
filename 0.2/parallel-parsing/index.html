@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1158,14 +1160,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1185,14 +1187,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1368,7 +1370,7 @@
 log entries, top-level definitions —
 <a href="../reference/api/#antlrope.FacadeListener.walk_parallel"><code>walk_parallel</code></a>
 parses them across a thread pool. The native parse releases the <a href="../glossary/#gil">GIL</a>, so the parses
-overlap across cores; one listener is produced per chunk, <strong>in input order</strong>.</p>
+overlap across cores; one listener is produced per chunk, <em>in input order</em>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">my_listener</span><span class="w"> </span><span class="kn">import</span> <span class="n">MyGrammarEventListener</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">chunks</span> <span class="o">=</span> <span class="n">MyGrammarEventListener</span><span class="o">.</span><span class="n">split_on_token</span><span class="p">(</span>
@@ -1396,14 +1398,14 @@ overlap across cores; one listener is produced per chunk, <strong>in input order
 <p>The <a href="../chunking/">chunking helpers</a> yield positioned <code>Chunk</code>s, so they drop straight
 in.</p>
 <h2 id="bounded-lazy-in-order">Bounded, lazy, in order<a class="headerlink" href="#bounded-lazy-in-order" title="Permanent link">&para;</a></h2>
-<p>The result is a <strong>lazy iterator</strong>: chunks are pulled and parsed on demand with at
+<p>The result is a <em>lazy iterator</em>: chunks are pulled and parsed on demand with at
 most <code>max_workers</code> parses in flight (also the ordering window), so neither the whole
 input nor all results need to be held in memory — consume it incrementally, or
 <code>list(...)</code> it if you want them all. Combined with a streaming chunker
 (<a href="../reference/api/#antlrope.FacadeListener.stream_on_token"><code>stream_on_token</code></a> /
 <a href="../reference/api/#antlrope.FacadeListener.stream_on_pattern"><code>stream_on_pattern</code></a>), the whole
 pipeline — read, chunk, parse — stays bounded in the input size.</p>
-<p><code>max_workers</code> defaults to <code>os.cpu_count()</code>; pass <code>1</code> to run inline without a pool.</p>
+<p><code>max_workers</code> defaults to <a href="https://docs.python.org/3/library/os.html#os.cpu_count">os.cpu_count()</a>; pass <code>1</code> to run inline without a pool.</p>
 <p>For an end-to-end pipeline over a file too large to hold in memory — streaming
 chunker into <code>walk_parallel</code>, plus preamble handling, terminator preservation, and
 recovering off-channel metadata — see the

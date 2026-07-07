@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../about/changelog/" class="md-tabs__link">
+        <a href="../../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1202,14 +1204,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/changelog/" class="md-nav__link">
+      <a href="../../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1229,14 +1231,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/motivation/" class="md-nav__link">
+      <a href="../../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1452,7 +1454,7 @@
 
 
 <h1 id="benchmark-systemrdl">Benchmark: SystemRDL<a class="headerlink" href="#benchmark-systemrdl" title="Permanent link">&para;</a></h1>
-<p>A real-world check of <code>antlrope</code> against the two alternatives a Python ANTLR
+<p>A real-world check of <strong>Antlrope</strong> against the two alternatives a Python ANTLR
 user actually has, on a real grammar:</p>
 <ul>
 <li>the official <strong><a href="https://pypi.org/project/antlr4-python3-runtime/">antlr4-python3-runtime</a></strong> (the pure-Python runtime), and</li>
@@ -1499,7 +1501,7 @@ support).</p>
 </tr>
 </tbody>
 </table>
-<p><code>antlrope</code> is the fastest <strong>and</strong> uses the least peak memory of the three. The
+<p>Antlrope is the fastest <strong>and</strong> uses the least peak memory of the three. The
 gap holds <a href="#end-to-end-parse-and-consume">end to end</a> once you also <em>consume</em> the
 result — and the consumer's output is identical to a pure-Python tree walk.</p>
 <blockquote>
@@ -1515,8 +1517,8 @@ the cost you pay before any application logic runs:</p>
 <li><strong>pure-Python</strong>: lex + parse to a Python parse tree.</li>
 <li><strong>speedy-antlr</strong>: lex + parse in C++, then translate the tree into Python nodes
   (<code>sa_systemrdl.parse</code>, the accelerator bundled in <code>systemrdl-compiler</code>).</li>
-<li><strong>antlrope</strong>: parse in C++ and emit the full, unfiltered bulk event buffer
-  (<code>parse_events</code>) — no Python tree.</li>
+<li><strong>antlrope</strong>: parse in C++ and emit the full, unfiltered bulk event buffer —
+  no Python tree.</li>
 </ul>
 <p>Wall-clock is the best of 7 warm runs over an in-memory string; <strong>peak memory</strong> is
 the process's peak resident set (<code>ru_maxrss</code>), each tool measured in a fresh
@@ -1598,7 +1600,7 @@ base, sub-millisecond parse); the differences appear once the input is non-trivi
 <p>Parsing is only half the job — you have to consume the result. A representative
 consumer task: <strong>collect every identifier (<code>ID</code> token) in the file</strong>, implemented
 identically across all four (pure-Python and speedy-antlr walk the tree with a
-<code>ParseTreeListener</code>; <code>antlrope</code> uses an event listener). All four produce the
+<code>ParseTreeListener</code>; Antlrope uses an event listener). All four produce the
 <strong>identical</strong> list of identifiers (verified by hash; 32,000 ids on the large input).</p>
 <table>
 <thead>
@@ -1660,7 +1662,7 @@ identically across all four (pure-Python and speedy-antlr walk the tree with a
 </tr>
 </tbody>
 </table>
-<p>End-to-end, <code>antlrope</code> is <strong>~21–23× faster than the pure-Python runtime and
+<p>End-to-end, Antlrope is <strong>~21–23× faster than the pure-Python runtime and
 ~8–9× faster than speedy-antlr</strong>, at the lowest peak memory.</p>
 <p>Two effects compound here. First, the tree-walking tools must traverse <em>every</em> node
 to reach the terminals; the <a href="../../glossary/#facade">facade</a> only receives the events its listener subscribes
@@ -1669,7 +1671,7 @@ side emit just those terminals — no rule events, no other tokens cross into Py
 shaving a further ~10% of time and memory over receiving all terminals. The
 tree-walk approaches have no equivalent; they pay for the whole tree regardless.</p>
 <h2 id="why-antlrope-wins-on-both-axes">Why antlrope wins on both axes<a class="headerlink" href="#why-antlrope-wins-on-both-axes" title="Permanent link">&para;</a></h2>
-<p><code>antlrope</code> <strong>never materializes a Python parse tree</strong>. It parses in C++, walks
+<p>Antlrope <strong>never materializes a Python parse tree</strong>. It parses in C++, walks
 the C++ tree once into a compact flat <code>int32</code> buffer, and hands Python a single
 transfer — so it pays neither the per-node Python object construction nor the memory
 of a Python tree.</p>
@@ -1684,7 +1686,7 @@ tree-translation accelerator, on speed <em>and</em> on memory.</p>
 <h2 id="correctness">Correctness<a class="headerlink" href="#correctness" title="Permanent link">&para;</a></h2>
 <p>The event stream reproduces the pure-Python parse tree exactly. On the medium input
 the pure-Python tree walk reports 50,201 rule contexts, 26,601 terminals, 0 errors;
-the <code>antlrope</code> event buffer contains exactly 50,201 rule-enter, 50,201
+the Antlrope event buffer contains exactly 50,201 rule-enter, 50,201
 rule-exit, 26,601 terminal, and 0 error events.</p>
 <h2 id="what-this-does-and-does-not-show">What this does and does not show<a class="headerlink" href="#what-this-does-and-does-not-show" title="Permanent link">&para;</a></h2>
 <ul>

@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1191,14 +1193,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1218,14 +1220,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1434,7 +1436,7 @@
 definitions — you can split it into <a href="../reference/api/#antlrope.Chunk"><code>Chunk</code></a>s
 and parse them in parallel with
 <a href="../parallel-parsing/"><code>walk_parallel</code></a>. The generated <code>&lt;Grammar&gt;EventListener</code>
-provides chunking <strong>classmethods</strong> that produce those chunks, each carrying its
+provides chunking classmethods that produce those chunks, each carrying its
 exact source position so callbacks still report positions against the whole source.
 The token- and rule-based ones use the <a href="../glossary/#facade">facade</a>'s baked-in lexer/parser and its
 token-type constants, so you call them on the class and pass no lexer/parser.</p>
@@ -1443,7 +1445,7 @@ not just speed — the splitting cost is usually negligible next to the per-chun
 parse it feeds.</p>
 <h2 id="token-based-split-at-lexer-tokens">Token-based — split at lexer tokens<a class="headerlink" href="#token-based-split-at-lexer-tokens" title="Permanent link">&para;</a></h2>
 <p>A single lexer pass (in C++, no parser) finds the boundaries, so a delimiter that
-appears <strong>inside a string or comment never causes a split</strong>. The splitter asks the
+appears inside a string or comment never causes a split. The splitter asks the
 lexer for only the boundary tokens, so little crosses into Python.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># each chunk begins with a delimiter token (one type, or several):</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">chunks</span> <span class="o">=</span> <span class="n">MyGrammarEventListener</span><span class="o">.</span><span class="n">split_on_token</span><span class="p">(</span>
@@ -1465,8 +1467,8 @@ lexer for only the boundary tokens, so little crosses into Python.</p>
   parser-free token pass, exposed directly if you want the token stream.</li>
 </ul>
 <h2 id="regex-based-split-on-a-pattern">Regex-based — split on a pattern<a class="headerlink" href="#regex-based-split-on-a-pattern" title="Permanent link">&para;</a></h2>
-<p>No lexer at all: roughly an order of magnitude faster at finding delimiters, but
-<strong>not token-aware</strong> (a match inside a string still splits). Prefer it when the
+<p>No lexer at all: roughly an order of magnitude faster at finding delimiters, but 
+not token-aware (a match inside a string still splits). Prefer it when the
 delimiter can't appear in disguise.</p>
 <ul>
 <li><a href="../reference/api/#antlrope.FacadeListener.split_on_pattern"><code>split_on_pattern</code></a> —
@@ -1496,15 +1498,15 @@ the pipeline stays bounded.</p>
   it over a sliding window (UTF-8).</li>
 <li><a href="../reference/api/#antlrope.FacadeListener.stream_on_pattern"><code>stream_on_pattern</code></a> —
   the streaming form of <code>split_on_pattern</code>. The regex runs Python-side, so it reads
-  any text source (a path, an open file, or an iterable of <code>str</code>) in <strong>any</strong> encoding.</li>
+  any text source (a path, an open file, or an iterable of <code>str</code>) in any encoding.</li>
 <li><a href="../reference/api/#antlrope.FacadeListener.stream_by_rule"><code>stream_by_rule</code></a> — the
-  streaming form of <code>chunk_by_rule</code>, for input that is a top-level <strong>sequence of
-  records</strong>, each an occurrence of a grammar <code>rule</code> (or one of several). It parses one
+  streaming form of <code>chunk_by_rule</code>, for input that is a top-level sequence of
+  records, each an occurrence of a grammar <code>rule</code> (or one of several). It parses one
   record at a time over a bounded-memory lexer→parser pipeline. Records must be
-  <strong>directly adjacent</strong> (only lexer-skipped whitespace/comments between them); with
+  directly adjacent (only lexer-skipped whitespace/comments between them); with
   several candidate rules the next token chooses which to parse, so they should have
   disjoint leading tokens (e.g. <code>class</code> vs <code>def</code>). If an on-channel token begins no
-  candidate rule (an unsupported header or separator), it <strong>raises</strong> a clear error
+  candidate rule (an unsupported header or separator), it raises a clear error
   naming the token and candidates rather than silently truncating. Unlike
   <code>chunk_by_rule</code> it does not find a rule <em>anywhere</em> in a full parse — for arbitrary
   nesting or comma-separated records, use <code>chunk_by_rule</code> or <code>stream_on_token</code>.</li>
@@ -1513,10 +1515,10 @@ the pipeline stays bounded.</p>
 <p>Every chunk carries its start <code>(offset, line, column)</code> against the whole source, so
 callbacks still report positions against the original after splitting. Each chunker
 also takes a <code>sourcename=</code> (a filename for diagnostics) recorded on every chunk — the
-streaming chunkers default it to their file path. During the parse it surfaces as
+streaming chunkers default it to their file path. During the parse it is accessible through
 <a href="../reference/api/#antlrope.FacadeListener.sourcename"><code>FacadeListener.sourcename()</code></a>,
 so a callback can report a position as <code>sourcename:line:column</code>.</p>
-<p>By default each chunk is <strong>trimmed</strong> of surrounding whitespace and whitespace-only
+<p>By default each chunk is trimmed of surrounding whitespace and whitespace-only
 regions are dropped. Pass <code>trim=False</code> (on the delimiter chunkers) to keep every
 region verbatim — preserving a leading or trailing whitespace terminator such as a
 record's mandatory newline — dropping only truly empty, zero-length regions.</p>

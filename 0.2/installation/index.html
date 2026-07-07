@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -911,17 +913,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#type-checking" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Type checking
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#install-the-antlr-tool-to-generate-parsers" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1164,14 +1155,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1191,14 +1182,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1324,17 +1315,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#type-checking" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Type checking
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#install-the-antlr-tool-to-generate-parsers" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1382,20 +1362,32 @@
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <h2 id="install-the-package">Install the package<a class="headerlink" href="#install-the-package" title="Permanent link">&para;</a></h2>
-<p>From PyPI:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">pip</label><label for="__tabbed_1_2">conda</label><label for="__tabbed_1_3">mamba</label><label for="__tabbed_1_4">pixi</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>antlrope
 </span></code></pre></div>
-<p>Or from <a href="https://conda-forge.org/">conda-forge</a>, with conda, mamba, or
-<a href="https://pixi.sh">pixi</a>:</p>
+</div>
+<div class="tabbed-block">
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>antlrope
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># or:  mamba install -c conda-forge antlrope</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># or:  pixi add antlrope</span>
 </span></code></pre></div>
-<p>Either way pulls in the official <code>antlr4-python3-runtime</code> automatically — your
-generated parser modules import it.</p>
-<p><code>antlrope</code> ships as a pre-compiled binary wheel (the C++ engine is built in),
-so there is <strong>nothing to compile</strong> on install. A single CPython Stable ABI
-(<code>abi3</code>) wheel per platform covers <strong>CPython 3.12 and newer</strong> (3.12, 3.13, 3.14,
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>antlrope
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pixi<span class="w"> </span>workspace<span class="w"> </span>channel<span class="w"> </span>add<span class="w"> </span>conda-forge
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pixi<span class="w"> </span>add<span class="w"> </span>antlrope
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Antlrope</strong> depends on the official <code>antlr4-python3-runtime</code>, so it will be pulled in
+automatically — your generated parser modules import it.</p>
+<p>Antlrope ships as a pre-compiled binary wheel (the C++ engine is built in),
+so there is nothing to compile on install. A single CPython Stable ABI
+(<code>abi3</code>) wheel per platform covers CPython 3.12 and newer (3.12, 3.13, 3.14,
 …), published on:</p>
 <ul>
 <li>Linux (<a href="../glossary/#manylinux">manylinux</a>, x86-64 and aarch64)</li>
@@ -1403,38 +1395,59 @@ so there is <strong>nothing to compile</strong> on install. A single CPython Sta
 <li>Windows (x86-64)</li>
 </ul>
 <p>The minimum supported Python is <strong>3.12</strong>.</p>
-<h2 id="type-checking">Type checking<a class="headerlink" href="#type-checking" title="Permanent link">&para;</a></h2>
-<p><code>antlrope</code> ships <code>py.typed</code> with full type information, so type checkers resolve its
-public API and submodules out of the box — <code>from antlrope import Chunk,
-FacadeListener, SourceMap</code> and <code>import antlrope.generate</code> all check cleanly.</p>
-<p>If your checker reports <code>reportMissingImports</code> / "could not be resolved", it is
-almost always pointed at the wrong interpreter — not the environment where
-<code>antlrope</code> is installed. Point it at that environment:</p>
-<ul>
-<li><strong>Pyright</strong>: set <code>pythonPath</code> (or <code>venvPath</code> + <code>venv</code>) in <code>pyrightconfig.json</code> /
-  <code>pyproject.toml</code>, run it from the activated virtualenv, or pass
-  <code>--pythonpath /path/to/venv/bin/python</code>.</li>
-<li><strong>mypy</strong>: run it from the same environment, or use <code>--python-executable</code>.</li>
-</ul>
-<p>Note <code>antlrope.generate</code> is a <em>module</em> (the CLI), so import it as
-<code>import antlrope.generate</code> / <code>from antlrope.generate import generate</code> — it is not a
-top-level re-exported name.</p>
 <h2 id="install-the-antlr-tool-to-generate-parsers">Install the ANTLR tool (to generate parsers)<a class="headerlink" href="#install-the-antlr-tool-to-generate-parsers" title="Permanent link">&para;</a></h2>
-<p>To turn a <code>.g4</code> grammar into the Python parser modules <code>antlrope</code> drives, you
+<p>To turn a <code>.g4</code> grammar into the Python parser modules Antlrope drives, you
 also need the <strong>ANTLR tool</strong> itself, which is a Java program. The easiest way is the
-<code>antlr4-tools</code> helper, which fetches the ANTLR jar (and a JDK on first use) for you:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>antlr4-tools<span class="w">     </span><span class="c1"># provides the `antlr4` command</span>
+<code>antlr4-tools</code> helper, which fetches the ANTLR jar (and a JDK on first use) for you
+and provides the <code>antlr4</code> command:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:4"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">pip</label><label for="__tabbed_2_2">conda</label><label for="__tabbed_2_3">mamba</label><label for="__tabbed_2_4">pixi</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>antlr4-tools
 </span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>antlr4-tools
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>antlr4-tools
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pixi<span class="w"> </span>workspace<span class="w"> </span>channel<span class="w"> </span>add<span class="w"> </span>conda-forge
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>pixi<span class="w"> </span>add<span class="w"> </span>antlr4-tools
+</span></code></pre></div>
+</div>
+</div>
+</div>
 <p>You only need this at build time, to (re)generate parsers — not to run them. If you
 already have Java and the ANTLR jar, use those instead; nothing here is specific to
-<code>antlrope</code>.</p>
+Antlrope.</p>
 <p>See <a href="../getting-started/">Getting started</a> for the full generate → write a listener →
 run walkthrough.</p>
 <h2 id="from-source">From source<a class="headerlink" href="#from-source" title="Permanent link">&para;</a></h2>
+<p>Clone the repo from <a href="https://github.com/zuzukin/antlrope">https://github.com/zuzukin/antlrope</a>:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">HTTPS</label><label for="__tabbed_3_2">SSH</label><label for="__tabbed_3_3">GitHub CLI</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/zuzukin/antlrope.git
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:zuzukin/antlrope.git
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>gh<span class="w"> </span>repo<span class="w"> </span>clone<span class="w"> </span>zuzukin/antlrope
+</span></code></pre></div>
+</div>
+</div>
+</div>
 <p>The repository builds with <a href="https://pixi.sh">pixi</a>: <code>pixi run build</code> compiles the
 C++ extension and <code>pixi run test</code> runs the suite. The build needs a C++17 compiler,
-CMake ≥ 3.21, and Ninja (all provided by the pixi <code>dev</code> environment). See the
-<a href="https://github.com/zuzukin/antlrope">repository</a> for details.</p>
+CMake ≥ 3.21, and Ninja (all provided by the pixi <code>dev</code> environment). See
+<a href="https://github.com/zuzukin/antlrope/blob/dev/CONTRIBUTING.md">CONTRIBUTING.md</a> for details.</p>
 
 
 

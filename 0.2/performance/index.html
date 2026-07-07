@@ -60,6 +60,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -345,7 +347,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../about/changelog/" class="md-tabs__link">
+        <a href="../about/motivation/" class="md-tabs__link">
           
   
   About
@@ -1214,14 +1216,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/changelog/" class="md-nav__link">
+      <a href="../about/motivation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Release notes
+  Motivation
 
     
   </span>
@@ -1241,14 +1243,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/motivation/" class="md-nav__link">
+      <a href="../about/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-  Motivation
+  Release notes
 
     
   </span>
@@ -1487,7 +1489,7 @@
    workload that touches most nodes — you can only shrink it by <em>receiving fewer
    events</em>, which is what native filtering does.</li>
 </ol>
-<p>So the honest framing: batching removes the call overhead; filtering reduces the
+<p>Batching removes the call overhead, and filtering reduces the
 iteration count. Neither makes a "reserialize everything" workload free, because
 something in Python still iterates the kept events.</p>
 <h2 id="how-fast-in-relative-terms">How fast, in relative terms<a class="headerlink" href="#how-fast-in-relative-terms" title="Permanent link">&para;</a></h2>
@@ -1538,6 +1540,12 @@ official <code>antlr4-python3-runtime</code> (its generated parser executes them
 restructure the grammar to be predicate-free.</p>
 <p>Grammars that are purely structural — most data and config formats, many DSLs —
 are unaffected.</p>
+<p>To find out where your grammar stands, run
+<a href="../reference/cli/#antlrope-check"><code>antlrope check &lt;parser-module&gt;</code></a> on the
+generated parser: it scans the serialized ATNs and reports every semantic
+predicate and embedded action by rule (exit status 0 when there are none).
+Precedence predicates from left-recursive rules and the built-in lexer commands
+(<code>-&gt; skip</code>, <code>-&gt; channel(...)</code>, ...) are fine and are not flagged.</p>
 <h2 id="other-notes">Other notes<a class="headerlink" href="#other-notes" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Single streaming pass.</strong> You get one ordered traversal, not a retained tree.
