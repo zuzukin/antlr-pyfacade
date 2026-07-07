@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Provenance metadata embedded in generated facades.
+"""Origin metadata embedded in generated facades.
 
 The `gen` subcommand writes a machine-parseable comment header recording the
 antlrope version, the command used, the run directory (relative to the output
@@ -40,7 +40,7 @@ _INPUT_PREFIX = "# input:"
 
 
 class Metadata(NamedTuple):
-    """Provenance recorded in a generated facade's header."""
+    """Origin metadata recorded in a generated facade's header."""
 
     version: str
     command: str
@@ -61,7 +61,7 @@ def relpath_or_abs(path: str, start: str) -> str:
     """`os.path.relpath`, falling back to the absolute path when there isn't one.
 
     On Windows there is no relative path between different drives (relpath
-    raises `ValueError`); an absolute path keeps the provenance header usable —
+    raises `ValueError`); an absolute path keeps the origin header usable —
     `regen` / `up-to-date` join recorded paths with `os.path.join`, which yields
     the absolute path unchanged.
     """

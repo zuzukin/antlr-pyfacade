@@ -188,7 +188,7 @@ constants.
 
 <!-- gen-cli-help: end -->
 
-## Provenance header
+## Origin header
 
 When generating to a file (`-o`), the `gen` subcommand writes a machine-readable comment header
 recording the antlrope version, the exact command, the run directory (relative to the

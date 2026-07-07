@@ -106,7 +106,7 @@ arguments or help text, or adding/renaming a subcommand), regenerate it:
 pixi run gen-cli-docs
 ```
 
-The prose outside the markers (the intro and the provenance section) is hand-written.
+The prose outside the markers (the intro and the origin-header section) is hand-written.
 `tests/test_cli_docs.py` runs `gen-cli-docs --check`, so `pixi run test` fails if the
 committed doc has drifted from the CLI.
 

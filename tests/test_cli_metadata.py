@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Provenance metadata in generated facades, and the `up-to-date` / `regen` commands."""
+"""Origin metadata in generated facades, and the `up-to-date` / `regen` commands."""
 
 from __future__ import annotations
 

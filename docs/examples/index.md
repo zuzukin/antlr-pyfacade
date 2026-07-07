@@ -27,7 +27,7 @@ parsers, or the sample data. To run one you need just two things:
   to *regenerate* a parser after editing a grammar.
 
 Use example files from the same version as your installed Antlrope. The generated
-facades carry a provenance version; if it drifts the code still runs, but
+facades carry an origin version; if it drifts the code still runs, but
 `antlrope up-to-date <facade>` will flag the mismatch.
 
 ## Getting the example files

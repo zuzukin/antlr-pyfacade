@@ -9,7 +9,7 @@ How a release goes out. Development happens on `dev`; releases are cut from
    release version with today's date.
 2. Set `src/antlrope/VERSION` to the release version (see the version policy in
    [CONTRIBUTING.md](CONTRIBUTING.md)).
-3. Regenerate the example facades so their provenance headers carry the release
+3. Regenerate the example facades so their origin headers carry the release
    version (`pixi run gen-facade && pixi run gen-schema-facade`), and confirm
    `antlrope up-to-date` passes on both.
 4. Run the full verification suite:

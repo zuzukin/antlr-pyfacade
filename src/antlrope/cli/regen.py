@@ -14,7 +14,7 @@
 
 """The `regen` subcommand: regenerate a facade in place from its embedded metadata.
 
-Reads the provenance header an earlier `antlrope gen` wrote into the file (see
+Reads the origin header an earlier `antlrope gen` wrote into the file (see
 antlrope.cli.metadata), re-runs that exact command from the recorded run directory
 (relative to the file), and overwrites the file. Assumes the input modules are
 importable from the run directory, as in the original invocation.

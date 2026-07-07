@@ -65,7 +65,7 @@ builds, never published to PyPI. Condensed highlights, roughly in order:
   protocols, the `cached=` option) went private, leaving a seven-name public
   surface plus a `clear_cache()` escape hatch.
 - **CLI**: grew from a single generator command into the `antlrope` command group
-  — `gen` (with a deterministic provenance header), `regen` and `up-to-date`
+  — `gen` (with a deterministic origin header), `regen` and `up-to-date`
   (regenerate / staleness-check from that header), `check` (flag semantic
   predicates and embedded actions the ATN interpreter cannot run), and `rules` /
   `tokens` introspection.

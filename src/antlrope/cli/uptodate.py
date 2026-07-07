@@ -14,7 +14,7 @@
 
 """The `up-to-date` subcommand: check a generated facade against its inputs.
 
-Re-hashes the input modules recorded in a facade's provenance header (see
+Re-hashes the input modules recorded in a facade's origin header (see
 antlrope.cli.metadata) and compares them — plus the antlrope version — to the
 recorded values. Pure hashing: no import or parse of the grammar. Exit status is
 0 when current, 1 when stale (CI/Make-friendly), 2 on a usage error.

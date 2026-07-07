@@ -169,7 +169,7 @@ def generate(
 
     rule_names_block = _rule_names_block(rule_names)
 
-    # The provenance header (antlrope.cli.metadata) when the CLI provides one, else
+    # The origin header (antlrope.cli.metadata) when the CLI provides one, else
     # the bare banner — keeping a direct generate() call deterministic + version-free.
     header = metadata if metadata is not None else BANNER
 
@@ -268,7 +268,7 @@ def _build_metadata(
     lexer_qualname: str,
     output: str | None,
 ) -> str:
-    """Render the provenance header for a `gen` invocation (antlrope.cli.metadata)."""
+    """Render the origin header for a `gen` invocation (antlrope.cli.metadata)."""
     command_parts = ["antlrope", "gen", parser_module, grammar]
     if lexer:
         command_parts += ["--lexer", lexer]
@@ -288,7 +288,7 @@ def _build_metadata(
 def run_gen(
     parser_module: str, grammar: str, lexer: str | None, output: str | None
 ) -> int:
-    """Generate the facade (with a provenance header) and write it to `output`/stdout."""
+    """Generate the facade (with an origin header) and write it to `output`/stdout."""
     lexer_qualname = lexer or _derive_lexer(parser_module)
     metadata = _build_metadata(parser_module, grammar, lexer, lexer_qualname, output)
     source = generate(parser_module, grammar, lexer, metadata=metadata)
