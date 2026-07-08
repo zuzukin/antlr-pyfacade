@@ -9,11 +9,11 @@ no external checkout.
 ## Provenance
 
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
-- **Snapshot commit:** `ef36025ca` (fork `zuzukin/antlr4`, branch
+- **Snapshot commit:** `c64c65bd4` (fork `zuzukin/antlr4`, branch
   `cpp-per-dfa-locks`, which stacks Patch 2 on Patch 1). Both patch branches are
   pushed to the fork and base off upstream `7d5770395`:
-  - `cpp-lockfree-dfa-edges` (`020f86cd0`) — Patch 1 only.
-  - `cpp-per-dfa-locks` (`ef36025ca`) — Patch 1 + Patch 2; this is what `src/` mirrors.
+  - `cpp-lockfree-dfa-edges` (`9066854fe`) — Patch 1 only.
+  - `cpp-per-dfa-locks` (`c64c65bd4`) — Patch 1 + Patch 2; this is what `src/` mirrors.
 - **Patch 1 (PR1) — lock-free DFA-edge reads.** `DFAState::edges` is a
   lazily-allocated array of `std::atomic<DFAState*>` with lock-free `getEdge`,
   replacing the `FlatHashMap` guarded by a mutex. This is the per-character
