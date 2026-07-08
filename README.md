@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zuzukin/antlrope/main/docs/assets/logo-dark.svg">
-    <img alt="antlrope" src="https://raw.githubusercontent.com/zuzukin/antlrope/main/docs/assets/logo.svg" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img alt="antlrope" src="docs/assets/logo.svg" width="420">
   </picture>
 </p>
 
@@ -13,7 +13,7 @@ A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for t
 > workloads that touch most nodes — and more when your listener subscribes to
 > only a subset of the grammar.
 
-[![Parsing and reading a 2.6 MB SystemRDL file: antlrope is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](https://raw.githubusercontent.com/zuzukin/antlrope/main/docs/benchmarks/systemrdl.svg)](https://zuzukin.github.io/antlrope/latest/benchmarks/systemrdl/)
+[![Parsing and reading a 2.6 MB SystemRDL file: antlrope is ~21x faster than the pure-Python runtime and ~8x faster than the speedy-antlr accelerator, at lower peak memory](docs/benchmarks/systemrdl.svg)](docs/benchmarks/systemrdl.md)
 
 <sub>Parsing + reading a real 2.6 MB SystemRDL file — see the [full benchmark](docs/benchmarks/systemrdl.md) (vs the pure-Python runtime and the `speedy-antlr` accelerator).</sub>
 

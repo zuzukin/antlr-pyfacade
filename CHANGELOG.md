@@ -8,9 +8,10 @@ follows semantic versioning (see the version policy in
 ## [1.0.1] - Unreleased
 
 ### Fixed
-- README images (logo, benchmark chart) now use absolute URLs so they render on
-  the PyPI project page, which resolved the previous repo-relative paths against
-  pypi.org.
+- The README's repo-relative image and link URLs are now rewritten to absolute
+  URLs at package build time (hatch-fancy-pypi-readme), so the logo, benchmark
+  chart, and doc links render on the PyPI project page; the repo file keeps the
+  relative paths GitHub renders natively.
 
 ## [1.0.0] - 2026-07-08
 
