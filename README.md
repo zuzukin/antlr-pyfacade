@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml?query=branch%3Adev"><img alt="CI" src="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=dev"></a>
   <a href="https://app.codecov.io/gh/zuzukin/antlrope/tree/dev"><img alt="coverage" src="https://codecov.io/gh/zuzukin/antlrope/branch/dev/graph/badge.svg"></a>
   <a href="https://pypi.org/project/antlrope/"><img alt="PyPI" src="https://img.shields.io/pypi/v/antlrope"></a>
   <a href="https://anaconda.org/conda-forge/antlrope"><img alt="conda-forge" src="https://img.shields.io/conda/vn/conda-forge/antlrope?label=conda-forge"></a>
