@@ -7,7 +7,10 @@ follows semantic versioning (see the version policy in
 
 ## [1.0.1] - Unreleased
 
-No changes yet.
+### Fixed
+- README images (logo, benchmark chart) now use absolute URLs so they render on
+  the PyPI project page, which resolved the previous repo-relative paths against
+  pypi.org.
 
 ## [1.0.0] - 2026-07-08
 
