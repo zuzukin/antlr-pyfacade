@@ -302,8 +302,8 @@ description = "Run the pytest correctness suite."
 cmd = "pytest"
 
 [tool.pixi.tasks.coverage]
-description = "Run the test suite under coverage; write an HTML site + JSON report into .coverage/ and print a summary to stdout."
-cmd = "mkdir -p .coverage && pytest --cov --cov-report=term-missing --cov-report=html:.coverage/html --cov-report=json:.coverage/coverage.json"
+description = "Run the test suite under coverage; write an HTML site + JSON/XML reports into .coverage/ and print a summary to stdout."
+cmd = "mkdir -p .coverage && pytest --cov --cov-report=term-missing --cov-report=html:.coverage/html --cov-report=json:.coverage/coverage.json --cov-report=xml:.coverage/coverage.xml"
 
 [tool.pixi.tasks.build]
 description = "Rebuild the _native C++ extension (run after editing cpp/ or the vendored runtime)."

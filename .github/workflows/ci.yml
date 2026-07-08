@@ -28,8 +28,15 @@ jobs:
           cache: true
       - run: pixi run build
       # Run the suite under coverage (only src/ is measured); the summary lands in
-      # the job log and the HTML/JSON artifacts in .coverage/.
+      # the job log and the HTML/JSON/XML artifacts in .coverage/.
       - run: pixi run coverage
+      # One upload (Linux) feeds the Codecov badge and PR comments.
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v5
+        with:
+          files: .coverage/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
       # Smoke-test the worked examples end to end (both OSes), so a runtime change
       # that breaks them — or their checked-in generated parsers/facades — is caught.
       - name: Examples

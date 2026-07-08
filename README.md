@@ -6,6 +6,7 @@
 </p>
 
 [![CI](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/zuzukin/antlrope/graph/badge.svg)](https://codecov.io/gh/zuzukin/antlrope)
 [![PyPI](https://img.shields.io/pypi/v/antlrope)](https://pypi.org/project/antlrope/)
 [![Python versions](https://img.shields.io/pypi/pyversions/antlrope)](https://pypi.org/project/antlrope/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/antlrope)](https://anaconda.org/conda-forge/antlrope)
