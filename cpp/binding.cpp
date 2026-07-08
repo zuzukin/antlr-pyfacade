@@ -303,6 +303,10 @@ static void parse_walk(ParserSpec &pspec,
 // Returned as a flat little-endian int32 buffer of 4*N values (N event rows of
 // (kind, payload, start, stop)). Python wraps it with memoryview(...).cast("i")
 // — no numpy dependency.
+//
+// NOTE: internal, but the srdl-bench benchmark (github.com/zuzukin/srdl-bench)
+// calls this directly (via antlrope._native) to time the raw native stage;
+// update that repo if the signature ever changes.
 static nb::object parse_events(ParserSpec &pspec,
                                LexerSpec &lspec,
                                const std::string &text,

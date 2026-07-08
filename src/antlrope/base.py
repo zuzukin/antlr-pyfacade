@@ -725,6 +725,10 @@ class FacadeListener:
         except ValueError:
             raise ValueError(f"unknown rule {rule!r}; known rules: {names}") from None
 
+    # NOTE: internal, but the srdl-bench benchmark (github.com/zuzukin/srdl-bench)
+    # calls _parser_spec/_lexer_spec and _native.parse_events directly to time the
+    # raw native stage. These are unlikely to ever change, but if they do, update
+    # that repo in the same breath (it is not shipped as a package).
     @classmethod
     def _parser_spec(cls, *, cached: bool = True) -> _native.ParserSpec:
         """Return the native `parser_spec` built from this grammar's baked-in parser.
