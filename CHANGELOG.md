@@ -7,6 +7,10 @@ follows semantic versioning (see the version policy in
 
 ## [1.0.1] - Unreleased
 
+### Added
+- README badges: CI status, PyPI release, supported Python versions,
+  conda-forge release, and a docs link.
+
 ### Fixed
 - The README's repo-relative image and link URLs are now rewritten to absolute
   URLs at package build time (hatch-fancy-pypi-readme), so the logo, benchmark

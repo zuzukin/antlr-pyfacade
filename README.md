@@ -5,6 +5,12 @@
   </picture>
 </p>
 
+[![CI](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/antlrope)](https://pypi.org/project/antlrope/)
+[![Python versions](https://img.shields.io/pypi/pyversions/antlrope)](https://pypi.org/project/antlrope/)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/antlrope)](https://anaconda.org/conda-forge/antlrope)
+[![docs](https://img.shields.io/badge/docs-latest-blue)](https://zuzukin.github.io/antlrope/)
+
 A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
 
 *antl**rope*** = ANTLR + **O**rdered **P**arse **E**vents — your parse delivered as one ordered stream of events, not a per-node tree walk.
