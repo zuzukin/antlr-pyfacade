@@ -5,12 +5,14 @@
   </picture>
 </p>
 
-[![CI](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zuzukin/antlrope/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/zuzukin/antlrope/graph/badge.svg)](https://codecov.io/gh/zuzukin/antlrope)
-[![PyPI](https://img.shields.io/pypi/v/antlrope)](https://pypi.org/project/antlrope/)
-[![Python versions](https://img.shields.io/pypi/pyversions/antlrope)](https://pypi.org/project/antlrope/)
-[![conda-forge](https://img.shields.io/conda/vn/conda-forge/antlrope)](https://anaconda.org/conda-forge/antlrope)
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://zuzukin.github.io/antlrope/)
+<p align="center">
+  <a href="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/zuzukin/antlrope/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://codecov.io/gh/zuzukin/antlrope"><img alt="coverage" src="https://codecov.io/gh/zuzukin/antlrope/graph/badge.svg"></a>
+  <a href="https://pypi.org/project/antlrope/"><img alt="PyPI" src="https://img.shields.io/pypi/v/antlrope"></a>
+  <a href="https://anaconda.org/conda-forge/antlrope"><img alt="conda-forge" src="https://img.shields.io/conda/vn/conda-forge/antlrope?label=conda-forge"></a>
+  <a href="https://pypi.org/project/antlrope/"><img alt="Python" src="https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fzuzukin%2Fantlrope%2Fmain%2Fpyproject.toml"></a>
+  <a href="https://zuzukin.github.io/antlrope/"><img alt="docs" src="https://img.shields.io/badge/docs-latest-blue"></a>
+</p>
 
 A fast, C++-accelerated [ANTLR](https://www.antlr.org/) runtime for Python for target-agnostic grammars
 
