@@ -20,9 +20,12 @@ jobs:
       fail-fast: false
       matrix:
         # ubuntu-latest = manylinux x86_64; ubuntu-24.04-arm = native manylinux
-        # aarch64 (free ARM runner, no QEMU); macos-13 = x86_64, macos-14 = arm64;
-        # windows-latest = amd64. cibuildwheel infers the wheel arch from the runner.
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-13, macos-14, windows-latest]
+        # aarch64 (free ARM runner, no QEMU); macos-15-intel = x86_64 (the last
+        # free Intel image — macos-13 was retired and its jobs queue forever);
+        # macos-14 = arm64; windows-latest = amd64. cibuildwheel infers the
+        # wheel arch from the runner.
+        os:
+          [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-14, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
