@@ -1,11 +1,11 @@
 schema_version: 1
 
-# rattler-build recipe for conda-forge — NOT YET SUBMITTED. At the first PyPI
-# release (see RELEASING.md): copy this directory to conda-forge/staged-recipes
-# under recipes/antlrope/, set `version` to the released version and `sha256` to
-# the real sdist hash, and open a PR. Once merged it becomes a feedstock and the
-# autotick bot handles later releases. Builds the C++ extension from the vendored
-# ANTLR4 runtime carried in the sdist, so no external runtime is fetched.
+# rattler-build recipe for conda-forge. Submitted as
+# https://github.com/conda-forge/staged-recipes/pull/34122; once merged the
+# feedstock is the source of truth and the autotick bot bumps it per PyPI
+# release — keep this copy as the reference/local-test recipe (see
+# RELEASING.md). Builds the C++ extension from the vendored ANTLR4 runtime
+# carried in the sdist, so no external runtime is fetched.
 
 context:
   name: antlrope
@@ -64,6 +64,9 @@ requirements:
     - pip
     - scikit-build-core >=0.10
     - nanobind >=2.0
+    # Build-time README metadata plugin (in [build-system] requires from 1.0.1;
+    # unused by the 1.0.0 sdist but keeps the autotick version bump working).
+    - hatch-fancy-pypi-readme
   run:
     - python-abi3 3.12.*
     - antlr4-python3-runtime >=4.13
@@ -80,7 +83,7 @@ tests:
 about:
   homepage: https://github.com/zuzukin/antlrope
   repository: https://github.com/zuzukin/antlrope
-  documentation: https://github.com/zuzukin/antlrope/tree/main/docs
+  documentation: https://zuzukin.github.io/antlrope/
   license: Apache-2.0
   license_file:
     - LICENSE
