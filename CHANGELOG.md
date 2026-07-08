@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows semantic versioning (see the version policy in
 [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-07-08
 
 First stable release. **Antlrope** is a fast, C++-accelerated ANTLR runtime for
 Python: it drives the official ANTLR4 C++ runtime's ATN interpreter directly from
