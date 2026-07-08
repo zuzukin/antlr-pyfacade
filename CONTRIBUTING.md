@@ -133,6 +133,22 @@ installed package metadata too.
 The vendored ANTLR C++ runtime is built from `vendor/antlr4-cpp/`; see
 `vendor/antlr4-cpp/UPDATING.md` to refresh the snapshot.
 
+## AI-assisted contributions
+
+Using an AI coding assistant is welcome — much of this project was written in
+close collaboration with one (see the
+[acknowledgements](docs/about/acknowledgements.md)). Two expectations:
+
+- **Disclose the model in the PR description** (e.g. "written with Claude
+  Opus 4.8").
+- Ideally, commits the agent makes should carry a `Co-Authored-By:` trailer
+  naming the model — most agents add this automatically when they run the
+  commit themselves.
+
+You remain the author: review, test, and understand what you submit. The
+"Before submitting" checklist below applies to AI-written changes exactly as it
+does to hand-written ones.
+
 ## Before submitting
 
 - If you changed C++ (`cpp/` or `vendor/antlr4-cpp/`), run `pixi run build` first.
