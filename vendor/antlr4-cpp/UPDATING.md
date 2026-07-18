@@ -9,11 +9,11 @@ no external checkout.
 ## Provenance
 
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
-- **Snapshot commit:** `c64c65bd4` (fork `zuzukin/antlr4`, branch
+- **Snapshot commit:** `96ea7bcc5` (fork `zuzukin/antlr4`, branch
   `cpp-per-dfa-locks`, which stacks Patch 2 on Patch 1). Both patch branches are
   pushed to the fork and base off upstream `7d5770395`:
-  - `cpp-lockfree-dfa-edges` (`9066854fe`) — Patch 1 only.
-  - `cpp-per-dfa-locks` (`c64c65bd4`) — Patch 1 + Patch 2; this is what `src/` mirrors.
+  - `cpp-lockfree-dfa-edges` (`baa5db5ba`) — Patch 1 only.
+  - `cpp-per-dfa-locks` (`96ea7bcc5`) — Patch 1 + Patch 2; this is what `src/` mirrors.
 - **Upstream PRs (opened 2026-07-18):** Patch 1 is
   https://github.com/antlr/antlr4/pull/4953, Patch 2 is
   https://github.com/antlr/antlr4/pull/4954 (stacked on #4953).
@@ -30,6 +30,10 @@ no external checkout.
     lookahead (e.g. a single-token input). `getExistingTargetState` now reads
     `getEdge(t + 1)`, `addDFAEdge` writes `setEdge(t + 1, maxTokenType + 2, …)`
     and guards `t < -1`. Verified clean under AddressSanitizer.
+  - **Fix (2026-07-18, also in the upstream PR):** `DFASerializer::getEdgeLabel`
+    must print `getDisplayName(i - 1)` to undo the `t + 1` indexing; the map-era
+    code printed the raw slot index, shifting every DFA-dump edge label by one
+    (caught by the upstream runtime testsuite's diagnostic-output tests).
 - **Patch 2 (PR2) — per-DFA write locks.** The DFA state/edge write locks were
   moved off the ATN (`ATN::_stateMutex` / `ATN::_edgeMutex`, now removed) and onto
   the DFA itself (`dfa::DFA::stateMutex()` / `edgeMutex()`, heap-allocated so DFA

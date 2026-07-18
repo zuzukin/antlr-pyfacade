@@ -39,7 +39,9 @@ std::string DFASerializer::toString() const {
 }
 
 std::string DFASerializer::getEdgeLabel(size_t i) const {
-  return _vocabulary.getDisplayName(i); // ml: no longer needed -1 as we use a map for edges, without offset.
+  // Edges are indexed by t + 1 (EOF in slot 0), so shift back to the token
+  // type; i == 0 wraps to Token::EOF, which the vocabulary displays as "EOF".
+  return _vocabulary.getDisplayName(i - 1);
 }
 
 std::string DFASerializer::getStateString(DFAState *s) const {
