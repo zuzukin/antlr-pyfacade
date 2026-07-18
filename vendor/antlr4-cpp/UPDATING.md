@@ -14,6 +14,9 @@ no external checkout.
   pushed to the fork and base off upstream `7d5770395`:
   - `cpp-lockfree-dfa-edges` (`9066854fe`) — Patch 1 only.
   - `cpp-per-dfa-locks` (`c64c65bd4`) — Patch 1 + Patch 2; this is what `src/` mirrors.
+- **Upstream PRs (opened 2026-07-18):** Patch 1 is
+  https://github.com/antlr/antlr4/pull/4953, Patch 2 is
+  https://github.com/antlr/antlr4/pull/4954 (stacked on #4953).
 - **Patch 1 (PR1) — lock-free DFA-edge reads.** `DFAState::edges` is a
   lazily-allocated array of `std::atomic<DFAState*>` with lock-free `getEdge`,
   replacing the `FlatHashMap` guarded by a mutex. This is the per-character
