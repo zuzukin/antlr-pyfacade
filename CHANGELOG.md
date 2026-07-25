@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 follows semantic versioning (see the version policy in
 [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-## [1.0.1] - Unreleased
+## [1.0.1] - 2026-07-25
 
 ### Added
 - README badges: CI status, coverage (Codecov), PyPI release, supported Python
@@ -16,6 +16,12 @@ follows semantic versioning (see the version policy in
   URLs at package build time (hatch-fancy-pypi-readme), so the logo, benchmark
   chart, and doc links render on the PyPI project page; the repo file keeps the
   relative paths GitHub renders natively.
+- The vendored ANTLR4 C++ runtime's `DFASerializer` printed DFA-dump edge
+  labels shifted by one token type (an offset missed by the lock-free
+  DFA-edge patch, caught by the upstream testsuite on antlr/antlr4#4953).
+  Diagnostic output only — parse behavior and the event stream were
+  unaffected. Both patches are now proposed upstream as antlr/antlr4#4953
+  and #4954.
 
 ## [1.0.0] - 2026-07-08
 
