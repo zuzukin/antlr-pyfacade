@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format is based on
 follows semantic versioning (see the version policy in
 [CONTRIBUTING.md](CONTRIBUTING.md)).
 
+## [1.0.2] - Unreleased
+
 ## [1.0.1] - 2026-07-25
 
 ### Added
