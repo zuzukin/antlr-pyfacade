@@ -13,7 +13,7 @@ context:
   # sdist below) — not read from the repo's src/antlrope/VERSION, which is
   # the dev version and may be ahead of the latest release. Placeholder until the
   # first PyPI release; on conda-forge the autotick bot bumps it per release.
-  version: "1.0.0"
+  version: "1.0.1"
 
 package:
   name: ${{ name }}
@@ -23,7 +23,7 @@ source:
   # Prefer the PyPI sdist (carries the vendored runtime). Replace sha256 on each
   # release.
   url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/antlrope-${{ version }}.tar.gz
-  sha256: "87f318e6c188bc7058807b203e1e71117812bed114f76b79a8bd9043175b99a2"
+  sha256: "678b235a7ed094074fa0c28133ee99d0570c44954307a474c5ed8d5fc377ecaa"
 
 build:
   number: 0
