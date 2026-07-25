@@ -1166,6 +1166,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#101-2026-07-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        [1.0.1] - 2026-07-25
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.1] - 2026-07-25">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Added
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fixed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#100-2026-07-08" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1189,7 +1228,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#added_1" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
         Added
@@ -1326,6 +1365,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#101-2026-07-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        [1.0.1] - 2026-07-25
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.1] - 2026-07-25">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Added
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fixed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#100-2026-07-08" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1349,7 +1427,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#added_1" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
         Added
@@ -1404,6 +1482,25 @@
 <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>, and from 1.0 the project
 follows semantic versioning (see the version policy in
 <a href="../CONTRIBUTING/">CONTRIBUTING.md</a>).</p>
+<h2 id="101-2026-07-25">[1.0.1] - 2026-07-25<a class="headerlink" href="#101-2026-07-25" title="Permanent link">&para;</a></h2>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li>README badges: CI status, coverage (Codecov), PyPI release, supported Python
+  versions, conda-forge release, and a docs link.</li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The README's repo-relative image and link URLs are now rewritten to absolute
+  URLs at package build time (hatch-fancy-pypi-readme), so the logo, benchmark
+  chart, and doc links render on the PyPI project page; the repo file keeps the
+  relative paths GitHub renders natively.</li>
+<li>The vendored ANTLR4 C++ runtime's <code>DFASerializer</code> printed DFA-dump edge
+  labels shifted by one token type (an offset missed by the lock-free
+  DFA-edge patch, caught by the upstream testsuite on antlr/antlr4#4953).
+  Diagnostic output only — parse behavior and the event stream were
+  unaffected. Both patches are now proposed upstream as antlr/antlr4#4953
+  and #4954.</li>
+</ul>
 <h2 id="100-2026-07-08">[1.0.0] - 2026-07-08<a class="headerlink" href="#100-2026-07-08" title="Permanent link">&para;</a></h2>
 <p>First stable release. <strong>Antlrope</strong> is a fast, C++-accelerated ANTLR runtime for
 Python: it drives the official ANTLR4 C++ runtime's ATN interpreter directly from
@@ -1423,7 +1520,7 @@ release.</p>
 <li><code>FacadeListener.rule_name</code> now raises <code>IndexError</code> for any out-of-range rule
   index; previously a negative index silently wrapped from the end.</li>
 </ul>
-<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Release engineering: complete PyPI metadata (development-status classifier,
   documentation/changelog/issue URLs), a documented release procedure
