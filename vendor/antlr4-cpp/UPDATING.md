@@ -9,11 +9,13 @@ no external checkout.
 ## Provenance
 
 - **Upstream repo:** https://github.com/antlr/antlr4 (`dev` branch lineage)
-- **Snapshot commit:** `96ea7bcc5` (fork `zuzukin/antlr4`, branch
+- **Snapshot commit:** `910af6e43` (fork `zuzukin/antlr4`, branch
   `cpp-per-dfa-locks`, which stacks Patch 2 on Patch 1). Both patch branches are
-  pushed to the fork and base off upstream `7d5770395`:
-  - `cpp-lockfree-dfa-edges` (`baa5db5ba`) — Patch 1 only.
-  - `cpp-per-dfa-locks` (`96ea7bcc5`) — Patch 1 + Patch 2; this is what `src/` mirrors.
+  pushed to the fork; since 2026-08-23 they are stacked on the `ts-tests-tsx`
+  test-harness branch (`ce99aa84d`, upstream PR #4963) purely so their CI runs
+  green — runtime content is unchanged — and base off upstream `7d5770395`:
+  - `cpp-lockfree-dfa-edges` (`4097eb8b7`) — Patch 1 only.
+  - `cpp-per-dfa-locks` (`910af6e43`) — Patch 1 + Patch 2; this is what `src/` mirrors.
 - **Upstream PRs (opened 2026-07-18):** Patch 1 is
   https://github.com/antlr/antlr4/pull/4953, Patch 2 is
   https://github.com/antlr/antlr4/pull/4954 (stacked on #4953).
